@@ -1,0 +1,17 @@
+Django
+django-ninja
+python-decouple
+cryptography
+google-api-python-client
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+requests
+Pillow
+dj-database-url
+gunicorn
+whitenoise
+psycopg2-binary
+mkdocs
+mkdocs-material
+pre-commit

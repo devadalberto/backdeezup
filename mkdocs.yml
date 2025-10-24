@@ -1,0 +1,9 @@
+site_name: gmail_josevaldes_cleanup
+theme: { name: material, features: [navigation.instant, content.code.copy] }
+nav:
+  - Home: index.md
+  - API & Flows:
+      - Endpoints: api.md
+      - States & Deletion: states.md
+  - Setup: setup.md
+markdown_extensions: [admonition, toc]

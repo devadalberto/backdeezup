@@ -1,0 +1,2 @@
+# States: DISCOVERED → DOWNLOADED → IMPORTED → VERIFIED → DELETE_PENDING → DELETED
+Retention guard: MIN_RETENTION_DAYS (default 3). Delete mode: DRIVE_DELETE_MODE = trash | hard.

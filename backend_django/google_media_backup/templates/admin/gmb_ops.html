@@ -1,0 +1,43 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Media pipeline</h1>
+<p>Set a limit (applies to each step), then click in order:</p>
+<div style="display:flex;gap:12px;align-items:center;margin:12px 0;">
+  <label>Limit <input id="limit" type="number" min="1" value="20" style="width:90px;padding:6px;"></label>
+  <button id="btn1" class="button">1) Discover</button>
+  <button id="btn2" class="button" disabled>2) Download</button>
+  <button id="btn3" class="button" disabled>3) Import</button>
+  <button id="btn4" class="button" disabled>4) Verify</button>
+  <button id="btn5" class="button" disabled>5) Mark Delete</button>
+  <button id="btn6" class="button" disabled>6) Commit Delete</button>
+</div>
+<div id="log" style="font-family:monospace;white-space:pre-wrap;background:#111;padding:12px;border-radius:6px;color:#ddd;min-height:80px;"></div>
+<div style="margin-top:12px;background:#2a2a2a;border-radius:4px;height:10px;overflow:hidden;">
+  <div id="bar" style="height:100%;width:0%;background:#5cb85c;"></div>
+</div>
+<script>
+function csrftoken(){const m=document.cookie.match(/csrftoken=([^;]+)/);return m?m[1]:'';}
+async function call(path, body){
+  const resp = await fetch(path+(path.includes('?')?'&':'?')+'limit='+parseInt(document.getElementById('limit').value||'20',10),{
+    method:"POST",headers:{"X-CSRFToken":csrftoken()}
+  }); return resp.json();
+}
+function setBar(p){document.getElementById('bar').style.width=p+'%';}
+function append(msg){const el=document.getElementById('log');el.textContent+=msg+"\n";el.scrollTop=el.scrollHeight;}
+async function runStep(btn,nextBtn,url){btn.disabled=true;btn.textContent+=' …';setBar(10);
+  try{const res=await call(url);append('POST '+url+' → '+JSON.stringify(res));setBar(100);if(nextBtn)nextBtn.disabled=false;}
+  catch(e){append('ERROR '+url+' → '+e);setBar(0);btn.disabled=false;}
+  finally{setTimeout(()=>setBar(0),400);}
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  const b1=document.getElementById('btn1'),b2=document.getElementById('btn2'),b3=document.getElementById('btn3'),
+        b4=document.getElementById('btn4'),b5=document.getElementById('btn5'),b6=document.getElementById('btn6');
+  b1.addEventListener('click',()=>runStep(b1,b2,'/api/sync/discover'));
+  b2.addEventListener('click',()=>runStep(b2,b3,'/api/sync/download'));
+  b3.addEventListener('click',()=>runStep(b3,b4,'/api/sync/import'));
+  b4.addEventListener('click',()=>runStep(b4,b5,'/api/sync/verify'));
+  b5.addEventListener('click',()=>runStep(b5,b6,'/api/sync/mark-delete'));
+  b6.addEventListener('click',()=>runStep(b6,null,'/api/sync/commit-delete'));
+});
+</script>
+{% endblock %}

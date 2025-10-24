@@ -1,0 +1,44 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gmail Media Cleanup — Query</title>
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:2rem}
+.row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+input,select,button{padding:.5rem .6rem;font-size:14px}
+table{width:100%;border-collapse:collapse;margin-top:1rem;font-size:14px}
+th,td{border:1px solid #ddd;padding:.4rem .5rem} th{background:#f5f5f5;text-align:left}
+.badge{padding:.15rem .4rem;border-radius:.3rem;background:#eee;font-size:12px}
+</style></head><body>
+<h1>Gmail Media Cleanup — Query</h1>
+<div class="row">
+  <label>State:
+    <select id="state">
+      <option value="">(any)</option><option>DISCOVERED</option><option>DOWNLOADED</option>
+      <option>IMPORTED</option><option>VERIFIED</option><option>DELETE_PENDING</option><option>DELETED</option>
+    </select>
+  </label>
+  <label>Search: <input id="q" placeholder="name contains..."/></label>
+  <button onclick="load()">Search</button>
+  <button onclick="op('sync/discover')">Discover</button>
+  <button onclick="op('sync/download')">Download</button>
+  <button onclick="op('sync/import')">Import (copy)</button>
+  <button onclick="op('sync/verify')">Verify</button>
+  <button onclick="op('sync/mark-delete')">Mark Delete</button>
+  <button onclick="op('sync/commit-delete')">Commit Delete</button>
+</div>
+<table id="tbl"><thead><tr>
+  <th>ID</th><th>Name</th><th>MIME</th><th>State</th><th>Path</th><th>Imported</th><th>Error</th>
+</tr></thead><tbody></tbody></table>
+<script>
+async function load(){
+  const s=document.getElementById('state').value, q=document.getElementById('q').value;
+  const p=new URLSearchParams(); if(s)p.set('state',s); if(q)p.set('q',q);
+  const res=await fetch('/api/assets?'+p.toString()); const data=await res.json();
+  const tb=document.querySelector('#tbl tbody'); tb.innerHTML='';
+  data.forEach(r=>{const tr=document.createElement('tr'); tr.innerHTML=
+    `<td>${r.id}</td><td>${r.name}</td><td>${r.mime_type}</td>
+     <td><span class="badge">${r.state}</span></td><td>${r.download_path||''}</td>
+     <td>${r.imported_at||''}</td><td>${r.error||''}</td>`; tb.appendChild(tr);});
+}
+async function op(path){const res=await fetch('/api/'+path,{method:'POST'}); alert(JSON.stringify(await res.json(),null,2)); load();}
+load();
+</script></body></html>
