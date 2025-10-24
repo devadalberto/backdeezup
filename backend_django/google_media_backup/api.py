@@ -13,6 +13,7 @@ api = NinjaAPI(
     description=config('SWAGGER_DESCRIPTION', default=''),
     version=config('SWAGGER_VERSION', default='0.1.0'),
     docs_url="/docs",
+    openapi_extra={"servers": [{"url": "/"}]},
 )
 
 class AssetOut(Schema):

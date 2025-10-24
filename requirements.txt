@@ -1,5 +1,6 @@
 Django
 django-ninja
+django-cors-headers
 python-decouple
 cryptography
 google-api-python-client
