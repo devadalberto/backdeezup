@@ -1,9 +1,21 @@
 site_name: gmail_josevaldes_cleanup
-theme: { name: material, features: [navigation.instant, content.code.copy] }
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - content.code.copy
 nav:
   - Home: index.md
+  - Architecture & Handover: handover.md
   - API & Flows:
       - Endpoints: api.md
       - States & Deletion: states.md
   - Setup: setup.md
-markdown_extensions: [admonition, toc]
+markdown_extensions:
+  - admonition
+  - toc
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format

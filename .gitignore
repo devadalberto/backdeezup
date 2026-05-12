@@ -12,3 +12,6 @@ site/
 dist/
 .DS_Store
 setup*.sh
+graphify-out/cache/
+graphify-out/.rebuild.lock
+.claude/settings.local.json

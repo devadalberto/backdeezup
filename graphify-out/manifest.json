@@ -1,0 +1,126 @@
+{
+  "/home/saitama/backdeezup/backend_django/manage.py": {
+    "mtime": 1761291208.3902798,
+    "hash": "09ce28f22db4398409f377833475117f"
+  },
+  "/home/saitama/backdeezup/backend_django/google_media_backup/tests.py": {
+    "mtime": 1761291208.3902798,
+    "hash": "465b7e9f69bfd158c850cdfbc7306818"
+  },
+  "/home/saitama/backdeezup/backend_django/google_media_backup/__init__.py": {
+    "mtime": 1761291208.3902798,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "/home/saitama/backdeezup/backend_django/google_media_backup/models.py": {
+    "mtime": 1761291208.3902798,
+    "hash": "0ba9eb0da6458f84f20b4b3cd6842449"
+  },
+  "/home/saitama/backdeezup/backend_django/google_media_backup/admin_ops.py": {
+    "mtime": 1761291208.3902798,
+    "hash": "9adea64358edc6d3f20a5823ca82851c"
+  },
+  "/home/saitama/backdeezup/backend_django/google_media_backup/services_google.py": {
+    "mtime": 1761291208.3902798,
+    "hash": "a706f28f4bb6d98d9283d9e2c0c01376"
+  },
+  "/home/saitama/backdeezup/backend_django/google_media_backup/utils.py": {
+    "mtime": 1761291208.3902798,
+    "hash": "bbc3e43f2a15a7842ae641da4fe5b09d"
+  },
+  "/home/saitama/backdeezup/backend_django/google_media_backup/api.py": {
+    "mtime": 1761291208.3902798,
+    "hash": "e49b18acbb2da4c2309f5fe52c0e8d2f"
+  },
+  "/home/saitama/backdeezup/backend_django/google_media_backup/apps.py": {
+    "mtime": 1761291208.3902798,
+    "hash": "0130284209d123d9c8ae19b957fd1794"
+  },
+  "/home/saitama/backdeezup/backend_django/google_media_backup/views.py": {
+    "mtime": 1761291208.3902798,
+    "hash": "0f111d35a3b2ddf4ceaec3699aee0c52"
+  },
+  "/home/saitama/backdeezup/backend_django/google_media_backup/admin.py": {
+    "mtime": 1761291208.3902798,
+    "hash": "69b7e7c52b9635e28d99a17652e1a7d6"
+  },
+  "/home/saitama/backdeezup/backend_django/google_media_backup/migrations/__init__.py": {
+    "mtime": 1761291208.3902798,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "/home/saitama/backdeezup/backend_django/google_media_backup/migrations/0001_initial.py": {
+    "mtime": 1761291208.3902798,
+    "hash": "29ddd8d020fb46e43998f634b6546990"
+  },
+  "/home/saitama/backdeezup/backend_django/config/urls.py": {
+    "mtime": 1761291208.3902798,
+    "hash": "527904d3386489e9bf47b65dc689015a"
+  },
+  "/home/saitama/backdeezup/backend_django/config/asgi.py": {
+    "mtime": 1761291208.3892796,
+    "hash": "63d5777b090ac063ecd29c3dfa786ba5"
+  },
+  "/home/saitama/backdeezup/backend_django/config/__init__.py": {
+    "mtime": 1761291208.3892796,
+    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "/home/saitama/backdeezup/backend_django/config/wsgi.py": {
+    "mtime": 1761291208.3902798,
+    "hash": "412e3606d946f0fb4dbc98443c4cf8bb"
+  },
+  "/home/saitama/backdeezup/backend_django/config/settings.py": {
+    "mtime": 1761327072.1056826,
+    "hash": "fbce17dabb177c7f421db819d661d312"
+  },
+  "/home/saitama/backdeezup/docker-compose.yml": {
+    "mtime": 1761291208.3902798,
+    "hash": "27c3927f09d7dd405513e33521906a3c"
+  },
+  "/home/saitama/backdeezup/requirements.txt": {
+    "mtime": 1761291208.3912797,
+    "hash": "5dedc2d88e3c9225b12c1d6514839328"
+  },
+  "/home/saitama/backdeezup/mkdocs.yml": {
+    "mtime": 1761291208.3902798,
+    "hash": "030e9a1a59315e80b8feba09afc7aaa1"
+  },
+  "/home/saitama/backdeezup/AGENTS.md": {
+    "mtime": 1778574404.3235407,
+    "hash": "da79aa9343cd2b362206f03762160abc"
+  },
+  "/home/saitama/backdeezup/GEMINI.md": {
+    "mtime": 1778574404.2165415,
+    "hash": "da79aa9343cd2b362206f03762160abc"
+  },
+  "/home/saitama/backdeezup/README.md": {
+    "mtime": 1761290551.1828132,
+    "hash": "31c5f25e25260cb3d1642ef336cfe5cd"
+  },
+  "/home/saitama/backdeezup/CLAUDE.md": {
+    "mtime": 1778573885.0845447,
+    "hash": "da79aa9343cd2b362206f03762160abc"
+  },
+  "/home/saitama/backdeezup/docs/api.md": {
+    "mtime": 1761291208.3902798,
+    "hash": "bfb4dffec928f4e332a1ac7e7b524694"
+  },
+  "/home/saitama/backdeezup/docs/states.md": {
+    "mtime": 1761291208.3902798,
+    "hash": "6b3428719795440a93973499f55772ec"
+  },
+  "/home/saitama/backdeezup/docs/index.md": {
+    "mtime": 1761291208.3902798,
+    "hash": "fa342c439fe56f1bf225c267b5e053e5"
+  },
+  "/home/saitama/backdeezup/docs/setup.md": {
+    "mtime": 1761291208.3902798,
+    "hash": "65b6256815f1e2938b9f050f5e25b7ec"
+  },
+  "/home/saitama/backdeezup/backend_django/google_media_backup/templates/query.html": {
+    "mtime": 1761291208.3902798,
+    "hash": "8e65b8466b6e080df6df24f123577281"
+  },
+  "/home/saitama/backdeezup/backend_django/google_media_backup/templates/admin/gmb_ops.html": {
+    "mtime": 1761291208.3902798,
+    "hash": "655c7f8a6badd1cb0cf1c50ff2d8e776"
+  }
+}

@@ -1,0 +1,1853 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "manage.py",
+      "file_type": "code",
+      "source_file": "backend_django/manage.py",
+      "source_location": "L1",
+      "id": "backend_django_manage_py",
+      "community": 3,
+      "norm_label": "manage.py"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "backend_django/manage.py",
+      "source_location": "L7",
+      "id": "backend_django_manage_main",
+      "community": 3,
+      "norm_label": "main()"
+    },
+    {
+      "label": "Run administrative tasks.",
+      "file_type": "rationale",
+      "source_file": "backend_django/manage.py",
+      "source_location": "L8",
+      "id": "backend_django_manage_rationale_8",
+      "community": 3,
+      "norm_label": "run administrative tasks."
+    },
+    {
+      "label": "tests.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/tests.py",
+      "source_location": "L1",
+      "id": "backend_django_google_media_backup_tests_py",
+      "community": 18,
+      "norm_label": "tests.py"
+    },
+    {
+      "label": "__init__.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/__init__.py",
+      "source_location": "L1",
+      "id": "backend_django_google_media_backup_init_py",
+      "community": 19,
+      "norm_label": "__init__.py"
+    },
+    {
+      "label": "models.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/models.py",
+      "source_location": "L1",
+      "id": "backend_django_google_media_backup_models_py",
+      "community": 2,
+      "norm_label": "models.py"
+    },
+    {
+      "label": "MediaItem",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/models.py",
+      "source_location": "L4",
+      "id": "google_media_backup_models_mediaitem",
+      "community": 2,
+      "norm_label": "mediaitem"
+    },
+    {
+      "label": "DriveAsset",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/models.py",
+      "source_location": "L9",
+      "id": "google_media_backup_models_driveasset",
+      "community": 2,
+      "norm_label": "driveasset"
+    },
+    {
+      "label": "RunLog",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/models.py",
+      "source_location": "L29",
+      "id": "google_media_backup_models_runlog",
+      "community": 2,
+      "norm_label": "runlog"
+    },
+    {
+      "label": "admin_ops.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/admin_ops.py",
+      "source_location": "L1",
+      "id": "backend_django_google_media_backup_admin_ops_py",
+      "community": 5,
+      "norm_label": "admin_ops.py"
+    },
+    {
+      "label": "admin_ops_view()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/admin_ops.py",
+      "source_location": "L7",
+      "id": "google_media_backup_admin_ops_admin_ops_view",
+      "community": 5,
+      "norm_label": "admin_ops_view()"
+    },
+    {
+      "label": "services_google.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L1",
+      "id": "backend_django_google_media_backup_services_google_py",
+      "community": 0,
+      "norm_label": "services_google.py"
+    },
+    {
+      "label": "_load_creds()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L21",
+      "id": "google_media_backup_services_google_load_creds",
+      "community": 0,
+      "norm_label": "_load_creds()"
+    },
+    {
+      "label": "_save_creds()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L30",
+      "id": "google_media_backup_services_google_save_creds",
+      "community": 0,
+      "norm_label": "_save_creds()"
+    },
+    {
+      "label": "start_oauth_local()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L35",
+      "id": "google_media_backup_services_google_start_oauth_local",
+      "community": 0,
+      "norm_label": "start_oauth_local()"
+    },
+    {
+      "label": "drive_service()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L42",
+      "id": "google_media_backup_services_google_drive_service",
+      "community": 0,
+      "norm_label": "drive_service()"
+    },
+    {
+      "label": "list_media_files()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L49",
+      "id": "google_media_backup_services_google_list_media_files",
+      "community": 0,
+      "norm_label": "list_media_files()"
+    },
+    {
+      "label": "photos_service()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L89",
+      "id": "google_media_backup_services_google_photos_service",
+      "community": 0,
+      "norm_label": "photos_service()"
+    },
+    {
+      "label": "list_photos_items()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L100",
+      "id": "google_media_backup_services_google_list_photos_items",
+      "community": 0,
+      "norm_label": "list_photos_items()"
+    },
+    {
+      "label": "list_common_files()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L139",
+      "id": "google_media_backup_services_google_list_common_files",
+      "community": 0,
+      "norm_label": "list_common_files()"
+    },
+    {
+      "label": "download_file()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L164",
+      "id": "google_media_backup_services_google_download_file",
+      "community": 0,
+      "norm_label": "download_file()"
+    },
+    {
+      "label": "trash_or_delete()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L180",
+      "id": "google_media_backup_services_google_trash_or_delete",
+      "community": 0,
+      "norm_label": "trash_or_delete()"
+    },
+    {
+      "label": "Return one page of media-like files (images/videos or shortcuts to them).     Lo",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L50",
+      "id": "google_media_backup_services_google_rationale_50",
+      "community": 0,
+      "norm_label": "return one page of media-like files (images/videos or shortcuts to them).     lo"
+    },
+    {
+      "label": "Google Photos Library API client.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L90",
+      "id": "google_media_backup_services_google_rationale_90",
+      "community": 0,
+      "norm_label": "google photos library api client."
+    },
+    {
+      "label": "Return mediaItems from Google Photos Library.     Note: these are NOT Drive file",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L101",
+      "id": "google_media_backup_services_google_rationale_101",
+      "community": 0,
+      "norm_label": "return mediaitems from google photos library.     note: these are not drive file"
+    },
+    {
+      "label": "Return one page of commonly-used document types in Drive.     Searches My Drive",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L140",
+      "id": "google_media_backup_services_google_rationale_140",
+      "community": 0,
+      "norm_label": "return one page of commonly-used document types in drive.     searches my drive"
+    },
+    {
+      "label": "utils.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/utils.py",
+      "source_location": "L1",
+      "id": "backend_django_google_media_backup_utils_py",
+      "community": 1,
+      "norm_label": "utils.py"
+    },
+    {
+      "label": "sha256_file()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/utils.py",
+      "source_location": "L8",
+      "id": "google_media_backup_utils_sha256_file",
+      "community": 1,
+      "norm_label": "sha256_file()"
+    },
+    {
+      "label": "deterministic_path()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/utils.py",
+      "source_location": "L15",
+      "id": "google_media_backup_utils_deterministic_path",
+      "community": 1,
+      "norm_label": "deterministic_path()"
+    },
+    {
+      "label": "copy_into_media()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/utils.py",
+      "source_location": "L23",
+      "id": "google_media_backup_utils_copy_into_media",
+      "community": 1,
+      "norm_label": "copy_into_media()"
+    },
+    {
+      "label": "get_fernet()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/utils.py",
+      "source_location": "L30",
+      "id": "google_media_backup_utils_get_fernet",
+      "community": 0,
+      "norm_label": "get_fernet()"
+    },
+    {
+      "label": "api.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L1",
+      "id": "backend_django_google_media_backup_api_py",
+      "community": 1,
+      "norm_label": "api.py"
+    },
+    {
+      "label": "AssetOut",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L18",
+      "id": "google_media_backup_api_assetout",
+      "community": 2,
+      "norm_label": "assetout"
+    },
+    {
+      "label": "Schema",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "id": "schema",
+      "community": 2,
+      "norm_label": "schema"
+    },
+    {
+      "label": "FilterIn",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L24",
+      "id": "google_media_backup_api_filterin",
+      "community": 2,
+      "norm_label": "filterin"
+    },
+    {
+      "label": "list_assets()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L29",
+      "id": "google_media_backup_api_list_assets",
+      "community": 1,
+      "norm_label": "list_assets()"
+    },
+    {
+      "label": "auth_connect()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L38",
+      "id": "google_media_backup_api_auth_connect",
+      "community": 1,
+      "norm_label": "auth_connect()"
+    },
+    {
+      "label": "sync_discover()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L42",
+      "id": "google_media_backup_api_sync_discover",
+      "community": 0,
+      "norm_label": "sync_discover()"
+    },
+    {
+      "label": "sync_discover_files()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L80",
+      "id": "google_media_backup_api_sync_discover_files",
+      "community": 1,
+      "norm_label": "sync_discover_files()"
+    },
+    {
+      "label": "sync_discover_photos()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L113",
+      "id": "google_media_backup_api_sync_discover_photos",
+      "community": 1,
+      "norm_label": "sync_discover_photos()"
+    },
+    {
+      "label": "sync_download()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L154",
+      "id": "google_media_backup_api_sync_download",
+      "community": 1,
+      "norm_label": "sync_download()"
+    },
+    {
+      "label": "sync_import()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L171",
+      "id": "google_media_backup_api_sync_import",
+      "community": 1,
+      "norm_label": "sync_import()"
+    },
+    {
+      "label": "sync_verify()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L187",
+      "id": "google_media_backup_api_sync_verify",
+      "community": 1,
+      "norm_label": "sync_verify()"
+    },
+    {
+      "label": "sync_mark_delete()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L199",
+      "id": "google_media_backup_api_sync_mark_delete",
+      "community": 1,
+      "norm_label": "sync_mark_delete()"
+    },
+    {
+      "label": "sync_commit_delete()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L204",
+      "id": "google_media_backup_api_sync_commit_delete",
+      "community": 1,
+      "norm_label": "sync_commit_delete()"
+    },
+    {
+      "label": "Discover commonly-used document types in Drive (pdf, office, csv, archives, iWor",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L81",
+      "id": "google_media_backup_api_rationale_81",
+      "community": 1,
+      "norm_label": "discover commonly-used document types in drive (pdf, office, csv, archives, iwor"
+    },
+    {
+      "label": "Discover media items from Google Photos Library.     NOTE: These are NOT Drive f",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L114",
+      "id": "google_media_backup_api_rationale_114",
+      "community": 1,
+      "norm_label": "discover media items from google photos library.     note: these are not drive f"
+    },
+    {
+      "label": "apps.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/apps.py",
+      "source_location": "L1",
+      "id": "backend_django_google_media_backup_apps_py",
+      "community": 4,
+      "norm_label": "apps.py"
+    },
+    {
+      "label": "GoogleMediaBackupConfig",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/apps.py",
+      "source_location": "L2",
+      "id": "google_media_backup_apps_googlemediabackupconfig",
+      "community": 4,
+      "norm_label": "googlemediabackupconfig"
+    },
+    {
+      "label": "AppConfig",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "id": "appconfig",
+      "community": 4,
+      "norm_label": "appconfig"
+    },
+    {
+      "label": "views.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/views.py",
+      "source_location": "L1",
+      "id": "backend_django_google_media_backup_views_py",
+      "community": 6,
+      "norm_label": "views.py"
+    },
+    {
+      "label": "query_page()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/views.py",
+      "source_location": "L2",
+      "id": "google_media_backup_views_query_page",
+      "community": 6,
+      "norm_label": "query_page()"
+    },
+    {
+      "label": "admin.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L1",
+      "id": "backend_django_google_media_backup_admin_py",
+      "community": 2,
+      "norm_label": "admin.py"
+    },
+    {
+      "label": "ops_link()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L11",
+      "id": "google_media_backup_admin_ops_link",
+      "community": 2,
+      "norm_label": "ops_link()"
+    },
+    {
+      "label": "MediaItemAdmin",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L16",
+      "id": "google_media_backup_admin_mediaitemadmin",
+      "community": 2,
+      "norm_label": "mediaitemadmin"
+    },
+    {
+      "label": "RunLogAdmin",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L20",
+      "id": "google_media_backup_admin_runlogadmin",
+      "community": 2,
+      "norm_label": "runlogadmin"
+    },
+    {
+      "label": "DriveAssetAdmin",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L24",
+      "id": "google_media_backup_admin_driveassetadmin",
+      "community": 2,
+      "norm_label": "driveassetadmin"
+    },
+    {
+      "label": "action_mark_delete()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L31",
+      "id": "google_media_backup_admin_action_mark_delete",
+      "community": 2,
+      "norm_label": "action_mark_delete()"
+    },
+    {
+      "label": "action_commit_delete()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L35",
+      "id": "google_media_backup_admin_action_commit_delete",
+      "community": 2,
+      "norm_label": "action_commit_delete()"
+    },
+    {
+      "label": "each_context()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L40",
+      "id": "google_media_backup_admin_each_context",
+      "community": 2,
+      "norm_label": "each_context()"
+    },
+    {
+      "label": "__init__.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/migrations/__init__.py",
+      "source_location": "L1",
+      "id": "backend_django_google_media_backup_migrations_init_py",
+      "community": 20,
+      "norm_label": "__init__.py"
+    },
+    {
+      "label": "0001_initial.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/migrations/0001_initial.py",
+      "source_location": "L1",
+      "id": "backend_django_google_media_backup_migrations_0001_initial_py",
+      "community": 7,
+      "norm_label": "0001_initial.py"
+    },
+    {
+      "label": "Migration",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/migrations/0001_initial.py",
+      "source_location": "L8",
+      "id": "migrations_0001_initial_migration",
+      "community": 7,
+      "norm_label": "migration"
+    },
+    {
+      "label": "urls.py",
+      "file_type": "code",
+      "source_file": "backend_django/config/urls.py",
+      "source_location": "L1",
+      "id": "backend_django_config_urls_py",
+      "community": 21,
+      "norm_label": "urls.py"
+    },
+    {
+      "label": "asgi.py",
+      "file_type": "code",
+      "source_file": "backend_django/config/asgi.py",
+      "source_location": "L1",
+      "id": "backend_django_config_asgi_py",
+      "community": 8,
+      "norm_label": "asgi.py"
+    },
+    {
+      "label": "ASGI config for config project.  It exposes the ASGI callable as a module-level",
+      "file_type": "rationale",
+      "source_file": "backend_django/config/asgi.py",
+      "source_location": "L1",
+      "id": "config_asgi_rationale_1",
+      "community": 8,
+      "norm_label": "asgi config for config project.  it exposes the asgi callable as a module-level"
+    },
+    {
+      "label": "__init__.py",
+      "file_type": "code",
+      "source_file": "backend_django/config/__init__.py",
+      "source_location": "L1",
+      "id": "backend_django_config_init_py",
+      "community": 22,
+      "norm_label": "__init__.py"
+    },
+    {
+      "label": "wsgi.py",
+      "file_type": "code",
+      "source_file": "backend_django/config/wsgi.py",
+      "source_location": "L1",
+      "id": "backend_django_config_wsgi_py",
+      "community": 9,
+      "norm_label": "wsgi.py"
+    },
+    {
+      "label": "WSGI config for config project.  It exposes the WSGI callable as a module-level",
+      "file_type": "rationale",
+      "source_file": "backend_django/config/wsgi.py",
+      "source_location": "L1",
+      "id": "config_wsgi_rationale_1",
+      "community": 9,
+      "norm_label": "wsgi config for config project.  it exposes the wsgi callable as a module-level"
+    },
+    {
+      "label": "settings.py",
+      "file_type": "code",
+      "source_file": "backend_django/config/settings.py",
+      "source_location": "L1",
+      "id": "backend_django_config_settings_py",
+      "community": 23,
+      "norm_label": "settings.py"
+    },
+    {
+      "label": "AGENTS.md",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L1",
+      "id": "agents_md",
+      "community": 10,
+      "norm_label": "agents.md"
+    },
+    {
+      "label": "graphify",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L1",
+      "id": "backdeezup_agents_graphify",
+      "community": 10,
+      "norm_label": "graphify"
+    },
+    {
+      "label": "GEMINI.md",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L1",
+      "id": "gemini_md",
+      "community": 11,
+      "norm_label": "gemini.md"
+    },
+    {
+      "label": "graphify",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L1",
+      "id": "backdeezup_gemini_graphify",
+      "community": 11,
+      "norm_label": "graphify"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "id": "readme_md",
+      "community": 12,
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "backdeezup",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "id": "backdeezup_readme_backdeezup",
+      "community": 12,
+      "norm_label": "backdeezup"
+    },
+    {
+      "label": "CLAUDE.md",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L1",
+      "id": "claude_md",
+      "community": 13,
+      "norm_label": "claude.md"
+    },
+    {
+      "label": "graphify",
+      "file_type": "document",
+      "source_file": "CLAUDE.md",
+      "source_location": "L1",
+      "id": "backdeezup_claude_graphify",
+      "community": 13,
+      "norm_label": "graphify"
+    },
+    {
+      "label": "api.md",
+      "file_type": "document",
+      "source_file": "docs/api.md",
+      "source_location": "L1",
+      "id": "docs_api_md",
+      "community": 14,
+      "norm_label": "api.md"
+    },
+    {
+      "label": "API (base: /api)",
+      "file_type": "document",
+      "source_file": "docs/api.md",
+      "source_location": "L1",
+      "id": "docs_api_api_base_api",
+      "community": 14,
+      "norm_label": "api (base: /api)"
+    },
+    {
+      "label": "states.md",
+      "file_type": "document",
+      "source_file": "docs/states.md",
+      "source_location": "L1",
+      "id": "docs_states_md",
+      "community": 15,
+      "norm_label": "states.md"
+    },
+    {
+      "label": "States: DISCOVERED \u2192 DOWNLOADED \u2192 IMPORTED \u2192 VERIFIED \u2192 DELETE_PENDING \u2192 DELETED",
+      "file_type": "document",
+      "source_file": "docs/states.md",
+      "source_location": "L1",
+      "id": "docs_states_states_discovered_downloaded_imported_verified_delete_pending_deleted",
+      "community": 15,
+      "norm_label": "states: discovered \u2192 downloaded \u2192 imported \u2192 verified \u2192 delete_pending \u2192 deleted"
+    },
+    {
+      "label": "index.md",
+      "file_type": "document",
+      "source_file": "docs/index.md",
+      "source_location": "L1",
+      "id": "docs_index_md",
+      "community": 16,
+      "norm_label": "index.md"
+    },
+    {
+      "label": "gmail_josevaldes_cleanup",
+      "file_type": "document",
+      "source_file": "docs/index.md",
+      "source_location": "L1",
+      "id": "docs_index_gmail_josevaldes_cleanup",
+      "community": 16,
+      "norm_label": "gmail_josevaldes_cleanup"
+    },
+    {
+      "label": "setup.md",
+      "file_type": "document",
+      "source_file": "docs/setup.md",
+      "source_location": "L1",
+      "id": "docs_setup_md",
+      "community": 17,
+      "norm_label": "setup.md"
+    },
+    {
+      "label": "Setup",
+      "file_type": "document",
+      "source_file": "docs/setup.md",
+      "source_location": "L1",
+      "id": "docs_setup_setup",
+      "community": 17,
+      "norm_label": "setup"
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/manage.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "backend_django_manage_py",
+      "target": "backend_django_manage_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/manage.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "backend_django_manage_rationale_8",
+      "target": "backend_django_manage_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/models.py",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_models_py",
+      "target": "google_media_backup_models_mediaitem",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/models.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_models_py",
+      "target": "google_media_backup_models_driveasset",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/models.py",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_models_py",
+      "target": "google_media_backup_models_runlog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_api_py",
+      "target": "backend_django_google_media_backup_models_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_admin_py",
+      "target": "backend_django_google_media_backup_models_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L6",
+      "weight": 0.8,
+      "source": "google_media_backup_api_assetout",
+      "target": "google_media_backup_models_mediaitem",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L6",
+      "weight": 0.8,
+      "source": "google_media_backup_api_filterin",
+      "target": "google_media_backup_models_mediaitem",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L5",
+      "weight": 0.8,
+      "source": "google_media_backup_admin_mediaitemadmin",
+      "target": "google_media_backup_models_mediaitem",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L5",
+      "weight": 0.8,
+      "source": "google_media_backup_admin_runlogadmin",
+      "target": "google_media_backup_models_mediaitem",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L5",
+      "weight": 0.8,
+      "source": "google_media_backup_admin_driveassetadmin",
+      "target": "google_media_backup_models_mediaitem",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L6",
+      "weight": 0.8,
+      "source": "google_media_backup_api_assetout",
+      "target": "google_media_backup_models_driveasset",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L6",
+      "weight": 0.8,
+      "source": "google_media_backup_api_filterin",
+      "target": "google_media_backup_models_driveasset",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L5",
+      "weight": 0.8,
+      "source": "google_media_backup_admin_mediaitemadmin",
+      "target": "google_media_backup_models_driveasset",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L5",
+      "weight": 0.8,
+      "source": "google_media_backup_admin_runlogadmin",
+      "target": "google_media_backup_models_driveasset",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L5",
+      "weight": 0.8,
+      "source": "google_media_backup_admin_driveassetadmin",
+      "target": "google_media_backup_models_driveasset",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L6",
+      "weight": 0.8,
+      "source": "google_media_backup_api_assetout",
+      "target": "google_media_backup_models_runlog",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L6",
+      "weight": 0.8,
+      "source": "google_media_backup_api_filterin",
+      "target": "google_media_backup_models_runlog",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L5",
+      "weight": 0.8,
+      "source": "google_media_backup_admin_mediaitemadmin",
+      "target": "google_media_backup_models_runlog",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L5",
+      "weight": 0.8,
+      "source": "google_media_backup_admin_runlogadmin",
+      "target": "google_media_backup_models_runlog",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L5",
+      "weight": 0.8,
+      "source": "google_media_backup_admin_driveassetadmin",
+      "target": "google_media_backup_models_runlog",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/admin_ops.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_admin_ops_py",
+      "target": "google_media_backup_admin_ops_admin_ops_view",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_services_google_py",
+      "target": "backend_django_google_media_backup_utils_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L21",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_services_google_py",
+      "target": "google_media_backup_services_google_load_creds",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_services_google_py",
+      "target": "google_media_backup_services_google_save_creds",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_services_google_py",
+      "target": "google_media_backup_services_google_start_oauth_local",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_services_google_py",
+      "target": "google_media_backup_services_google_drive_service",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L49",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_services_google_py",
+      "target": "google_media_backup_services_google_list_media_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L89",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_services_google_py",
+      "target": "google_media_backup_services_google_photos_service",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L100",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_services_google_py",
+      "target": "google_media_backup_services_google_list_photos_items",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L139",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_services_google_py",
+      "target": "google_media_backup_services_google_list_common_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L164",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_services_google_py",
+      "target": "google_media_backup_services_google_download_file",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L180",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_services_google_py",
+      "target": "google_media_backup_services_google_trash_or_delete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_api_py",
+      "target": "backend_django_google_media_backup_services_google_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_drive_service",
+      "target": "google_media_backup_services_google_load_creds",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_photos_service",
+      "target": "google_media_backup_services_google_load_creds",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_load_creds",
+      "target": "google_media_backup_utils_get_fernet"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_start_oauth_local",
+      "target": "google_media_backup_services_google_save_creds",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_drive_service",
+      "target": "google_media_backup_services_google_save_creds",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L95",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_photos_service",
+      "target": "google_media_backup_services_google_save_creds",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L32",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_save_creds",
+      "target": "google_media_backup_utils_get_fernet"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "google_media_backup_api_auth_connect",
+      "target": "google_media_backup_services_google_start_oauth_local"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L54",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_list_media_files",
+      "target": "google_media_backup_services_google_drive_service",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L144",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_list_common_files",
+      "target": "google_media_backup_services_google_drive_service",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L165",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_download_file",
+      "target": "google_media_backup_services_google_drive_service",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L181",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_trash_or_delete",
+      "target": "google_media_backup_services_google_drive_service",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_rationale_50",
+      "target": "google_media_backup_services_google_list_media_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L48",
+      "weight": 1.0,
+      "source": "google_media_backup_api_sync_discover",
+      "target": "google_media_backup_services_google_list_media_files"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L105",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_list_photos_items",
+      "target": "google_media_backup_services_google_photos_service",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L90",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_rationale_90",
+      "target": "google_media_backup_services_google_photos_service",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_rationale_101",
+      "target": "google_media_backup_services_google_list_photos_items",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L124",
+      "weight": 1.0,
+      "source": "google_media_backup_api_sync_discover_photos",
+      "target": "google_media_backup_services_google_list_photos_items"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L140",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_rationale_140",
+      "target": "google_media_backup_services_google_list_common_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L89",
+      "weight": 1.0,
+      "source": "google_media_backup_api_sync_discover_files",
+      "target": "google_media_backup_services_google_list_common_files"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L162",
+      "weight": 1.0,
+      "source": "google_media_backup_api_sync_download",
+      "target": "google_media_backup_services_google_download_file"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L210",
+      "weight": 1.0,
+      "source": "google_media_backup_api_sync_commit_delete",
+      "target": "google_media_backup_services_google_trash_or_delete"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/utils.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_utils_py",
+      "target": "google_media_backup_utils_sha256_file",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/utils.py",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_utils_py",
+      "target": "google_media_backup_utils_deterministic_path",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/utils.py",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_utils_py",
+      "target": "google_media_backup_utils_copy_into_media",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/utils.py",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_utils_py",
+      "target": "google_media_backup_utils_get_fernet",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_api_py",
+      "target": "backend_django_google_media_backup_utils_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L177",
+      "weight": 1.0,
+      "source": "google_media_backup_api_sync_import",
+      "target": "google_media_backup_utils_sha256_file"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L160",
+      "weight": 1.0,
+      "source": "google_media_backup_api_sync_download",
+      "target": "google_media_backup_utils_deterministic_path"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L179",
+      "weight": 1.0,
+      "source": "google_media_backup_api_sync_import",
+      "target": "google_media_backup_utils_copy_into_media"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_api_py",
+      "target": "google_media_backup_api_assetout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_api_py",
+      "target": "google_media_backup_api_filterin",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_api_py",
+      "target": "google_media_backup_api_list_assets",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_api_py",
+      "target": "google_media_backup_api_auth_connect",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_api_py",
+      "target": "google_media_backup_api_sync_discover",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_api_py",
+      "target": "google_media_backup_api_sync_discover_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L113",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_api_py",
+      "target": "google_media_backup_api_sync_discover_photos",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L154",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_api_py",
+      "target": "google_media_backup_api_sync_download",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L171",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_api_py",
+      "target": "google_media_backup_api_sync_import",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L187",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_api_py",
+      "target": "google_media_backup_api_sync_verify",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L199",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_api_py",
+      "target": "google_media_backup_api_sync_mark_delete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L204",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_api_py",
+      "target": "google_media_backup_api_sync_commit_delete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "google_media_backup_api_assetout",
+      "target": "schema",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "google_media_backup_api_list_assets",
+      "target": "google_media_backup_api_assetout",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "google_media_backup_api_filterin",
+      "target": "schema",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L81",
+      "weight": 1.0,
+      "source": "google_media_backup_api_rationale_81",
+      "target": "google_media_backup_api_sync_discover_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/api.py",
+      "source_location": "L114",
+      "weight": 1.0,
+      "source": "google_media_backup_api_rationale_114",
+      "target": "google_media_backup_api_sync_discover_photos",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/apps.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_apps_py",
+      "target": "google_media_backup_apps_googlemediabackupconfig",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/apps.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "google_media_backup_apps_googlemediabackupconfig",
+      "target": "appconfig",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/views.py",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_views_py",
+      "target": "google_media_backup_views_query_page",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_admin_py",
+      "target": "google_media_backup_admin_ops_link",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_admin_py",
+      "target": "google_media_backup_admin_mediaitemadmin",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_admin_py",
+      "target": "google_media_backup_admin_runlogadmin",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_admin_py",
+      "target": "google_media_backup_admin_driveassetadmin",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_admin_py",
+      "target": "google_media_backup_admin_action_mark_delete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_admin_py",
+      "target": "google_media_backup_admin_action_commit_delete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_admin_py",
+      "target": "google_media_backup_admin_each_context",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/admin.py",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "google_media_backup_admin_each_context",
+      "target": "google_media_backup_admin_ops_link",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/migrations/0001_initial.py",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_migrations_0001_initial_py",
+      "target": "migrations_0001_initial_migration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/config/asgi.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "config_asgi_rationale_1",
+      "target": "backend_django_config_asgi_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/config/wsgi.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "config_wsgi_rationale_1",
+      "target": "backend_django_config_wsgi_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "agents_md",
+      "target": "backdeezup_agents_graphify",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "gemini_md",
+      "target": "backdeezup_gemini_graphify",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "readme_md",
+      "target": "backdeezup_readme_backdeezup",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CLAUDE.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "claude_md",
+      "target": "backdeezup_claude_graphify",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/api.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "docs_api_md",
+      "target": "docs_api_api_base_api",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/states.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "docs_states_md",
+      "target": "docs_states_states_discovered_downloaded_imported_verified_delete_pending_deleted",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/index.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "docs_index_md",
+      "target": "docs_index_gmail_josevaldes_cleanup",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/setup.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "docs_setup_md",
+      "target": "docs_setup_setup",
+      "confidence_score": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "built_at_commit": "b8ed1fb1a111a30a6282185a810fbb995dc72557"
+}
