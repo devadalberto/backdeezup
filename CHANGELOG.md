@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-13
+
+### Added
+- **CI workflow** (`.github/workflows/ci.yml`) — runs on every push and PR to main:
+  - Django system check + test suite (uv, Python 3.12, sqlite)
+  - Playwright smoke test: confirms Swagger UI and Admin login load on localhost:8844
+  - Uses `astral-sh/setup-uv` for fast dependency install
+- **Playwright 1.59** added as a project dependency — headless Chromium installed and smoke-tested on WINWEB01
+
+### Fixed
+- All remaining broken Mermaid diagrams in `shared_context.md` — removed `\n` in node labels and Unicode arrows
+- `gh-pages.yml` — added `enablement: true` to `configure-pages` step to auto-enable GitHub Pages (fixes all prior deploy failures)
+
+### Changed
+- `shared_context.md` — updated Playwright status to installed/working, added CI workflow reference, noted GitHub Pages manual activation requirement, corrected WSL status
+
 ## [0.3.0] - 2026-05-13
 
 ### Added

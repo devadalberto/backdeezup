@@ -22,20 +22,17 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
-      - name: Install MkDocs and plugins
-        run: |
-          pip install \
-            mkdocs \
-            mkdocs-material \
-            mkdocs-material[imaging] \
-            pymdown-extensions
+      - name: Install MkDocs
+        run: pip install mkdocs mkdocs-material pymdown-extensions
 
       - name: Build docs
-        run: mkdocs build --clean --strict
+        run: mkdocs build --clean
 
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:

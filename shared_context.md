@@ -21,36 +21,31 @@
 
 ```mermaid
 flowchart LR
-    GD[(Google Drive\n/ Photos)]
-    API[Django-Ninja\nAPI]
-    DB[(Database\nDriveAsset · MediaItem · RunLog)]
-    FS[Local Storage\nmedia/imported/]
-    AD[Django Admin\n+ Ops Console]
+    GD[(Google Drive / Photos)]
+    API[Django-Ninja API]
+    DB[(Database)]
+    FS[Local Storage]
+    AD[Django Admin]
 
-    GD -->|OAuth + Drive v3\nPhotos Library API| API
+    GD -->|OAuth + Drive v3| API
     API -->|state transitions| DB
-    API -->|binary download + SHA-256 copy| FS
-    AD -->|manage & monitor| DB
+    API -->|binary download + SHA-256| FS
+    AD -->|manage and monitor| DB
 ```
 
 ### State machine
 
 ```mermaid
 stateDiagram-v2
-    [*] --> DISCOVERED : /sync/discover\n/sync/discover-files\n/sync/discover-photos
+    [*] --> DISCOVERED
+    DISCOVERED --> DOWNLOADED
+    DOWNLOADED --> IMPORTED
+    IMPORTED --> VERIFIED
+    VERIFIED --> DELETE_PENDING
+    DELETE_PENDING --> DELETED
 
-    DISCOVERED --> DOWNLOADED : /sync/download\n(Drive → local disk)
-
-    DOWNLOADED --> IMPORTED : /sync/import\n(SHA-256 + copy to media/imported/\ncreates MediaItem)
-
-    IMPORTED --> VERIFIED : /sync/verify\n(proof 1: file on disk\nproof 2: MediaItem in DB)
-
-    VERIFIED --> DELETE_PENDING : /sync/mark-delete
-
-    DELETE_PENDING --> DELETED : /sync/commit-delete\n(retention guard: MIN_RETENTION_DAYS)\n(mode: trash | hard)
-
-    DISCOVERED --> DISCOVERED : error → retry
-    DOWNLOADED --> DOWNLOADED : error → retry
+    DISCOVERED --> DISCOVERED : download error, retry
+    DOWNLOADED --> DOWNLOADED : import error, retry
 ```
 
 ### Data model (ER)
@@ -73,20 +68,20 @@ erDiagram
         datetime last_attempt_at
     }
     MediaItem {
-        int      id       PK
-        string   sha256   "unique dedup key"
-        file     file     "media/imported/<sha[:2]>/<sha>.ext"
+        int      id         PK
+        string   sha256
+        string   file
         datetime created_at
     }
     RunLog {
-        string   run_id      PK
-        string   status      "RUNNING | OK | ERROR"
+        string   run_id     PK
+        string   status
         json     totals
         json     error_log
         datetime started_at
         datetime finished_at
     }
-    DriveAsset }o--|| MediaItem : "media_item (SET NULL)"
+    DriveAsset }o--|| MediaItem : "media_item SET NULL"
 ```
 
 ### Request/response sequence
@@ -94,8 +89,8 @@ erDiagram
 ```mermaid
 sequenceDiagram
     participant C as Client
-    participant A as Django-Ninja API
-    participant G as Google API
+    participant A as API
+    participant G as Google
     participant DB as Database
     participant FS as File System
 
@@ -103,42 +98,42 @@ sequenceDiagram
     A->>G: InstalledAppFlow OAuth
     G-->>A: credentials
     A->>FS: Fernet-encrypted token saved
-    A-->>C: "OAuth completed"
+    A-->>C: OAuth completed
 
     C->>A: POST /sync/discover
     A->>G: Drive files().list
     G-->>A: files + nextPageToken
-    A->>DB: DriveAsset.get_or_create → DISCOVERED
-    A-->>C: {discovered: N}
+    A->>DB: DriveAsset get_or_create DISCOVERED
+    A-->>C: discovered N
 
     C->>A: POST /sync/download
     A->>G: files().get_media
     G-->>A: binary stream
-    A->>FS: write .part → rename
-    A->>DB: state = DOWNLOADED
-    A-->>C: {downloaded: N}
+    A->>FS: write .part then rename
+    A->>DB: state DOWNLOADED
+    A-->>C: downloaded N
 
     C->>A: POST /sync/import
-    A->>FS: sha256_file() + copy_into_media()
-    A->>DB: MediaItem.get_or_create(sha256)
-    A->>DB: DriveAsset.media_item=FK, state=IMPORTED
-    A-->>C: {imported: N}
+    A->>FS: sha256_file + copy_into_media
+    A->>DB: MediaItem get_or_create by sha256
+    A->>DB: DriveAsset state IMPORTED
+    A-->>C: imported N
 
     C->>A: POST /sync/verify
-    A->>FS: os.path.exists(download_path)
-    A->>DB: MediaItem.objects.filter(id).exists()
-    A->>DB: state = VERIFIED
-    A-->>C: {verified: N}
+    A->>FS: os.path.exists proof 1
+    A->>DB: MediaItem.exists proof 2
+    A->>DB: state VERIFIED
+    A-->>C: verified N
 
     C->>A: POST /sync/mark-delete
-    A->>DB: state = DELETE_PENDING
-    A-->>C: {queued_for_delete: N}
+    A->>DB: state DELETE_PENDING
+    A-->>C: queued N
 
     C->>A: POST /sync/commit-delete
     A->>DB: check retention days
-    A->>G: files().update trashed=true OR files().delete
-    A->>DB: state = DELETED
-    A-->>C: {deleted: N, mode: trash|hard}
+    A->>G: trash or hard delete
+    A->>DB: state DELETED
+    A-->>C: deleted N
 ```
 
 ---
@@ -154,14 +149,13 @@ sequenceDiagram
 | Google auth | `google-auth-oauthlib`, OAuth token encrypted with Fernet |
 | File crypto | `cryptography.Fernet` (key = `GOOGLE_ENCRYPTION_KEY` env var) |
 | Serving | Gunicorn + Whitenoise + Nginx |
-| Docs | MkDocs Material (GitHub Pages via `.github/workflows/gh-pages.yml`) |
 | Containerization | Docker Compose (web + nginx + postgres + redis) |
+| Package Manager | uv (Rust-based, 10-100x faster than pip) |
+| Config | pyproject.toml (PEP 621) |
+| Versioning | Semantic Versioning — CHANGELOG.md + VERSION file + git tags |
+| Docs | MkDocs Material deployed to GitHub Pages via Actions |
+| Browser tests | Playwright 1.59 + Chromium — installed and smoke-tested on WINWEB01 |
 | Linting | pre-commit |
-| **Package Manager** | **uv (Rust-based, 10-100x faster than pip)** |
-| **Config** | **pyproject.toml (PEP 621)** |
-| **Versioning** | **Semantic Versioning (CHANGELOG.md + VERSION file)** |
-| **Docs** | **MkDocs Material — deployed to GitHub Pages via Actions** |
-| **Browser tests** | **Playwright (pending — blocked by nested virt setup)** |
 
 ---
 
@@ -185,7 +179,7 @@ Fields: `run_id`, `status`, `started_at`, `finished_at`, `totals` (JSON), `error
 ## State machine
 
 ```
-DISCOVERED → DOWNLOADED → IMPORTED → VERIFIED → DELETE_PENDING → DELETED
+DISCOVERED -> DOWNLOADED -> IMPORTED -> VERIFIED -> DELETE_PENDING -> DELETED
 ```
 
 | State | Meaning |
@@ -197,7 +191,7 @@ DISCOVERED → DOWNLOADED → IMPORTED → VERIFIED → DELETE_PENDING → DELET
 | `DELETE_PENDING` | Queued for Drive deletion (retention guard applies) |
 | `DELETED` | Removed from Drive (trash or hard, per `DRIVE_DELETE_MODE`) |
 
-**Retention guard:** `MIN_RETENTION_DAYS` (default: 3). An asset must be at least this many days old (from `imported_at` or `discovered_at`) before `commit-delete` acts on it.
+**Retention guard:** `MIN_RETENTION_DAYS` (default: 3). An asset must be at least this many days old (from `imported_at`) before `commit-delete` acts on it.
 
 ---
 
@@ -212,7 +206,7 @@ DISCOVERED → DOWNLOADED → IMPORTED → VERIFIED → DELETE_PENDING → DELET
 | `POST` | `/sync/download?limit=20` | Download `DISCOVERED` assets to local disk |
 | `POST` | `/sync/import?limit=20` | SHA-256, copy to `media/imported/`, create `MediaItem` |
 | `POST` | `/sync/verify?limit=50` | Confirm both proofs, advance to `VERIFIED` |
-| `POST` | `/sync/mark-delete?limit=100` | Advance `VERIFIED` → `DELETE_PENDING` |
+| `POST` | `/sync/mark-delete?limit=100` | Advance `VERIFIED` to `DELETE_PENDING` |
 | `POST` | `/sync/commit-delete?force=false&limit=50` | Execute Drive deletion respecting retention guard |
 | `GET` | `/assets?state=&q=` | List assets with optional state/name filter |
 
@@ -229,18 +223,17 @@ Swagger UI: `/api/docs`
 | `backend_django/google_media_backup/services_google.py` | Google Drive / Photos API wrappers, OAuth, Fernet token storage |
 | `backend_django/google_media_backup/utils.py` | `sha256_file`, `deterministic_path`, `copy_into_media`, `get_fernet` |
 | `backend_django/google_media_backup/admin.py` | Django admin with custom ops link |
-| `backend_django/google_media_backup/admin_ops.py` | Staff-only operations console view |
 | `backend_django/config/settings.py` | Django settings (all config via `python-decouple` + `.env`) |
 | `docker-compose.yml` | Full stack: web + nginx + postgres + redis |
-| `secrets/google_client.json` | Google OAuth client credentials (not committed in prod) |
-| `secrets/google_token.json` | Encrypted OAuth token (Fernet-wrapped) |
-| **`pyproject.toml`** | **Project config, dependencies, build settings (PEP 621)** |
-| **`uv.lock`** | **Dependency lock file (managed by uv)** |
-| **`dev.sh` / `dev.ps1`** | **Developer helper scripts (migrate, dev, test, etc.)** |
-| **`CHANGELOG.md`** | **Release notes following Keep a Changelog format** |
-| **`VERSION`** | **Current semantic version** |
-| **`docs/project-comparison.md`** | **Feature comparison with Gmail cleanup project + roadmap** |
-| **`docs/index.md` + 9 more pages** | **Full MkDocs documentation suite (v0.3.0)** |
+| `pyproject.toml` | Project config, dependencies, build settings (PEP 621) |
+| `uv.lock` | Dependency lock file (managed by uv) |
+| `dev.sh` / `dev.ps1` | Developer helper scripts (migrate, dev, test, etc.) |
+| `CHANGELOG.md` | Release notes following Keep a Changelog format |
+| `VERSION` | Current semantic version (0.3.0) |
+| `docs/` | Full MkDocs documentation suite (10 pages) |
+| `.github/workflows/gh-pages.yml` | Auto-deploy docs to GitHub Pages on push to main |
+| `.github/workflows/ci.yml` | CI: Django checks + Playwright smoke test on every push/PR |
+| `shared_context.md` | AI agent coordination — keep in sync |
 
 ---
 
@@ -256,7 +249,7 @@ Swagger UI: `/api/docs`
 | `MIN_RETENTION_DAYS` | `3` | Minimum days before commit-delete fires |
 | `DATABASE_URL` | SQLite fallback | Postgres URL in prod |
 | `MEDIA_ROOT` | `backend_django/media` | Where imported files land |
-| `DEBUG` | `False` | |
+| `DEBUG` | `True` (dev) | Set `False` in prod |
 
 ---
 
@@ -271,8 +264,6 @@ Graph output: `graphify-out/` (graph.json, graph.html, GRAPH_REPORT.md)
 
 ## Future Roadmap (see docs/project-comparison.md)
 
-The project has been analyzed against a similar Gmail cleanup project. Key enhancements planned:
-
 ### Phase 1: Foundation (HIGH PRIORITY)
 - Multi-account model (`GoogleAccount`) with scope tracking
 - Enhanced audit logs (actor, action, affected_count, affected_bytes)
@@ -286,7 +277,7 @@ The project has been analyzed against a similar Gmail cleanup project. Key enhan
 ### Phase 3: Cleanup Rules Engine
 - `CleanupRule` model with query filters
 - Cleanup boards (Large+Old, Video, Duplicates)
-- Dry-run → Execute workflow with confirmation
+- Dry-run then Execute workflow with confirmation
 
 ### Phase 4: Advanced Features
 - SHA-256 duplicate detection (field exists, need logic)
@@ -294,7 +285,7 @@ The project has been analyzed against a similar Gmail cleanup project. Key enhan
 - Proxy generation (720p thumbnails/previews)
 
 ### Phase 5: Automation
-- Scheduled sync & cleanup (OFF by default)
+- Scheduled sync and cleanup (OFF by default)
 - Protected lists (never-delete file types/paths)
 - Quota tracking with color-coded UI
 
@@ -311,13 +302,13 @@ The project has been analyzed against a similar Gmail cleanup project. Key enhan
 - **Settings via env.** All config is read via `python-decouple`; never hardcode.
 - **Test DB is SQLite.** Use `DATABASE_URL` to point to Postgres in prod/Docker.
 - **Graphify is installed for Claude, Gemini, and Codex.** Run `graphify update .` after any structural change so all agents stay in sync.
-- **Use uv for dependencies.** Run `uv add <package>` to add dependencies (auto-updates pyproject.toml and uv.lock).
-- **Use dev scripts.** Run `./dev.sh <command>` (Bash) or `.\dev.ps1 <command>` (PowerShell) for common tasks.
-- **Update CHANGELOG.md.** Add changes under `[Unreleased]` section as you work. Move to versioned section on release.
-- **Semantic versioning.** Follow semver: MAJOR.MINOR.PATCH (breaking.feature.fix).
-- **Git user: devadalberto.** Local repo configured for devadalberto@gmail.com.
-- **Private GitHub repo.** Located at https://github.com/devadalberto/backdeezup (private).
-- **Docs site.** MkDocs Material deployed to GitHub Pages on every push to main. 10 pages covering quickstart, config, architecture, API, deployment, contributing, changelog, acknowledgements.
-- **Mermaid diagrams.** All diagrams use plain ASCII/GitHub-compatible syntax. No `\n` in node labels, no Unicode arrows. Required for GitHub renderer.
-- **Server: WINWEB01.** Windows Server 2025, itself a Hyper-V VM. Nested virtualization not yet enabled — Claude sandbox and WSL2 distros blocked until host enables `ExposeVirtualizationExtensions`. Playwright browser automation works without this fix.
-- **Playwright (next).** Browser automation for testing planned. `uv add playwright` + `playwright install chromium` works on Windows without nested virt.
+- **Use uv for dependencies.** Run `uv add <package>` — auto-updates pyproject.toml and uv.lock.
+- **Use dev scripts.** `./dev.sh <command>` (Bash) or `.\dev.ps1 <command>` (PowerShell).
+- **Update CHANGELOG.md.** Add under `[Unreleased]` as you work; move to versioned section on release.
+- **Semantic versioning.** MAJOR.MINOR.PATCH — bump VERSION + pyproject.toml + tag + GitHub Release.
+- **Git user: devadalberto** (devadalberto@gmail.com). Global account on machine is vertexchaos — local config overrides it.
+- **Private GitHub repo.** https://github.com/devadalberto/backdeezup
+- **Mermaid diagrams.** No `\n` in node labels, no Unicode arrows (use plain text). Required for GitHub renderer.
+- **Playwright installed.** `uv run playwright` + Chromium ready on WINWEB01. No credentials needed for headless tests.
+- **Server: WINWEB01.** Windows Server 2025, Hyper-V guest. HypervisorPlatform now enabled. Still needs `wsl --install -d Ubuntu` to clear Claude sandbox error.
+- **GitHub Pages.** Needs manual enable in repo Settings > Pages > Source: GitHub Actions. Workflow is ready but Pages not yet activated — all deploys failing until then.
