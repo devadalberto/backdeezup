@@ -1,7 +1,7 @@
 # shared_context.md
 > Shared ground truth for Claude, Gemini, and Codex working on this repo.
 > Keep this file updated as the project evolves.
-> Last updated: 2026-05-12
+> Last updated: 2026-05-13 (v0.2.0)
 
 ---
 
@@ -147,8 +147,8 @@ sequenceDiagram
 
 | Layer | Choice |
 |---|---|
-| Backend | Django 4+ |
-| API | Django-Ninja (FastAPI-style, auto Swagger at `/api/docs`) |
+| Backend | Django 6.0+ |
+| API | Django-Ninja 1.6+ (FastAPI-style, auto Swagger at `/api/docs`) |
 | DB (dev) | SQLite (`db.sqlite3`) |
 | DB (prod) | PostgreSQL 16 (via Docker Compose) |
 | Google auth | `google-auth-oauthlib`, OAuth token encrypted with Fernet |
@@ -157,6 +157,9 @@ sequenceDiagram
 | Docs | MkDocs Material (GitHub Pages via `.github/workflows/gh-pages.yml`) |
 | Containerization | Docker Compose (web + nginx + postgres + redis) |
 | Linting | pre-commit |
+| **Package Manager** | **uv (Rust-based, 10-100x faster than pip)** |
+| **Config** | **pyproject.toml (PEP 621)** |
+| **Versioning** | **Semantic Versioning (CHANGELOG.md + VERSION file)** |
 
 ---
 
@@ -229,6 +232,12 @@ Swagger UI: `/api/docs`
 | `docker-compose.yml` | Full stack: web + nginx + postgres + redis |
 | `secrets/google_client.json` | Google OAuth client credentials (not committed in prod) |
 | `secrets/google_token.json` | Encrypted OAuth token (Fernet-wrapped) |
+| **`pyproject.toml`** | **Project config, dependencies, build settings (PEP 621)** |
+| **`uv.lock`** | **Dependency lock file (managed by uv)** |
+| **`dev.sh` / `dev.ps1`** | **Developer helper scripts (migrate, dev, test, etc.)** |
+| **`CHANGELOG.md`** | **Release notes following Keep a Changelog format** |
+| **`VERSION`** | **Current semantic version** |
+| **`docs/project-comparison.md`** | **Feature comparison with Gmail cleanup project + roadmap** |
 
 ---
 
@@ -257,6 +266,39 @@ Graph output: `graphify-out/` (graph.json, graph.html, GRAPH_REPORT.md)
 
 ---
 
+## Future Roadmap (see docs/project-comparison.md)
+
+The project has been analyzed against a similar Gmail cleanup project. Key enhancements planned:
+
+### Phase 1: Foundation (HIGH PRIORITY)
+- Multi-account model (`GoogleAccount`) with scope tracking
+- Enhanced audit logs (actor, action, affected_count, affected_bytes)
+- DB-backed settings management
+
+### Phase 2: Reporting & Dashboards
+- Admin dashboard with stats, quota tracking, top file types
+- Materialized views for file type/size/age analysis
+- CSV/JSON export capabilities
+
+### Phase 3: Cleanup Rules Engine
+- `CleanupRule` model with query filters
+- Cleanup boards (Large+Old, Video, Duplicates)
+- Dry-run → Execute workflow with confirmation
+
+### Phase 4: Advanced Features
+- SHA-256 duplicate detection (field exists, need logic)
+- Incremental sync using Drive `changes.list()` API
+- Proxy generation (720p thumbnails/previews)
+
+### Phase 5: Automation
+- Scheduled sync & cleanup (OFF by default)
+- Protected lists (never-delete file types/paths)
+- Quota tracking with color-coded UI
+
+**Current version: 0.2.0** | **Target: v1.0.0 after Phase 3 complete**
+
+---
+
 ## Conventions for AI agents
 
 - **One pipeline step at a time.** Each API call advances exactly one state transition.
@@ -266,3 +308,9 @@ Graph output: `graphify-out/` (graph.json, graph.html, GRAPH_REPORT.md)
 - **Settings via env.** All config is read via `python-decouple`; never hardcode.
 - **Test DB is SQLite.** Use `DATABASE_URL` to point to Postgres in prod/Docker.
 - **Graphify is installed for Claude, Gemini, and Codex.** Run `graphify update .` after any structural change so all agents stay in sync.
+- **Use uv for dependencies.** Run `uv add <package>` to add dependencies (auto-updates pyproject.toml and uv.lock).
+- **Use dev scripts.** Run `./dev.sh <command>` (Bash) or `.\dev.ps1 <command>` (PowerShell) for common tasks.
+- **Update CHANGELOG.md.** Add changes under `[Unreleased]` section as you work. Move to versioned section on release.
+- **Semantic versioning.** Follow semver: MAJOR.MINOR.PATCH (breaking.feature.fix).
+- **Git user: devadalberto.** Local repo configured for devadalberto@gmail.com.
+- **Private GitHub repo.** Located at https://github.com/devadalberto/backdeezup (private).
