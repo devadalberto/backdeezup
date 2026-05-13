@@ -309,6 +309,7 @@ Graph output: `graphify-out/` (graph.json, graph.html, GRAPH_REPORT.md)
 - **Git user: devadalberto** (devadalberto@gmail.com). Global account on machine is vertexchaos — local config overrides it.
 - **Private GitHub repo.** https://github.com/devadalberto/backdeezup
 - **Mermaid diagrams.** No `\n` in node labels, no Unicode arrows (use plain text). Required for GitHub renderer.
-- **Playwright installed.** `uv run playwright` + Chromium ready on WINWEB01. No credentials needed for headless tests.
-- **Server: WINWEB01.** Windows Server 2025, Hyper-V guest. HypervisorPlatform now enabled. Still needs `wsl --install -d Ubuntu` to clear Claude sandbox error.
-- **GitHub Pages.** Needs manual enable in repo Settings > Pages > Source: GitHub Actions. Workflow is ready but Pages not yet activated — all deploys failing until then.
+- **Playwright installed.** `playwright==1.59.0` + Chromium ready. Run via `uv run playwright`. No credentials needed for headless tests.
+- **Server: WINWEB01.** Windows Server 2025, Hyper-V guest. HypervisorPlatform enabled. WSL2 running Debian (v2). Claude sandbox error resolved.
+- **GitHub Pages disabled.** Private repo on free plan — Pages requires public. Docs workflow builds to artifact instead. Serve locally: `./dev.sh docs` on port 8001.
+- **Cowork / Remote Control.** Start: `claude --remote-control backdeezup` from repo root. Join: `claude --resume WINWEB01/backdeezup` from another client.
