@@ -1,7 +1,7 @@
 # shared_context.md
 > Shared ground truth for Claude, Gemini, and Codex working on this repo.
 > Keep this file updated as the project evolves.
-> Last updated: 2026-05-13 (v0.2.0)
+> Last updated: 2026-05-13 (v0.3.0)
 
 ---
 
@@ -160,6 +160,8 @@ sequenceDiagram
 | **Package Manager** | **uv (Rust-based, 10-100x faster than pip)** |
 | **Config** | **pyproject.toml (PEP 621)** |
 | **Versioning** | **Semantic Versioning (CHANGELOG.md + VERSION file)** |
+| **Docs** | **MkDocs Material — deployed to GitHub Pages via Actions** |
+| **Browser tests** | **Playwright (pending — blocked by nested virt setup)** |
 
 ---
 
@@ -238,6 +240,7 @@ Swagger UI: `/api/docs`
 | **`CHANGELOG.md`** | **Release notes following Keep a Changelog format** |
 | **`VERSION`** | **Current semantic version** |
 | **`docs/project-comparison.md`** | **Feature comparison with Gmail cleanup project + roadmap** |
+| **`docs/index.md` + 9 more pages** | **Full MkDocs documentation suite (v0.3.0)** |
 
 ---
 
@@ -295,7 +298,7 @@ The project has been analyzed against a similar Gmail cleanup project. Key enhan
 - Protected lists (never-delete file types/paths)
 - Quota tracking with color-coded UI
 
-**Current version: 0.2.0** | **Target: v1.0.0 after Phase 3 complete**
+**Current version: 0.3.0** | **Target: v1.0.0 after Phase 3 complete**
 
 ---
 
@@ -314,3 +317,7 @@ The project has been analyzed against a similar Gmail cleanup project. Key enhan
 - **Semantic versioning.** Follow semver: MAJOR.MINOR.PATCH (breaking.feature.fix).
 - **Git user: devadalberto.** Local repo configured for devadalberto@gmail.com.
 - **Private GitHub repo.** Located at https://github.com/devadalberto/backdeezup (private).
+- **Docs site.** MkDocs Material deployed to GitHub Pages on every push to main. 10 pages covering quickstart, config, architecture, API, deployment, contributing, changelog, acknowledgements.
+- **Mermaid diagrams.** All diagrams use plain ASCII/GitHub-compatible syntax. No `\n` in node labels, no Unicode arrows. Required for GitHub renderer.
+- **Server: WINWEB01.** Windows Server 2025, itself a Hyper-V VM. Nested virtualization not yet enabled — Claude sandbox and WSL2 distros blocked until host enables `ExposeVirtualizationExtensions`. Playwright browser automation works without this fix.
+- **Playwright (next).** Browser automation for testing planned. `uv add playwright` + `playwright install chromium` works on Windows without nested virt.
