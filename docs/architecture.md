@@ -1,43 +1,32 @@
-# Handover & Architecture
-
-> Last updated: 2026-05-13 (v0.2.0)
-
-This document is the canonical reference for anyone (human or AI agent) picking up this codebase. It covers architecture, invariants, and operational context.
-
----
-
-## What this system does
-
-**BackDeezUp** is a backend-first pipeline that safely migrates media from Google Drive / Google Photos into local Django-managed storage, then deletes the originals from Drive only after two independent proofs of local safety are confirmed.
-
-**Two proofs required before any Drive delete:**
-
-1. Local file exists at `download_path` on disk
-2. A `MediaItem` row exists in the database (keyed by SHA-256)
+# Architecture
 
 ---
 
 ## System overview
 
+BackDeezUp is an API-first Django application. The Django-Ninja layer is the primary interface; Django Admin provides a secondary ops console for browsing and managing state.
+
 ```mermaid
 flowchart LR
     GD[(Google Drive / Photos)]
     API[Django-Ninja API port 8844]
-    DB[(Database)]
+    DB[(Postgres / SQLite)]
     FS[Local Storage media/]
-    AD[Django Admin + Ops Console]
+    AD[Django Admin]
+    SW[Swagger UI /api/docs]
 
-    GD -->|OAuth + Drive v3| API
+    GD -->|OAuth 2.0| API
+    SW -->|HTTP| API
     API -->|state transitions| DB
-    API -->|binary download + SHA-256 copy| FS
-    AD -->|manage and monitor| DB
+    API -->|binary + SHA-256 copy| FS
+    AD -->|read / manage| DB
 ```
 
 ---
 
 ## Pipeline state machine
 
-Each `DriveAsset` row moves through exactly these states. No state can be skipped.
+Every `DriveAsset` row progresses through exactly six states. No state can be skipped. Each API endpoint only processes assets in its expected input state.
 
 ```mermaid
 stateDiagram-v2
@@ -50,6 +39,80 @@ stateDiagram-v2
 
     DISCOVERED --> DISCOVERED : download error, retry
     DOWNLOADED --> DOWNLOADED : import error, retry
+```
+
+| State | Meaning | Set by |
+|---|---|---|
+| `DISCOVERED` | Found in Drive/Photos, not yet downloaded | `/sync/discover*` |
+| `DOWNLOADED` | Binary file on disk at `download_path` | `/sync/download` |
+| `IMPORTED` | SHA-256 computed, copied to `media/imported/`, `MediaItem` created | `/sync/import` |
+| `VERIFIED` | Both proofs confirmed | `/sync/verify` |
+| `DELETE_PENDING` | Queued for Drive deletion | `/sync/mark-delete` |
+| `DELETED` | Removed from Drive (trash or hard) | `/sync/commit-delete` |
+
+---
+
+## Two-proof deletion guard
+
+Before any file is deleted from Google Drive, the system independently verifies:
+
+1. **Disk proof** — `os.path.exists(download_path)` returns `True`
+2. **Database proof** — `MediaItem.objects.filter(id=asset.media_item_id).exists()` returns `True`
+
+If either check fails the asset stays in `DOWNLOADED`/`IMPORTED` and the error is recorded. Only assets where **both** proofs pass advance to `VERIFIED`.
+
+---
+
+## Full request / response sequence
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant A as API
+    participant G as Google
+    participant DB as Database
+    participant FS as File System
+
+    C->>A: POST /auth/connect
+    A->>G: InstalledAppFlow OAuth
+    G-->>A: credentials
+    A->>FS: Fernet-encrypted token saved
+    A-->>C: OAuth completed
+
+    C->>A: POST /sync/discover
+    A->>G: files().list
+    G-->>A: files + nextPageToken
+    A->>DB: DriveAsset get_or_create DISCOVERED
+    A-->>C: discovered N
+
+    C->>A: POST /sync/download
+    A->>G: files().get_media
+    G-->>A: binary stream
+    A->>FS: write to .part then rename
+    A->>DB: state DOWNLOADED
+    A-->>C: downloaded N
+
+    C->>A: POST /sync/import
+    A->>FS: sha256_file + copy_into_media
+    A->>DB: MediaItem get_or_create by sha256
+    A->>DB: DriveAsset state IMPORTED
+    A-->>C: imported N
+
+    C->>A: POST /sync/verify
+    A->>FS: os.path.exists proof 1
+    A->>DB: MediaItem.exists proof 2
+    A->>DB: state VERIFIED
+    A-->>C: verified N
+
+    C->>A: POST /sync/mark-delete
+    A->>DB: state DELETE_PENDING
+    A-->>C: queued N
+
+    C->>A: POST /sync/commit-delete
+    A->>DB: check retention days
+    A->>G: trash or hard delete
+    A->>DB: state DELETED
+    A-->>C: deleted N
 ```
 
 ---
@@ -92,60 +155,6 @@ erDiagram
 
 ---
 
-## Full request / response sequence
-
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant A as API
-    participant G as Google
-    participant DB as Database
-    participant FS as File System
-
-    C->>A: POST /auth/connect
-    A->>G: InstalledAppFlow OAuth
-    G-->>A: credentials
-    A->>FS: Fernet-encrypted token saved
-    A-->>C: OAuth completed
-
-    C->>A: POST /sync/discover
-    A->>G: files().list
-    G-->>A: files + nextPageToken
-    A->>DB: DriveAsset get_or_create DISCOVERED
-    A-->>C: discovered N
-
-    C->>A: POST /sync/download
-    A->>G: files().get_media
-    G-->>A: binary stream
-    A->>FS: write .part then rename
-    A->>DB: state DOWNLOADED
-    A-->>C: downloaded N
-
-    C->>A: POST /sync/import
-    A->>FS: sha256_file + copy_into_media
-    A->>DB: MediaItem get_or_create by sha256
-    A->>DB: DriveAsset state IMPORTED
-    A-->>C: imported N
-
-    C->>A: POST /sync/verify
-    A->>FS: os.path.exists proof 1
-    A->>DB: MediaItem.exists proof 2
-    A->>DB: state VERIFIED
-    A-->>C: verified N
-
-    C->>A: POST /sync/mark-delete
-    A->>DB: state DELETE_PENDING
-    A-->>C: queued N
-
-    C->>A: POST /sync/commit-delete
-    A->>DB: check retention days
-    A->>G: trash or hard delete
-    A->>DB: state DELETED
-    A-->>C: deleted N
-```
-
----
-
 ## Deployment topology
 
 ```mermaid
@@ -162,7 +171,7 @@ flowchart TD
         Gunicorn
         Django
         Postgres
-        Redis[(Redis)]
+        Redis[(Redis future use)]
     end
 ```
 
@@ -173,14 +182,12 @@ flowchart TD
 | File | Responsibility |
 |---|---|
 | `google_media_backup/models.py` | `DriveAsset`, `MediaItem`, `RunLog` |
-| `google_media_backup/api.py` | All Ninja endpoints |
+| `google_media_backup/api.py` | All Ninja endpoints — pipeline logic |
 | `google_media_backup/services_google.py` | Google API client, OAuth, Fernet token I/O |
 | `google_media_backup/utils.py` | `sha256_file`, `deterministic_path`, `copy_into_media`, `get_fernet` |
 | `google_media_backup/admin.py` | Django admin + ops console link |
 | `config/settings.py` | All settings via python-decouple |
 | `docker-compose.yml` | Postgres + Redis + Gunicorn + Nginx |
-| `shared_context.md` | AI agent coordination — keep in sync |
-| `pyproject.toml` | Dependencies + build config (uv / PEP 621) |
 
 ---
 
@@ -188,7 +195,7 @@ flowchart TD
 
 - **Never skip a state.** Each endpoint only processes its expected input state.
 - **SHA-256 is the dedup key.** Two Drive files with identical content produce one `MediaItem`.
-- **`photos:` prefix.** Google Photos IDs stored as `photos:<id>` to prevent Drive ID collision.
+- **`photos:` prefix.** Google Photos IDs stored as `photos:<id>` to avoid collision with Drive IDs.
 - **Atomic download.** Files written to `<path>.part` then `os.replace()` — no partial files reach `DOWNLOADED`.
-- **Retention guard.** `MIN_RETENTION_DAYS` enforced unless `force=true` is explicitly passed.
+- **Retention guard is not bypassable without `force=true`.** Even then, `DRIVE_DELETE_MODE=trash` is the safe default.
 - **`GOOGLE_ENCRYPTION_KEY` must be persisted.** Losing it makes the OAuth token unreadable.

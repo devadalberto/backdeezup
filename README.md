@@ -6,42 +6,42 @@ A backend-first pipeline that safely migrates media from **Google Drive / Google
 > 1. Local file exists on disk
 > 2. File is recorded as a `MediaItem` in the database
 
+[![GitHub release](https://img.shields.io/github/v/release/devadalberto/backdeezup)](https://github.com/devadalberto/backdeezup/releases)
+[![Python](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/)
+[![Django](https://img.shields.io/badge/django-6.0%2B-green)](https://www.djangoproject.com/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
+
 ---
 
 ## How it works
 
 ```mermaid
 flowchart LR
-    GD[(Google Drive\n/ Photos)]
-    API[Django-Ninja\nAPI]
-    DB[(Database\nDriveAsset\nMediaItem\nRunLog)]
-    FS[Local\nFile Storage\nmedia/imported/]
-    AD[Django Admin\n+ Ops Console]
+    GD[(Google Drive / Photos)]
+    API[Django-Ninja API]
+    DB[(Database)]
+    FS[Local Storage]
+    AD[Django Admin]
 
-    GD -->|OAuth + Drive v3\nPhotos Library API| API
+    GD -->|OAuth + Drive v3| API
     API -->|state transitions| DB
-    API -->|binary download\nSHA-256 copy| FS
-    AD -->|manage & monitor| DB
+    API -->|binary download + SHA-256| FS
+    AD -->|manage and monitor| DB
 ```
 
 ### Pipeline state machine
 
 ```mermaid
 stateDiagram-v2
-    [*] --> DISCOVERED : /sync/discover\n/sync/discover-files\n/sync/discover-photos
+    [*] --> DISCOVERED
+    DISCOVERED --> DOWNLOADED
+    DOWNLOADED --> IMPORTED
+    IMPORTED --> VERIFIED
+    VERIFIED --> DELETE_PENDING
+    DELETE_PENDING --> DELETED
 
-    DISCOVERED --> DOWNLOADED : /sync/download\n(Drive → local disk)
-
-    DOWNLOADED --> IMPORTED : /sync/import\n(SHA-256 + copy to media/imported/\ncreates MediaItem)
-
-    IMPORTED --> VERIFIED : /sync/verify\n(proof 1: file on disk\nproof 2: MediaItem in DB)
-
-    VERIFIED --> DELETE_PENDING : /sync/mark-delete
-
-    DELETE_PENDING --> DELETED : /sync/commit-delete\n(retention guard: MIN_RETENTION_DAYS)\n(mode: trash | hard)
-
-    DISCOVERED --> DISCOVERED : error → retry
-    DOWNLOADED --> DOWNLOADED : error → retry
+    DISCOVERED --> DISCOVERED : download error, retry
+    DOWNLOADED --> DOWNLOADED : import error, retry
 ```
 
 ### Data model
@@ -49,13 +49,13 @@ stateDiagram-v2
 ```mermaid
 erDiagram
     DriveAsset {
-        string  drive_id       PK "unique Drive / photos: ID"
+        string  drive_id       PK
         string  name
         string  mime_type
         bigint  size_bytes
         string  md5_checksum
         string  download_path
-        string  state          "DISCOVERED → … → DELETED"
+        string  state
         text    error
         int     media_item_id  FK
         datetime discovered_at
@@ -64,29 +64,29 @@ erDiagram
         datetime last_attempt_at
     }
     MediaItem {
-        int    id       PK
-        string sha256   "unique — dedup key"
-        file   file     "media/imported/<sha[:2]>/<sha>.ext"
+        int      id        PK
+        string   sha256
+        string   file
         datetime created_at
     }
     RunLog {
-        string   run_id      PK "UUID"
-        string   status      "RUNNING | OK | ERROR"
+        string   run_id     PK
+        string   status
         json     totals
         json     error_log
         datetime started_at
         datetime finished_at
     }
-    DriveAsset }o--|| MediaItem : "media_item (SET NULL)"
+    DriveAsset }o--|| MediaItem : "media_item SET NULL"
 ```
 
-### Request → response flow for a full pipeline run
+### Request / response flow
 
 ```mermaid
 sequenceDiagram
     participant C as Client
-    participant A as Django-Ninja API
-    participant G as Google API
+    participant A as API
+    participant G as Google
     participant DB as Database
     participant FS as File System
 
@@ -94,102 +94,88 @@ sequenceDiagram
     A->>G: InstalledAppFlow OAuth
     G-->>A: credentials
     A->>FS: save Fernet-encrypted token
-    A-->>C: "OAuth completed"
+    A-->>C: OAuth completed
 
     C->>A: POST /sync/discover
-    A->>G: Drive files().list (images/videos)
-    G-->>A: page of files + nextPageToken
-    A->>DB: DriveAsset get_or_create (state=DISCOVERED)
-    A-->>C: {discovered: N, run_id: ...}
+    A->>G: files().list
+    G-->>A: files + nextPageToken
+    A->>DB: DriveAsset get_or_create DISCOVERED
+    A-->>C: discovered N, run_id
 
-    C->>A: POST /sync/download?limit=20
-    A->>G: files().get_media (per asset)
+    C->>A: POST /sync/download
+    A->>G: files().get_media
     G-->>A: binary stream
-    A->>FS: write .part → rename to final path
-    A->>DB: state = DOWNLOADED
-    A-->>C: {downloaded: N}
+    A->>FS: write .part then rename
+    A->>DB: state DOWNLOADED
+    A-->>C: downloaded N
 
-    C->>A: POST /sync/import?limit=20
-    A->>FS: sha256_file(), copy_into_media()
-    A->>DB: MediaItem get_or_create (sha256)
-    A->>DB: DriveAsset.media_item = FK, state = IMPORTED
-    A-->>C: {imported: N}
+    C->>A: POST /sync/import
+    A->>FS: sha256_file + copy_into_media
+    A->>DB: MediaItem get_or_create
+    A->>DB: DriveAsset state IMPORTED
+    A-->>C: imported N
 
-    C->>A: POST /sync/verify?limit=50
-    A->>FS: os.path.exists(download_path)
-    A->>DB: MediaItem.objects.filter(id=...).exists()
-    A->>DB: state = VERIFIED (both proofs pass)
-    A-->>C: {verified: N}
+    C->>A: POST /sync/verify
+    A->>FS: os.path.exists proof 1
+    A->>DB: MediaItem.exists proof 2
+    A->>DB: state VERIFIED
+    A-->>C: verified N
 
-    C->>A: POST /sync/mark-delete?limit=100
-    A->>DB: state = DELETE_PENDING
-    A-->>C: {queued_for_delete: N}
+    C->>A: POST /sync/mark-delete
+    A->>DB: state DELETE_PENDING
+    A-->>C: queued N
 
     C->>A: POST /sync/commit-delete
-    A->>DB: check (now - imported_at).days >= MIN_RETENTION_DAYS
-    A->>G: files().update trashed=true  OR  files().delete
-    A->>DB: state = DELETED
-    A-->>C: {deleted: N, mode: trash|hard}
+    A->>DB: check retention days
+    A->>G: trash or hard delete
+    A->>DB: state DELETED
+    A-->>C: deleted N
 ```
 
 ---
 
 ## Quick start
 
-### Local dev (uv - recommended)
+### Local dev (uv — recommended)
 
 ```bash
-# 1. Install dependencies (uv handles venv automatically)
+# 1. Install dependencies (uv manages the venv automatically)
 uv sync
 
 # 2. Configure environment
 cp .env.sample .env
 # Edit .env — set GOOGLE_ENCRYPTION_KEY (44-char Fernet key)
-# Generate one: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+# python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 
 # 3. Place Google OAuth credentials
-# Download client_secret_*.json from Google Cloud Console → rename to:
 cp ~/Downloads/client_secret_*.json secrets/google_client.json
 
 # 4. Run migrations and start
-./dev.sh migrate      # or ./dev.ps1 migrate on Windows
+./dev.sh migrate      # Windows: .\dev.ps1 migrate
 ./dev.sh dev          # http://localhost:8844
 
 # 5. Complete OAuth
-# Open http://localhost:8844/api/docs → POST /auth/connect
+# Open http://localhost:8844/api/docs -> POST /auth/connect
 ```
 
-### Development commands (uv scripts)
+### Development commands
 
 ```bash
-# PowerShell (Windows)
-.\dev.ps1 dev              # Start dev server
-.\dev.ps1 migrate          # Run migrations
-.\dev.ps1 makemigrations   # Create migrations
-.\dev.ps1 superuser        # Create superuser
-.\dev.ps1 shell            # Django shell
-.\dev.ps1 test             # Run tests
-.\dev.ps1 docs             # Docs server
-.\dev.ps1 add <package>    # Add dependency
+# Bash (Linux / Mac / WSL)
+./dev.sh dev | migrate | makemigrations | superuser | shell | test | docs
 
-# Bash (Linux/Mac/WSL)
-./dev.sh dev               # Start dev server
-./dev.sh migrate           # Run migrations
-./dev.sh makemigrations    # Create migrations
-./dev.sh superuser         # Create superuser
-./dev.sh shell             # Django shell
-./dev.sh test              # Run tests
-./dev.sh docs              # Docs server
-./dev.sh add <package>     # Add dependency
+# PowerShell (Windows)
+.\dev.ps1 dev | migrate | makemigrations | superuser | shell | test | docs
+
+# Add a dependency
+./dev.sh add django-extensions
 ```
 
 ### Docker (prod-like)
 
 ```bash
-make build
-make up           # postgres + nginx on :8844
-make migrate
-make superuser
+make build && make up   # postgres + nginx on :8844
+make migrate && make superuser
 ```
 
 ---
@@ -200,34 +186,34 @@ Base: `http://localhost:8844/api` — Swagger UI at `/api/docs`
 
 | Method | Endpoint | Key params | Advances state |
 |--------|----------|------------|----------------|
-| `POST` | `/auth/connect` | — | — (OAuth) |
-| `POST` | `/sync/discover` | `page_size`, `max_pages` | → `DISCOVERED` |
-| `POST` | `/sync/discover-files` | `page_size`, `max_pages` | → `DISCOVERED` |
-| `POST` | `/sync/discover-photos` | `page_size`, `max_pages` | → `DISCOVERED` |
-| `POST` | `/sync/download` | `limit=20` | → `DOWNLOADED` |
-| `POST` | `/sync/import` | `limit=20` | → `IMPORTED` |
-| `POST` | `/sync/verify` | `limit=50` | → `VERIFIED` |
-| `POST` | `/sync/mark-delete` | `limit=100` | → `DELETE_PENDING` |
-| `POST` | `/sync/commit-delete` | `force=false`, `limit=50` | → `DELETED` |
-| `GET`  | `/assets` | `state=`, `q=` | — (read) |
+| `POST` | `/auth/connect` | — | OAuth |
+| `POST` | `/sync/discover` | `page_size`, `max_pages` | DISCOVERED |
+| `POST` | `/sync/discover-files` | `page_size`, `max_pages` | DISCOVERED |
+| `POST` | `/sync/discover-photos` | `page_size`, `max_pages` | DISCOVERED |
+| `POST` | `/sync/download` | `limit=20` | DOWNLOADED |
+| `POST` | `/sync/import` | `limit=20` | IMPORTED |
+| `POST` | `/sync/verify` | `limit=50` | VERIFIED |
+| `POST` | `/sync/mark-delete` | `limit=100` | DELETE_PENDING |
+| `POST` | `/sync/commit-delete` | `force=false`, `limit=50` | DELETED |
+| `GET`  | `/assets` | `state=`, `q=` | read-only |
 
 ---
 
 ## Configuration
 
-Copy `.env.sample` → `.env` and set:
+Copy `.env.sample` to `.env`:
 
 | Variable | Default | Required | Notes |
 |----------|---------|----------|-------|
-| `DJANGO_SECRET_KEY` | `insecure-key` | **prod** | Random 50-char string |
-| `GOOGLE_ENCRYPTION_KEY` | random | **yes** | 44-char Fernet key; generate once, keep forever |
+| `DJANGO_SECRET_KEY` | `insecure-key` | prod | Random 50-char string |
+| `GOOGLE_ENCRYPTION_KEY` | — | **yes** | 44-char Fernet key — generate once, never lose |
 | `GOOGLE_CLIENT_SECRETS` | `secrets/google_client.json` | **yes** | OAuth client JSON from Google Cloud |
 | `GOOGLE_TOKEN_FILE` | `secrets/google_token.json` | auto | Written by `/auth/connect` |
-| `GOOGLE_MIME_ALLOWLIST` | `image/jpeg,...` | no | Comma-separated MIME types to discover |
+| `GOOGLE_MIME_ALLOWLIST` | `image/jpeg,...` | no | Comma-separated MIME filter |
 | `DRIVE_DELETE_MODE` | `trash` | no | `trash` (recoverable) or `hard` (permanent) |
-| `MIN_RETENTION_DAYS` | `3` | no | Days asset must be held locally before Drive delete |
+| `MIN_RETENTION_DAYS` | `3` | no | Days before commit-delete fires |
 | `DATABASE_URL` | SQLite | prod | `postgres://user:pass@host/db` |
-| `MEDIA_ROOT` | `media` | no | Local directory for imported files |
+| `MEDIA_ROOT` | `media` | no | Where imported files land |
 | `DEBUG` | `false` | no | Never `true` in prod |
 
 ---
@@ -238,57 +224,53 @@ Copy `.env.sample` → `.env` and set:
 backdeezup/
 ├── backend_django/
 │   ├── config/
-│   │   ├── settings.py          # All config via python-decouple
-│   │   └── urls.py              # Routes: /admin /api /admin/ops /
+│   │   ├── settings.py          # python-decouple config
+│   │   └── urls.py              # /admin  /api  /admin/ops
 │   └── google_media_backup/
 │       ├── models.py            # DriveAsset, MediaItem, RunLog
 │       ├── api.py               # All Ninja endpoints
-│       ├── services_google.py   # Drive/Photos API + OAuth + Fernet token
-│       ├── utils.py             # sha256_file, deterministic_path, get_fernet
-│       ├── admin.py             # Django admin registrations + ops link
-│       └── admin_ops.py        # Staff-only ops console view
-├── secrets/                     # OAuth credentials (git-ignored in prod)
-├── docs/                        # MkDocs source (published to GitHub Pages)
+│       ├── services_google.py   # Drive/Photos OAuth + Fernet
+│       ├── utils.py             # sha256_file, deterministic_path
+│       ├── admin.py             # Admin registrations
+│       └── admin_ops.py         # Staff-only ops console
+├── docs/                        # MkDocs source
+├── secrets/                     # OAuth credentials (git-ignored)
 ├── nginx/nginx.conf
 ├── docker-compose.yml
-├── Makefile
-├── requirements.txt
-└── shared_context.md            # AI agent coordination file
+├── pyproject.toml               # uv / PEP 621
+├── dev.sh / dev.ps1             # Developer helper scripts
+├── CHANGELOG.md
+└── shared_context.md            # AI agent coordination
 ```
 
 ---
 
-## Make targets (legacy - prefer dev.sh/dev.ps1)
-
-```bash
-make run        # python manage.py runserver 0.0.0.0:8844
-make migrate    # python manage.py migrate
-make superuser  # python manage.py createsuperuser
-make build      # docker compose build
-make up         # docker compose up -d
-make down       # docker compose down
-make logs       # docker compose logs -f --tail=100
-make docs       # mkdocs serve -a 0.0.0.0:8001
-```
-
 ## Modern tooling
 
-This project uses **[uv](https://docs.astral.sh/uv/)** — a fast, Rust-based Python package manager:
+Powered by **[uv](https://docs.astral.sh/uv/)** — Rust-based, 10-100x faster than pip:
 
-- ⚡ **10-100x faster** than pip
-- 🔒 **Automatic virtual environment** management
-- 📦 **Lock file** support (uv.lock)
-- 🎯 **pyproject.toml-first** configuration
-- 🔄 **Drop-in replacement** for pip/pip-tools/poetry
+- Automatic virtual environment management
+- Lock file (`uv.lock`) for reproducible builds
+- `pyproject.toml`-first (PEP 621)
 
-All dependencies are declared in `pyproject.toml`. Use `uv add <package>` to add new packages.
+Use `uv add <package>` to add dependencies.
 
 ---
 
 ## AI agent collaboration
 
-This repo is worked on by **Claude**, **Gemini CLI**, and **Codex** in parallel.
+Claude, Gemini CLI, and Codex work this repo in parallel.
 
-- **`shared_context.md`** — canonical ground truth for all agents; update it when architecture changes
-- **`graphify-out/`** — knowledge graph (86 nodes, 104 edges); refresh with `graphify update .` after code changes
-- Graphify is registered for all three agents via their respective instruction files (`CLAUDE.md`, `GEMINI.md`, `AGENTS.md`)
+- **`shared_context.md`** — canonical ground truth; update when architecture changes
+- **`graphify-out/`** — knowledge graph (86 nodes, 104 edges); run `graphify update .` after code changes
+- Agent config files: `CLAUDE.md`, `GEMINI.md`, `AGENTS.md`
+
+---
+
+## Acknowledgements
+
+- [Django](https://www.djangoproject.com/) and [Django Ninja](https://django-ninja.dev/) for the API layer
+- [Google APIs Python Client](https://github.com/googleapis/google-api-python-client) for Drive and Photos integration
+- [uv](https://docs.astral.sh/uv/) by Astral for blazing-fast Python package management
+- [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) for documentation
+- [Fernet (cryptography)](https://cryptography.io/) for token encryption

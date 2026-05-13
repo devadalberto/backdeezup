@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-13
+
+### Added
+- Complete MkDocs Material documentation site with 10 pages: index, quickstart, configuration, installation, architecture, states, data model, API reference, deployment, contributing, changelog, acknowledgements
+- Working Mermaid diagrams throughout docs and README (fixed for GitHub rendering)
+- GitHub Actions workflow with separate build/deploy jobs and proper environment gating
+
+### Changed
+- All Mermaid diagrams: removed `\n` in node labels and transition text (broke GitHub renderer), removed non-ASCII arrows and checkmarks
+- `mkdocs.yml`: renamed from `gmail_josevaldes_cleanup`, full Material theme config with dark/light mode, nav tabs, search, code copy
+- `docs/handover.md`: fixed all Mermaid diagrams
+- README: complete rewrite with working diagrams and modern quick start
+
 ## [0.2.0] - 2026-05-13
 
 ### Added
