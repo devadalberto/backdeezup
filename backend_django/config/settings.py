@@ -6,10 +6,24 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('DJANGO_SECRET_KEY', default='insecure-key')
-DEBUG = config('DEBUG', cast=bool, default=False)
+DEBUG = config('DEBUG', cast=bool, default=True)
 ALLOWED_HOSTS = [h.strip() for h in config('ALLOWED_HOSTS', default='*').split(',') if h.strip()]
-CORS_ALLOWED_ORIGINS = [h.strip() for h in config('CORS_ALLOWED_ORIGINS', default='*').split(',') if h.strip()]
-CSRF_TRUSTED_ORIGINS = [h.strip() for h in config('CSRF_TRUSTED_ORIGINS', default='*').split(',') if h.strip()]
+
+# CORS Configuration
+cors_origins = config('CORS_ALLOWED_ORIGINS', default='').strip()
+if cors_origins == '*' or not cors_origins:
+    CORS_ALLOW_ALL_ORIGINS = True
+    CORS_ALLOWED_ORIGINS = []
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = [h.strip() for h in cors_origins.split(',') if h.strip()]
+
+# CSRF Configuration
+csrf_origins = config('CSRF_TRUSTED_ORIGINS', default='').strip()
+if csrf_origins and csrf_origins != '*':
+    CSRF_TRUSTED_ORIGINS = [h.strip() for h in csrf_origins.split(',') if h.strip()]
+else:
+    CSRF_TRUSTED_ORIGINS = []
 
 INSTALLED_APPS = [
     'django.contrib.admin','django.contrib.auth','django.contrib.contenttypes',

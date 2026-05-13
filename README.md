@@ -136,12 +136,11 @@ sequenceDiagram
 
 ## Quick start
 
-### Local dev
+### Local dev (uv - recommended)
 
 ```bash
-# 1. Install dependencies
-uv venv && source .venv/bin/activate
-uv pip install -r requirements.txt
+# 1. Install dependencies (uv handles venv automatically)
+uv sync
 
 # 2. Configure environment
 cp .env.sample .env
@@ -153,11 +152,35 @@ cp .env.sample .env
 cp ~/Downloads/client_secret_*.json secrets/google_client.json
 
 # 4. Run migrations and start
-make migrate
-make run          # http://localhost:8844
+./dev.sh migrate      # or ./dev.ps1 migrate on Windows
+./dev.sh dev          # http://localhost:8844
 
 # 5. Complete OAuth
 # Open http://localhost:8844/api/docs → POST /auth/connect
+```
+
+### Development commands (uv scripts)
+
+```bash
+# PowerShell (Windows)
+.\dev.ps1 dev              # Start dev server
+.\dev.ps1 migrate          # Run migrations
+.\dev.ps1 makemigrations   # Create migrations
+.\dev.ps1 superuser        # Create superuser
+.\dev.ps1 shell            # Django shell
+.\dev.ps1 test             # Run tests
+.\dev.ps1 docs             # Docs server
+.\dev.ps1 add <package>    # Add dependency
+
+# Bash (Linux/Mac/WSL)
+./dev.sh dev               # Start dev server
+./dev.sh migrate           # Run migrations
+./dev.sh makemigrations    # Create migrations
+./dev.sh superuser         # Create superuser
+./dev.sh shell             # Django shell
+./dev.sh test              # Run tests
+./dev.sh docs              # Docs server
+./dev.sh add <package>     # Add dependency
 ```
 
 ### Docker (prod-like)
@@ -235,7 +258,7 @@ backdeezup/
 
 ---
 
-## Make targets
+## Make targets (legacy - prefer dev.sh/dev.ps1)
 
 ```bash
 make run        # python manage.py runserver 0.0.0.0:8844
@@ -247,6 +270,18 @@ make down       # docker compose down
 make logs       # docker compose logs -f --tail=100
 make docs       # mkdocs serve -a 0.0.0.0:8001
 ```
+
+## Modern tooling
+
+This project uses **[uv](https://docs.astral.sh/uv/)** — a fast, Rust-based Python package manager:
+
+- ⚡ **10-100x faster** than pip
+- 🔒 **Automatic virtual environment** management
+- 📦 **Lock file** support (uv.lock)
+- 🎯 **pyproject.toml-first** configuration
+- 🔄 **Drop-in replacement** for pip/pip-tools/poetry
+
+All dependencies are declared in `pyproject.toml`. Use `uv add <package>` to add new packages.
 
 ---
 
