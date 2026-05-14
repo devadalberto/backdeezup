@@ -39,7 +39,7 @@ GOOGLE_CLIENT_SECRETS=secrets/google_client.json
 Generate a Fernet key:
 
 ```bash
-uv run python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+python3 -c "import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())"
 ```
 
 !!! warning "Keep your encryption key"

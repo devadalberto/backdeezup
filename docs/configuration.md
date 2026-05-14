@@ -8,7 +8,7 @@ All configuration uses environment variables via [python-decouple](https://githu
 
 | Variable | Description |
 |---|---|
-| `GOOGLE_ENCRYPTION_KEY` | 44-char Fernet key that encrypts the OAuth token on disk. Generate once: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`. Never change after first auth. |
+| `GOOGLE_ENCRYPTION_KEY` | 44-char Fernet key that encrypts the OAuth token on disk. Generate once: `python3 -c "import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())"`. Never change after first auth. |
 | `GOOGLE_CLIENT_SECRETS` | Path to OAuth client JSON. Default: `secrets/google_client.json`. |
 
 ---

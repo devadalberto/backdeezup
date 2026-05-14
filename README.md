@@ -145,7 +145,7 @@ uv sync
 # 2. Configure environment
 cp .env.sample .env
 # Edit .env — set GOOGLE_ENCRYPTION_KEY (44-char Fernet key)
-# python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+# python3 -c "import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())"
 
 # 3. Place Google OAuth credentials
 cp ~/Downloads/client_secret_*.json secrets/google_client.json
@@ -224,7 +224,7 @@ SWAGGER_VERSION=0.4.0
 Generate the Fernet key for `GOOGLE_ENCRYPTION_KEY`:
 
 ```bash
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+python3 -c "import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())"
 ```
 
 Generate a Django secret key:
