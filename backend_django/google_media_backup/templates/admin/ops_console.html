@@ -1,0 +1,113 @@
+{% extends "admin/base_site.html" %} {% block content %}
+<h1>Gmail Media Cleanup — Ops</h1>
+
+<style>
+  .card {
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    padding: 16px;
+    margin: 12px 0;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .btn {
+    padding: 6px 10px;
+    border: 1px solid #bbb;
+    background: #fafafa;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .badge {
+    background: #eee;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 12px;
+  }
+  pre {
+    background: #f7f7f7;
+    border: 1px solid #eee;
+    padding: 8px;
+    overflow: auto;
+  }
+</style>
+
+<div class="card">
+  <div class="row">
+    <label
+      >Limit&nbsp;<input
+        id="limit"
+        type="number"
+        value="50"
+        style="width: 80px"
+    /></label>
+    <span class="badge">Same limit is used for steps 2–5.</span>
+  </div>
+  <ol>
+    <li class="row">
+      <button
+        class="btn"
+        onclick="call('sync/discover?page_size=200&max_pages=10', this)"
+      >
+        1) Discover (Drive media)
+      </button>
+    </li>
+    <li class="row">
+      <button class="btn" onclick="call('sync/download?limit='+L(), this)">
+        2) Download
+      </button>
+    </li>
+    <li class="row">
+      <button class="btn" onclick="call('sync/import?limit='+L(), this)">
+        3) Import (copy)
+      </button>
+    </li>
+    <li class="row">
+      <button class="btn" onclick="call('sync/verify?limit='+L(), this)">
+        4) Verify
+      </button>
+    </li>
+    <li class="row">
+      <button class="btn" onclick="call('sync/mark-delete?limit='+L(), this)">
+        5a) Mark Delete
+      </button>
+      <button class="btn" onclick="call('sync/commit-delete?limit='+L(), this)">
+        5b) Commit Delete
+      </button>
+    </li>
+  </ol>
+</div>
+
+<div class="card">
+  <h3>Output</h3>
+  <pre id="out">(results appear here)</pre>
+</div>
+
+<script>
+  function L() {
+    return document.getElementById("limit").value || "50";
+  }
+  async function call(path, btn) {
+    const out = document.getElementById("out");
+    btn.disabled = true;
+    out.textContent = "Calling /api/" + path + " ...";
+    try {
+      const res = await fetch("/api/" + path, { method: "POST" });
+      const txt = await res.text();
+      out.textContent = "HTTP " + res.status + "\n\n" + txt;
+    } catch (e) {
+      out.textContent = "ERROR: " + e;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+</script>
+{% endblock %}

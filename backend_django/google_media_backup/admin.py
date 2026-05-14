@@ -1,44 +1,47 @@
+# backend_django/google_media_backup/admin.py
 from django.contrib import admin
 from django.conf import settings
-from django.urls import reverse
-from django.utils.html import format_html
 from .models import DriveAsset, MediaItem, RunLog
 
-admin.site.site_header = getattr(settings, 'ADMIN_SITE_HEADER', 'Admin')
-admin.site.site_title = getattr(settings, 'ADMIN_SITE_TITLE', 'Admin')
-admin.site.index_title = getattr(settings, 'ADMIN_INDEX_TITLE', 'Dashboard')
+# Branding from .env via settings (optional)
+admin.site.site_header = getattr(settings, "ADMIN_SITE_HEADER", "Gmail Media Cleanup Admin")
+admin.site.site_title = getattr(settings, "ADMIN_SITE_TITLE", "Gmail Media Cleanup")
+admin.site.index_title = getattr(settings, "ADMIN_INDEX_TITLE", "Operations Console")
 
-def ops_link():
-    url = reverse('gmb_ops')
-    return format_html('<a class="button" href="{}">Open Operations Console</a>', url)
+# IMPORTANT: Do NOT override admin.site.each_context here.
+# That was the source of the RecursionError.
 
 @admin.register(MediaItem)
 class MediaItemAdmin(admin.ModelAdmin):
-    list_display = ('sha256', 'file', 'created_at')
+    list_display = ("sha256", "file", "created_at")
+    search_fields = ("sha256", "file")
+
 
 @admin.register(RunLog)
 class RunLogAdmin(admin.ModelAdmin):
-    list_display = ('run_id', 'status', 'started_at', 'finished_at')
+    list_display = ("run_id", "status", "started_at", "finished_at")
+    search_fields = ("run_id", "status")
+    readonly_fields = ("started_at", "finished_at", "totals")
+
 
 @admin.register(DriveAsset)
 class DriveAssetAdmin(admin.ModelAdmin):
-    list_display = ('drive_id', 'name', 'mime_type', 'state', 'download_path', 'imported_at')
-    list_filter = ('state', 'mime_type')
-    search_fields = ('drive_id', 'name')
-    actions = ['action_mark_delete', 'action_commit_delete']
+    list_display = ("drive_id", "name", "mime_type", "state", "download_path", "imported_at")
+    list_filter = ("state", "mime_type")
+    search_fields = ("drive_id", "name", "mime_type")
+    readonly_fields = ("discovered_at", "downloaded_at", "imported_at", "last_attempt_at")
 
-    @admin.action(description="Mark selected as DELETE_PENDING")
+    actions = ["action_mark_delete", "action_commit_delete"]
+
+    @admin.action(description="Mark selected as DELETE_PENDING (only if VERIFIED)")
     def action_mark_delete(self, request, queryset):
-        queryset.filter(state='VERIFIED').update(state='DELETE_PENDING')
+        updated = queryset.filter(state="VERIFIED").update(state="DELETE_PENDING")
+        self.message_user(request, f"Marked {updated} item(s) as DELETE_PENDING.")
 
-    @admin.action(description="Commit delete (Drive) [Queue only]")
+    @admin.action(description="Queue selected for Drive delete (commit via API)")
     def action_commit_delete(self, request, queryset):
-        updated = queryset.filter(state='DELETE_PENDING').count()
-        self.message_user(request, f"Queued {updated} for /admin/ops (Commit Delete)")
-
-# Add an ops link on the admin index page via site each_context (appears in template blocks)
-def each_context(request):
-    ctx = admin.site.each_context(request)
-    ctx['gmb_ops_link'] = ops_link()
-    return ctx
-admin.site.each_context = each_context
+        count = queryset.filter(state="DELETE_PENDING").count()
+        self.message_user(
+            request,
+            f"{count} item(s) are in DELETE_PENDING. Use /admin/ops/ → Commit Delete to perform Drive delete."
+        )

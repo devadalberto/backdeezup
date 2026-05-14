@@ -1,22 +1,33 @@
-version: "3.8"
 services:
   db:
     image: postgres:16
-    environment: { POSTGRES_USER: app, POSTGRES_PASSWORD: app, POSTGRES_DB: app }
-    volumes: [ "pgdata:/var/lib/postgresql/data" ]
-    healthcheck: { test: ["CMD-SHELL","pg_isready -U app -d app"], interval: 10s, timeout: 5s, retries: 5 }
+    environment:
+      { POSTGRES_USER: app, POSTGRES_PASSWORD: app, POSTGRES_DB: app }
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      {
+        test: ["CMD-SHELL", "pg_isready -U app -d app"],
+        interval: 10s,
+        timeout: 5s,
+        retries: 5,
+      }
   redis: { image: redis:7-alpine }
   web:
     build: .
-    environment: { DATABASE_URL: postgres://app:app@db:5432/app, DEBUG: "false", ALLOWED_HOSTS: "*" }
-    volumes: [ "media:/app/media", "staticfiles:/app/staticfiles" ]
-    depends_on: [ db ]
+    environment:
+      {
+        DATABASE_URL: postgres://app:app@db:5432/app,
+        DEBUG: "false",
+        ALLOWED_HOSTS: "*",
+      }
+    volumes: ["media:/app/media", "staticfiles:/app/staticfiles"]
+    depends_on: [db]
   nginx:
     image: nginx:stable-alpine
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - media:/app/media:ro
       - staticfiles:/app/staticfiles:ro
-    ports: [ "8844:80" ]
-    depends_on: [ web ]
+    ports: ["8844:80"]
+    depends_on: [web]
 volumes: { pgdata: {}, media: {}, staticfiles: {} }
