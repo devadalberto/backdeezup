@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-14
+
+### Added
+- `admin_views.py` — `reports_view` (assets by state, top MIME types, totals, last 20 RunLog entries) and `ops_console` (one-click pipeline UI)
+- `templates/admin/reports.html` — responsive grid dashboard with totals, state table, MIME types, recent runs
+- `templates/admin/ops_console.html` — pipeline step buttons with shared limit input and live JSON output
+
+### Fixed
+- `admin.py` — removed `each_context` override that caused `RecursionError`; added `search_fields` and `readonly_fields` to all three admin classes; better action feedback messages
+- `urls.py` — custom admin routes registered before `path("admin/")` (correct Django ordering); graceful `try/except` for optional `query_page` view
+
+### Security
+- Merged `dev/local-tests` branch discarding its `docker-compose.yml` (had hardcoded `app:app` credentials); main's env-var-driven version kept
+
 ## [0.4.2] - 2026-05-13
 
 ### Added
