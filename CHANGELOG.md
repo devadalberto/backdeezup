@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-05-14
+
+### Changed
+- `Dockerfile` — switched from pip + requirements.txt to uv for dependency installation; uses `ghcr.io/astral-sh/uv:latest` via COPY --from, `uv sync --frozen --no-dev`
+- `requirements.txt` — regenerated from uv lockfile via `uv export`; now includes all pinned transitive deps and is always in sync with `pyproject.toml`
+
 ## [0.5.0] - 2026-05-14
 
 ### Added
