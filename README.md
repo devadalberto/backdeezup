@@ -194,7 +194,10 @@ ALLOWED_HOSTS=CHANGE_ME_your_server_hostname_or_ip,localhost
 CSRF_TRUSTED_ORIGINS=http://CHANGE_ME_your_server_hostname_or_ip:8844
 
 # ── Database ──────────────────────────────────────────────────────────────────
-DATABASE_URL=postgres://app:CHANGE_ME_db_password@db:5432/app
+POSTGRES_USER=backdeezup
+POSTGRES_PASSWORD=CHANGE_ME_db_password
+POSTGRES_DB=backdeezup
+DATABASE_URL=postgres://backdeezup:CHANGE_ME_db_password@db:5432/backdeezup
 
 # ── Google OAuth ──────────────────────────────────────────────────────────────
 GOOGLE_ENCRYPTION_KEY=CHANGE_ME_run_keygen_below
