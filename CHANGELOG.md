@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-05-13
+
+### Fixed
+- `docker-compose.yml` — Postgres credentials now sourced from `.env` via `${POSTGRES_USER}`, `${POSTGRES_PASSWORD}`, `${POSTGRES_DB}`. Nothing hardcoded.
+- `web` service `depends_on` upgraded to wait for db healthcheck before starting.
+
+### Added
+- README: full production deployment section with copy-paste `.env` scaffold (all secrets as `CHANGE_ME` placeholders), step-by-step deploy commands, static file notes, and ongoing ops reference.
+
 ## [0.4.0] - 2026-05-13
 
 ### Added

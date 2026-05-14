@@ -1,7 +1,7 @@
 # shared_context.md
 > Shared ground truth for Claude, Gemini, and Codex working on this repo.
 > Keep this file updated as the project evolves.
-> Last updated: 2026-05-13 (v0.3.0)
+> Last updated: 2026-05-13 (v0.4.0)
 
 ---
 
@@ -313,3 +313,5 @@ Graph output: `graphify-out/` (graph.json, graph.html, GRAPH_REPORT.md)
 - **Server: WINWEB01.** Windows Server 2025, Hyper-V guest. HypervisorPlatform enabled. WSL2 running Debian (v2). Claude sandbox error resolved.
 - **GitHub Pages disabled.** Private repo on free plan — Pages requires public. Docs workflow builds to artifact instead. Serve locally: `./dev.sh docs` on port 8001.
 - **Cowork / Remote Control.** Start: `claude --remote-control backdeezup` from repo root. Join: `claude --resume WINWEB01/backdeezup` from another client.
+- **docker-compose.yml** — all Postgres credentials come from `.env` via `${POSTGRES_USER}`, `${POSTGRES_PASSWORD}`, `${POSTGRES_DB}`. Never hardcoded. `web` waits for db healthcheck.
+- **Production deploy** — full copy-paste steps in README: `.env` scaffold → build → up → migrate → createsuperuser → OAuth. `collectstatic` runs automatically at image build time (Dockerfile). Static files served by nginx from `/app/staticfiles/`.
