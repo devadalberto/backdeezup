@@ -1,7 +1,7 @@
 # shared_context.md
 > Shared ground truth for Claude, Gemini, and Codex working on this repo.
 > Keep this file updated as the project evolves.
-> Last updated: 2026-05-13 (v0.4.0)
+> Last updated: 2026-05-14 (v0.5.0)
 
 ---
 
@@ -289,7 +289,7 @@ Graph output: `graphify-out/` (graph.json, graph.html, GRAPH_REPORT.md)
 - Protected lists (never-delete file types/paths)
 - Quota tracking with color-coded UI
 
-**Current version: 0.3.0** | **Target: v1.0.0 after Phase 3 complete**
+**Current version: 0.5.0** | **Target: v1.0.0 after Phase 3 complete**
 
 ---
 
@@ -315,7 +315,10 @@ Graph output: `graphify-out/` (graph.json, graph.html, GRAPH_REPORT.md)
 - **Cowork / Remote Control.** Start: `claude --remote-control backdeezup` from repo root. Join: `claude --resume WINWEB01/backdeezup` from another client.
 - **docker-compose.yml** — all Postgres credentials come from `.env` via `${POSTGRES_USER}`, `${POSTGRES_PASSWORD}`, `${POSTGRES_DB}`. Never hardcoded. `web` waits for db healthcheck.
 - **Production deploy** — full copy-paste steps in README: `.env` scaffold → build → up → migrate → createsuperuser → OAuth. `collectstatic` runs at container start via `entrypoint.sh`. Static files served by nginx from `/app/staticfiles/`.
-- **entrypoint.sh** — runs `collectstatic` then starts gunicorn. Replaces the build-time collectstatic. Ensures static files are always fresh on start.
+- **entrypoint.sh** — runs `collectstatic` then starts gunicorn. Ensures static files always fresh on start.
 - **secrets volume** — `./secrets:/app/backend_django/secrets:ro` mounted in docker-compose. Never baked into the image.
 - **Debian WSL2 repo** — cloned at `/home/saitama/repos/github/devadalberto/backdeezup` (user: saitama).
-- **Makefile** — `migrate`, `superuser`, `shell` now run inside the Docker container via `docker compose exec web`. `run` and `docs` remain local dev targets.
+- **Makefile** — `migrate`, `superuser`, `shell` run inside Docker via `docker compose exec web`. `run` and `docs` are local dev targets.
+- **Admin UI (v0.5.0)** — `/admin/reports/` (live dashboard) and `/admin/ops/` (pipeline ops console) added via `admin_views.py` + templates.
+- **Ubuntu remote** — hostname: DTC-5CG4155DQ9, IP: 192.168.88.20, user: jose, SSH port 2222 (WSL2 port-forward). Connect: `wsl -d Debian -- bash -c "ssh -p 2222 jose@192.168.88.20 '<cmd>'"`. Secrets path: `/home/jose/repos/github/devadalberto/gmail_cleanup/jose.valdes/secrets/`.
+- **Google OAuth secrets** — copied to `secrets/` on both WINWEB01 and Debian WSL repos. Git-ignored, never committed.
