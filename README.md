@@ -180,6 +180,152 @@ make migrate && make superuser
 
 ---
 
+## Production deployment
+
+### 1. Create `.env`
+
+Copy this block, fill in every `CHANGE_ME` value, then save as `.env` in the repo root:
+
+```env
+# ── Django ────────────────────────────────────────────────────────────────────
+DJANGO_SECRET_KEY=CHANGE_ME_long_random_50_char_string
+DEBUG=False
+ALLOWED_HOSTS=CHANGE_ME_your_server_hostname_or_ip,localhost
+CSRF_TRUSTED_ORIGINS=http://CHANGE_ME_your_server_hostname_or_ip:8844
+
+# ── Database ──────────────────────────────────────────────────────────────────
+DATABASE_URL=postgres://app:CHANGE_ME_db_password@db:5432/app
+
+# ── Google OAuth ──────────────────────────────────────────────────────────────
+GOOGLE_ENCRYPTION_KEY=CHANGE_ME_run_keygen_below
+GOOGLE_CLIENT_SECRETS=secrets/google_client.json
+GOOGLE_TOKEN_FILE=secrets/google_token.json
+GOOGLE_MIME_ALLOWLIST=image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/x-msvideo
+
+# ── Pipeline behaviour ────────────────────────────────────────────────────────
+DRIVE_DELETE_MODE=trash
+MIN_RETENTION_DAYS=3
+
+# ── Storage ───────────────────────────────────────────────────────────────────
+MEDIA_ROOT=/app/media
+STATIC_ROOT=/app/staticfiles
+
+# ── Admin UI labels (optional) ───────────────────────────────────────────────
+ADMIN_SITE_HEADER=BackDeezUp
+ADMIN_SITE_TITLE=BackDeezUp Admin
+ADMIN_INDEX_TITLE=Dashboard
+SWAGGER_TITLE=BackDeezUp API
+SWAGGER_VERSION=0.4.0
+```
+
+Generate the Fernet key for `GOOGLE_ENCRYPTION_KEY`:
+
+```bash
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+Generate a Django secret key:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(50))"
+```
+
+> **Important:** Store `.env` and `secrets/` outside version control. Both are git-ignored.
+
+---
+
+### 2. Place Google OAuth credentials
+
+```bash
+mkdir -p secrets
+cp ~/Downloads/client_secret_*.json secrets/google_client.json
+```
+
+---
+
+### 3. Build and start
+
+```bash
+# Build image (runs collectstatic automatically)
+docker compose build
+
+# Start all services: postgres + redis + web + nginx
+docker compose up -d
+
+# Verify all containers are healthy
+docker compose ps
+```
+
+---
+
+### 4. Run migrations
+
+```bash
+docker compose exec web python manage.py migrate
+```
+
+---
+
+### 5. Create superuser
+
+```bash
+docker compose exec web python manage.py createsuperuser
+```
+
+---
+
+### 6. Authenticate with Google
+
+```bash
+# Open the Swagger UI in a browser and call POST /auth/connect
+open http://localhost:8844/api/docs
+# OR trigger it directly:
+curl -X POST http://localhost:8844/api/auth/connect
+```
+
+Complete the OAuth browser flow. The encrypted token is saved to `secrets/google_token.json` inside the container volume.
+
+---
+
+### 7. Verify the deployment
+
+```bash
+# Static files served by nginx (should return 200)
+curl -I http://localhost:8844/static/admin/css/base.css
+
+# API health / Swagger UI
+curl -I http://localhost:8844/api/docs
+
+# Django Admin
+curl -I http://localhost:8844/admin/
+```
+
+---
+
+### Ongoing operations
+
+```bash
+# Tail logs
+docker compose logs -f --tail=100
+
+# Restart after a code change
+docker compose build web && docker compose up -d web
+
+# Apply new migrations after a code change
+docker compose exec web python manage.py migrate
+
+# Open Django shell
+docker compose exec web python manage.py shell
+
+# Stop everything
+docker compose down
+
+# Stop and wipe the database volume (destructive)
+docker compose down -v
+```
+
+---
+
 ## API reference
 
 Base: `http://localhost:8844/api` — Swagger UI at `/api/docs`
