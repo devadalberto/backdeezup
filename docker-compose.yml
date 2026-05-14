@@ -39,4 +39,9 @@ services:
     ports:
       - "8844:80"
     depends_on:
-      -
+      - web
+
+volumes:
+  pgdata:
+  media:
+  staticfiles:

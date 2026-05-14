@@ -310,8 +310,12 @@ Graph output: `graphify-out/` (graph.json, graph.html, GRAPH_REPORT.md)
 - **Private GitHub repo.** https://github.com/devadalberto/backdeezup
 - **Mermaid diagrams.** No `\n` in node labels, no Unicode arrows (use plain text). Required for GitHub renderer.
 - **Playwright installed.** `playwright==1.59.0` + Chromium ready. Run via `uv run playwright`. No credentials needed for headless tests.
-- **Server: WINWEB01.** Windows Server 2025, Hyper-V guest. HypervisorPlatform enabled. WSL2 running Debian (v2). Claude sandbox error resolved.
+- **Server: WINWEB01.** Windows Server 2025, Hyper-V guest. HypervisorPlatform enabled. WSL2 running **Debian**, user: **saitama** (`\\wsl$\Debian\home\saitama`). SSH keys at `~/.ssh/` (copied from `C:\Users\Administrator\.ssh\`). Claude sandbox error resolved.
 - **GitHub Pages disabled.** Private repo on free plan — Pages requires public. Docs workflow builds to artifact instead. Serve locally: `./dev.sh docs` on port 8001.
 - **Cowork / Remote Control.** Start: `claude --remote-control backdeezup` from repo root. Join: `claude --resume WINWEB01/backdeezup` from another client.
 - **docker-compose.yml** — all Postgres credentials come from `.env` via `${POSTGRES_USER}`, `${POSTGRES_PASSWORD}`, `${POSTGRES_DB}`. Never hardcoded. `web` waits for db healthcheck.
-- **Production deploy** — full copy-paste steps in README: `.env` scaffold → build → up → migrate → createsuperuser → OAuth. `collectstatic` runs automatically at image build time (Dockerfile). Static files served by nginx from `/app/staticfiles/`.
+- **Production deploy** — full copy-paste steps in README: `.env` scaffold → build → up → migrate → createsuperuser → OAuth. `collectstatic` runs at container start via `entrypoint.sh`. Static files served by nginx from `/app/staticfiles/`.
+- **entrypoint.sh** — runs `collectstatic` then starts gunicorn. Replaces the build-time collectstatic. Ensures static files are always fresh on start.
+- **secrets volume** — `./secrets:/app/backend_django/secrets:ro` mounted in docker-compose. Never baked into the image.
+- **Debian WSL2 repo** — cloned at `/home/saitama/repos/github/devadalberto/backdeezup` (user: saitama).
+- **Makefile** — `migrate`, `superuser`, `shell` now run inside the Docker container via `docker compose exec web`. `run` and `docs` remain local dev targets.

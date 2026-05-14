@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-05-13
+
+### Added
+- `entrypoint.sh` — runs `collectstatic` then starts gunicorn at container start. Replaces build-time collectstatic so static files are always current.
+- `secrets/.gitkeep` — ensures the secrets directory is tracked by git (contents git-ignored).
+- Debian WSL2 environment: repo cloned at `/home/saitama/repos/github/devadalberto/backdeezup`.
+
+### Changed
+- `Dockerfile` — removed `COPY .env` and build-time `collectstatic`; now uses `entrypoint.sh` as CMD.
+- `docker-compose.yml` — added `./secrets:/app/backend_django/secrets:ro` volume mount so OAuth credentials are injected at runtime, not baked into the image.
+- `Makefile` — `migrate`, `superuser`, `shell` now run via `docker compose exec web`; `run` and `docs` remain local dev targets.
+- `.env.sample` — fully updated with all current variables, inline generation commands, and `CHANGE_ME` placeholders.
+
 ## [0.4.1] - 2026-05-13
 
 ### Fixed
