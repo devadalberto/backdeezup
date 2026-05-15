@@ -56,8 +56,10 @@ def start_oauth_local(port: int = 18444) -> str:
     print(f"Starting local OAuth server on port {port}...")
     print(f"Make sure port {port} is reachable from your browser.")
     print("="*60 + "\n")
+    # Google rejects 0.0.0.0 as a redirect URI — must be localhost.
+    # Docker port mapping (18444:18444) handles routing from outside into the container.
     creds = flow.run_local_server(
-        host="0.0.0.0",
+        host="localhost",
         port=port,
         open_browser=False,
         success_message="OAuth completed! You can close this tab.",
