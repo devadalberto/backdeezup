@@ -140,35 +140,37 @@ sync-download:
 	curl -s -X POST "$(HOST)/api/sync/download?limit=$(LIMIT)" | python3 -m json.tool || true
 
 sync-run:
-	@echo "Running full pipeline: download -> import -> verify (loops until done)"
-	@_progress() { \
-		p=$$(curl -s "$(HOST)/api/progress" 2>/dev/null); \
-		pct=$$(echo "$$p" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['pct'])" 2>/dev/null || echo "?"); \
-		done=$$(echo "$$p" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['done'])" 2>/dev/null || echo "?"); \
-		total=$$(echo "$$p" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['total'])" 2>/dev/null || echo "?"); \
-		filled=$$(python3 -c "print(int(float('$$pct') / 5))" 2>/dev/null || echo 0); \
-		bar=$$(python3 -c "print('=' * $$filled + '-' * (20 - $$filled))" 2>/dev/null || echo "--------------------"); \
-		echo "[$$bar] $$pct% ($$done/$$total verified)"; \
+	@bash -c '\
+	HOST=$(HOST); LIMIT=$(LIMIT); \
+	show_progress() { \
+		p=$$(curl -s "$$HOST/api/progress" 2>/dev/null); \
+		pct=$$(echo "$$p" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[\"pct\"])" 2>/dev/null || echo 0); \
+		done_n=$$(echo "$$p" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[\"done\"])" 2>/dev/null || echo 0); \
+		total=$$(echo "$$p" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[\"total\"])" 2>/dev/null || echo 0); \
+		filled=$$(python3 -c "print(int(float(\"$$pct\") / 5))" 2>/dev/null || echo 0); \
+		bar=$$(python3 -c "f=$$filled; print(\"=\"*f + \"-\"*(20-f))" 2>/dev/null); \
+		echo "  [$$bar] $$pct% ($$done_n/$$total verified)"; \
 	}; \
+	echo "Running full pipeline: download -> import -> verify (loops until done)"; \
 	while true; do \
-		result=$$(curl -s -X POST "$(HOST)/api/sync/download?limit=$(LIMIT)"); \
-		n=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('downloaded',0))" 2>/dev/null || echo 0); \
-		echo "  downloaded: $$n"; _progress; \
+		result=$$(curl -s -X POST "$$HOST/api/sync/download?limit=$$LIMIT"); \
+		n=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"downloaded\",0))" 2>/dev/null || echo 0); \
+		echo "  download: $$n"; show_progress; \
 		[ "$$n" -gt 0 ] || break; \
 	done; \
 	while true; do \
-		result=$$(curl -s -X POST "$(HOST)/api/sync/import?limit=$(LIMIT)"); \
-		n=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('imported',0))" 2>/dev/null || echo 0); \
-		echo "  imported: $$n"; _progress; \
+		result=$$(curl -s -X POST "$$HOST/api/sync/import?limit=$$LIMIT"); \
+		n=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"imported\",0))" 2>/dev/null || echo 0); \
+		echo "  import: $$n"; show_progress; \
 		[ "$$n" -gt 0 ] || break; \
 	done; \
 	while true; do \
-		result=$$(curl -s -X POST "$(HOST)/api/sync/verify?limit=$(LIMIT)"); \
-		n=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('verified',0))" 2>/dev/null || echo 0); \
-		echo "  verified: $$n"; _progress; \
+		result=$$(curl -s -X POST "$$HOST/api/sync/verify?limit=$$LIMIT"); \
+		n=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"verified\",0))" 2>/dev/null || echo 0); \
+		echo "  verify: $$n"; show_progress; \
 		[ "$$n" -gt 0 ] || break; \
 	done; \
-	echo "Pipeline complete!"; _progress
+	echo "Pipeline complete!"; show_progress'
 
 sync-import:
 	curl -s -X POST "$(HOST)/api/sync/import?limit=$(LIMIT)" | python3 -m json.tool || true
