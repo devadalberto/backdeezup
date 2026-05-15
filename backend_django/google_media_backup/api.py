@@ -225,3 +225,31 @@ def sync_commit_delete(request, force: bool = False, limit: int = 50):
         else:
             a.error=f"Delete failed ({mode})"; a.save(update_fields=['error'])
     return {"deleted": done, "mode": mode}
+
+
+@api.get("/progress")
+def pipeline_progress(request):
+    from django.db.models import Count, Sum
+    counts = dict(
+        DriveAsset.objects.values_list("state").annotate(n=Count("id"))
+    )
+    total = sum(counts.values()) or 1
+    discovered  = counts.get("DISCOVERED", 0)
+    downloaded  = counts.get("DOWNLOADED", 0)
+    imported    = counts.get("IMPORTED", 0)
+    verified    = counts.get("VERIFIED", 0)
+    pending     = counts.get("DELETE_PENDING", 0)
+    deleted     = counts.get("DELETED", 0)
+    done        = verified + pending + deleted
+    pct         = round(done / total * 100, 1)
+    return {
+        "total":      total,
+        "discovered": discovered,
+        "downloaded": downloaded,
+        "imported":   imported,
+        "verified":   verified,
+        "pending":    pending,
+        "deleted":    deleted,
+        "done":       done,
+        "pct":        pct,
+    }
