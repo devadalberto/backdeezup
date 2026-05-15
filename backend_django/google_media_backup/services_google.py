@@ -35,6 +35,7 @@ def _save_creds(creds: Credentials) -> None:
     with open(TOKEN_FILE_ENC, 'w') as f: json.dump(wrapped, f, indent=2)
 
 def start_oauth_local() -> str:
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
     """
     Headless OAuth for Desktop App (installed) client type.
     The registered redirect URI is http://localhost — Google sends the code
