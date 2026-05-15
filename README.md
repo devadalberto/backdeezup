@@ -134,6 +134,79 @@ sequenceDiagram
 
 ---
 
+## Operational runbook (production)
+
+### First-time deployment
+
+```bash
+# 1. Clone
+git clone git@github.com:devadalberto/backdeezup.git
+cd backdeezup
+
+# 2. Configure
+cp .env.sample .env
+vim .env   # fill all CHANGE_ME values
+# Generate Django secret key:
+python3 -c "import secrets; print(secrets.token_urlsafe(50))"
+# Generate Fernet key (stdlib, no deps needed):
+python3 -c "import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())"
+
+# 3. Place Google Desktop app credentials (type must be 'installed', not 'web')
+# Download from Google Auth Platform → Clients → backdeezup-desktop → Download JSON
+# If file already exists in Downloads, Google adds (1) suffix — use that one:
+cp '/mnt/c/Users/Administrator/Downloads/client_secret_*_(1).json' secrets/google_client.json
+# Verify type:
+python3 -c "import json; d=json.load(open('secrets/google_client.json')); print(list(d.keys())[0])"
+# Must print: installed
+
+# 4. Pre-flight check
+make preflight
+
+# 5. Build and start
+make build && make up
+make migrate && make superuser
+
+# 6. Authenticate with Google
+make auth
+# Opens browser URL — approve all scopes — copy redirect URL back to terminal
+
+# 7. Verify auth
+curl -s http://localhost:8844/api/gmail/profile
+```
+
+### Running the backup pipeline
+
+```bash
+# Drive + Photos discovery
+make discover
+make discover-files
+
+# Full Drive pipeline loop (runs until 100%)
+while make sync-run; do sleep 1; done
+
+# Check Drive progress anytime
+make progress
+
+# Gmail discovery (fast — stores IDs only)
+make gmail-discover
+
+# Full Gmail pipeline loop (runs until 100%)
+while make gmail-run; do sleep 1; done
+
+# Check Gmail progress anytime
+make gmail-progress
+```
+
+### Subsequent runs (incremental)
+
+```bash
+make redeploy           # pull latest + rebuild + restart
+make gmail-discover     # pick up new messages since last run
+while make gmail-run; do sleep 1; done
+```
+
+---
+
 ## Quick start
 
 ### Local dev (uv — recommended)

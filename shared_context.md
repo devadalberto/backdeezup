@@ -338,5 +338,10 @@ Graph output: `graphify-out/` (graph.json, graph.html, GRAPH_REPORT.md)
 - **Google Photos blocked** — photoslibrary.readonly scope blocked because old web client (1ql0o9aj) still has non-HTTPS redirect URIs in the project. Project-wide restriction. Photos skipped for now.
 - **Google Auth Platform** (new UI 2025+) — replaces "APIs & Services → OAuth consent screen". Scopes at: Google Auth Platform → Data Access → Add or remove scopes.
 - **Desktop app OAuth client** — client_id: `486053539237-c454bqj13or711a74tfc8t493qlna64d`, named `backdeezup-desktop`. MUST be `installed` type, not `web`.
-- **Current pipeline status** — 548/2176 verified (25.2%) as of 2026-05-15. Running `make sync-run` to complete.
-- **Current version: 0.6.4**
+- **Drive pipeline** — COMPLETE. 2176/2176 verified (100%).
+- **Gmail pipeline** — 9500 messages discovered, running `while make gmail-run; do sleep 1; done` to complete.
+- **Google Photos** — BLOCKED. Delete old web client (`1ql0o9aj`) from Google Auth Platform → Clients, then re-auth.
+- **make gmail-run** — single pass download→verify, exits 1 when done. Loop: `while make gmail-run; do sleep 1; done`
+- **make gmail-progress** — shows Gmail pipeline progress bar via `/api/gmail/progress`
+- **make progress** — shows Drive pipeline progress via `/api/progress`
+- **Current version: 0.7.0**
