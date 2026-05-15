@@ -343,6 +343,30 @@ def gmail_label(request, gmail_ids: List[str], add_labels: List[str] = [], remov
     return {"dry_run": False, "modified": modified, "errors": errors}
 
 
+# ── Progress ──────────────────────────────────────────────────────────────────
+
+@gmail_api.get("/progress")
+def gmail_progress(request):
+    from django.db.models import Count, Sum
+    counts = dict(GmailMessage.objects.values_list("state").annotate(n=Count("id")))
+    total_db = sum(counts.values()) or 0
+    sync_total = GmailSyncState.objects.aggregate(t=Sum("total_messages"))["t"] or total_db
+    verified = counts.get(GmailMessage.STATE_VERIFIED, 0)
+    downloaded = counts.get(GmailMessage.STATE_DOWNLOADED, 0)
+    discovered = counts.get(GmailMessage.STATE_DISCOVERED, 0)
+    pct = round(verified / sync_total * 100, 1) if sync_total else 0
+    filled = int(pct / 5)
+    bar = "=" * filled + "-" * (20 - filled)
+    return {
+        "total": sync_total,
+        "discovered": discovered,
+        "downloaded": downloaded,
+        "verified": verified,
+        "pct": pct,
+        "bar": f"[{bar}] {pct}% ({verified}/{sync_total} verified)",
+    }
+
+
 # ── Asset listing ─────────────────────────────────────────────────────────────
 
 @gmail_api.get("/messages", response=List[GmailMessageOut])
