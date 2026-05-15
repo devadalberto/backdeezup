@@ -36,35 +36,43 @@ def _save_creds(creds: Credentials) -> None:
 
 def start_oauth_local(port: int = 18444) -> str:
     """
-    OAuth flow for headless servers.
-    Starts a temporary local server on `port` inside the container.
-    Requires port `port` to be forwarded from the host to the container.
-
-    Step 1 — forward the port (run on the host before calling this):
-        docker compose exec -it web sh  (then in another terminal)
-        OR just ensure port 18444 is exposed in docker-compose if needed.
-
-    Step 2 — run: make auth
-    Step 3 — open the printed URL in a browser on any machine that can reach
-              http://localhost:18444 (or the host IP on port 18444).
-    Step 4 — Google redirects to localhost:18444 automatically and saves token.
+    Two-step headless OAuth:
+    1. Prints the authorization URL — open it in any browser.
+    2. Google redirects to localhost:18444/?code=... — copy the full redirect URL
+       or just the `code=` value and paste it when prompted.
     """
     if not os.path.exists(CLIENT_SECRETS):
         return "Missing client secrets at secrets/google_client.json"
     flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS, SCOPES)
+    flow.redirect_uri = f"http://localhost:{port}/"
+    auth_url, _ = flow.authorization_url(prompt="consent", access_type="offline")
+
     print("\n" + "="*60)
-    print(f"Starting local OAuth server on port {port}...")
-    print(f"Make sure port {port} is reachable from your browser.")
-    print("="*60 + "\n")
-    # Google rejects 0.0.0.0 as a redirect URI — must be localhost.
-    # Docker port mapping (18444:18444) handles routing from outside into the container.
-    creds = flow.run_local_server(
-        host="localhost",
-        port=port,
-        open_browser=False,
-        success_message="OAuth completed! You can close this tab.",
-    )
-    _save_creds(creds)
+    print("Step 1: Open this URL in your browser:")
+    print()
+    print(auth_url)
+    print()
+    print("Step 2: After approving, your browser will redirect to")
+    print(f"  http://localhost:{port}/?code=...&state=...")
+    print("The page will show ERR_EMPTY_RESPONSE — that is expected.")
+    print("Copy the FULL redirect URL from the browser address bar and paste below.")
+    print("="*60)
+
+    redirect_response = input("\nPaste the full redirect URL here: ").strip()
+
+    # Extract code from URL or accept raw code
+    if "code=" in redirect_response:
+        from urllib.parse import urlparse, parse_qs
+        parsed = urlparse(redirect_response)
+        code = parse_qs(parsed.query).get("code", [None])[0]
+    else:
+        code = redirect_response
+
+    if not code:
+        return "ERROR: Could not extract authorization code from the URL."
+
+    flow.fetch_token(code=code)
+    _save_creds(flow.credentials)
     return "OAuth completed and token saved."
 
 def drive_service():
