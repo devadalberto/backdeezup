@@ -45,5 +45,16 @@ urlpatterns = [
 if HAS_QUERY_PAGE:
     urlpatterns += [path("", query_page, name="query")]
 
+# OAuth callback — web client type redirects here; returns 200 so browser shows success
+from django.http import HttpResponse
+
+def oauth_callback(request):
+    return HttpResponse(
+        "<h2>OAuth completed.</h2><p>You can close this tab and return to the terminal.</p>",
+        status=200,
+    )
+
+urlpatterns += [path("api/oauth/callback", oauth_callback, name="oauth_callback")]
+
 # Static/media (dev)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
