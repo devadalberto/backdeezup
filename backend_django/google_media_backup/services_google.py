@@ -110,27 +110,13 @@ def list_media_files(page_size: int = 200, page_token: str | None = None):
     if not svc:
         return ([], None)
 
-    q_parts = [
-        "(mimeType contains 'image/' or mimeType contains 'video/')",
-        "trashed = false",
-        "(mimeType = 'application/vnd.google-apps.shortcut' and "
-        "(shortcutDetails.targetMimeType contains 'image/' or "
-        " shortcutDetails.targetMimeType contains 'video/'))",
-    ]
-    q = f"({q_parts[0]}) and {q_parts[1]} or ({q_parts[2]})"
+    q = "(mimeType contains 'image/' or mimeType contains 'video/') and trashed = false"
 
     res = svc.files().list(
         pageSize=min(int(page_size or 200), 1000),
         pageToken=page_token,
         q=q,
-        fields=(
-            "nextPageToken,"
-            "files(id,name,mimeType,size,md5Checksum,"
-            "shortcutDetails/targetId,shortcutDetails/targetMimeType)"
-        ),
-        includeItemsFromAllDrives=True,
-        supportsAllDrives=True,
-        corpora="user",
+        fields="nextPageToken, files(id,name,mimeType,size,md5Checksum)",
         spaces="drive",
     ).execute()
     return (res.get("files", []), res.get("nextPageToken"))
