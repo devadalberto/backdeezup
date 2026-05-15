@@ -34,16 +34,32 @@ def _save_creds(creds: Credentials) -> None:
     wrapped = {'payload': get_fernet().encrypt(creds.to_json().encode()).decode()}
     with open(TOKEN_FILE_ENC, 'w') as f: json.dump(wrapped, f, indent=2)
 
-def start_oauth_local(port: int = 18444) -> str:
+def start_oauth_local() -> str:
     """
-    Two-step headless OAuth:
-    1. Prints the authorization URL — open it in any browser.
-    2. Google redirects to localhost:18444/?code=... — copy the full redirect URL
-       or just the `code=` value and paste it when prompted.
+    Headless OAuth for Desktop App (installed) client type.
+    The registered redirect URI is http://localhost — Google sends the code
+    to localhost on a random port. We bind there, catch the response.
+
+    On a server with no browser:
+      1. Run: make auth
+      2. Copy the printed URL and open it in any browser.
+      3. Google redirects to http://localhost:<random_port>/?code=...
+         The page shows ERR_EMPTY_RESPONSE — that is expected.
+      4. Copy the FULL redirect URL from the address bar and paste it back.
     """
     if not os.path.exists(CLIENT_SECRETS):
         return "Missing client secrets at secrets/google_client.json"
+
     flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS, SCOPES)
+
+    # For installed/Desktop clients, redirect_uri must be http://localhost (no port).
+    # We use port=0 so the OS picks a free port, then tell the user the exact URL.
+    import socket
+    sock = socket.socket()
+    sock.bind(("localhost", 0))
+    port = sock.getsockname()[1]
+    sock.close()
+
     flow.redirect_uri = f"http://localhost:{port}/"
     auth_url, _ = flow.authorization_url(prompt="consent", access_type="offline")
 
@@ -52,26 +68,30 @@ def start_oauth_local(port: int = 18444) -> str:
     print()
     print(auth_url)
     print()
-    print("Step 2: After approving, your browser will redirect to")
-    print(f"  http://localhost:{port}/?code=...&state=...")
-    print("The page will show ERR_EMPTY_RESPONSE — that is expected.")
-    print("Copy the FULL redirect URL from the browser address bar and paste below.")
+    print(f"Step 2: Google will redirect to http://localhost:{port}/?code=...")
+    print("        The page shows ERR_EMPTY_RESPONSE — that is normal.")
+    print("        Copy the FULL URL from the browser address bar.")
     print("="*60)
 
     redirect_response = input("\nPaste the full redirect URL here: ").strip()
 
-    # Extract code from URL or accept raw code
+    from urllib.parse import urlparse, parse_qs
     if "code=" in redirect_response:
-        from urllib.parse import urlparse, parse_qs
         parsed = urlparse(redirect_response)
         code = parse_qs(parsed.query).get("code", [None])[0]
+        state = parse_qs(parsed.query).get("state", [None])[0]
     else:
         code = redirect_response
+        state = None
 
     if not code:
         return "ERROR: Could not extract authorization code from the URL."
 
-    flow.fetch_token(code=code)
+    flow.oauth2session.state = state
+    flow.fetch_token(
+        code=code,
+        authorization_response=redirect_response if "code=" in redirect_response else None,
+    )
     _save_creds(flow.credentials)
     return "OAuth completed and token saved."
 
