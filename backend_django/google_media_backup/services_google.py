@@ -75,23 +75,10 @@ def start_oauth_local() -> str:
 
     redirect_response = input("\nPaste the full redirect URL here: ").strip()
 
-    from urllib.parse import urlparse, parse_qs
-    if "code=" in redirect_response:
-        parsed = urlparse(redirect_response)
-        code = parse_qs(parsed.query).get("code", [None])[0]
-        state = parse_qs(parsed.query).get("state", [None])[0]
-    else:
-        code = redirect_response
-        state = None
+    if "code=" not in redirect_response:
+        return "ERROR: No authorization code found in the URL."
 
-    if not code:
-        return "ERROR: Could not extract authorization code from the URL."
-
-    flow.oauth2session.state = state
-    flow.fetch_token(
-        code=code,
-        authorization_response=redirect_response if "code=" in redirect_response else None,
-    )
+    flow.fetch_token(authorization_response=redirect_response)
     _save_creds(flow.credentials)
     return "OAuth completed and token saved."
 
