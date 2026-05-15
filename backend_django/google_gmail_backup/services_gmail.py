@@ -185,12 +185,17 @@ def extract_headers(msg: dict) -> dict:
 
 
 def parse_date(date_str: str):
-    """Parse RFC2822 date string to datetime. Returns None on failure."""
+    """Parse RFC2822 date string to timezone-aware datetime. Returns None on failure."""
     if not date_str:
         return None
     try:
         from email.utils import parsedate_to_datetime
-        return parsedate_to_datetime(date_str)
+        import datetime
+        from django.utils import timezone
+        dt = parsedate_to_datetime(date_str)
+        if dt.tzinfo is None:
+            dt = timezone.make_aware(dt, datetime.timezone.utc)
+        return dt
     except Exception:
         return None
 

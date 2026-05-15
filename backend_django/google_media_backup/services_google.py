@@ -139,7 +139,7 @@ def list_photos_items(page_size: int = 200, page_token: str | None = None):
     if not svc:
         return ([], None)
     res = svc.mediaItems().list(
-        pageSize=min(int(page_size or 200), 1000),
+        pageSize=min(int(page_size or 100), 100),  # Photos API max is 100
         pageToken=page_token,
     ).execute()
     return (res.get("mediaItems", []) or [], res.get("nextPageToken"))
