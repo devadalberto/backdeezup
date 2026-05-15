@@ -76,11 +76,11 @@ def gmail_profile(request):
 # ── Discovery ─────────────────────────────────────────────────────────────────
 
 @gmail_api.post("/sync/discover")
-def gmail_discover(request, q: str = "", max_pages: int = 10, page_size: int = 500):
+def gmail_discover(request, q: str = "", max_pages: int = 20, page_size: int = 500):
     """
-    Full snapshot discovery — lists all message IDs and fetches metadata.
-    Stores each as a GmailMessage in DISCOVERED state.
-    On completion stores the latest historyId for future incremental syncs.
+    Fast discovery — stores only message IDs (no per-message API calls).
+    Metadata is fetched lazily during gmail-download.
+    One list page = 1 API call regardless of page_size.
     """
     run_id = str(uuid.uuid4())
     account_email = get_authenticated_email()
@@ -88,60 +88,38 @@ def gmail_discover(request, q: str = "", max_pages: int = 10, page_size: int = 5
         return {"error": "Not authenticated."}
 
     discovered = 0
-    errors = 0
     page_token = None
     pages = 0
-    latest_history_id = None
 
     while pages < max_pages:
-        ids, page_token = list_message_ids(page_token=page_token, q_filter=q, max_results=page_size)
-        for msg_ref in ids:
-            msg_id = msg_ref["id"]
-            if GmailMessage.objects.filter(gmail_id=msg_id).exists():
-                continue
-            try:
-                msg = get_message_metadata(msg_id)
-                if not msg:
-                    errors += 1
-                    continue
-                headers = extract_headers(msg)
-                date = parse_date(headers["date"])
-                GmailMessage.objects.get_or_create(
-                    gmail_id=msg_id,
-                    defaults=dict(
-                        thread_id=msg.get("threadId", ""),
-                        history_id=msg.get("historyId"),
-                        subject=headers["subject"],
-                        from_address=headers["from"],
-                        to_address=headers["to"],
-                        date=date,
-                        snippet=msg.get("snippet", ""),
-                        labels=msg.get("labelIds", []),
-                        size_estimate=msg.get("sizeEstimate", 0),
-                        has_attachments=has_attachments(msg),
-                        state=GmailMessage.STATE_DISCOVERED,
-                        account_email=account_email,
-                    ),
+        ids, page_token = list_message_ids(
+            page_token=page_token, q_filter=q, max_results=min(page_size, 500)
+        )
+        new_ids = [
+            m["id"] for m in ids
+            if not GmailMessage.objects.filter(gmail_id=m["id"]).exists()
+        ]
+        if new_ids:
+            GmailMessage.objects.bulk_create([
+                GmailMessage(
+                    gmail_id=mid,
+                    thread_id="",
+                    account_email=account_email,
+                    state=GmailMessage.STATE_DISCOVERED,
                 )
-                if not latest_history_id:
-                    latest_history_id = msg.get("historyId")
-                discovered += 1
-            except Exception:
-                errors += 1
-
+                for mid in new_ids
+            ], ignore_conflicts=True)
+            discovered += len(new_ids)
         pages += 1
         if not page_token:
             break
 
-    # Update sync state
     state, _ = GmailSyncState.objects.get_or_create(email=account_email)
     state.last_full_sync_at = timezone.now()
     state.total_messages = GmailMessage.objects.filter(account_email=account_email).count()
-    if latest_history_id:
-        state.last_history_id = latest_history_id
     state.save()
 
-    return {"discovered": discovered, "errors": errors, "run_id": run_id, "sync_type": "full"}
+    return {"discovered": discovered, "run_id": run_id, "sync_type": "full"}
 
 
 @gmail_api.post("/sync/incremental")
@@ -249,6 +227,22 @@ def gmail_download(request, limit: int = 20):
 
     for msg in qs:
         try:
+            # Fetch metadata if not yet populated (fast discover skips this)
+            if not msg.subject and not msg.from_address:
+                meta = get_message_metadata(msg.gmail_id)
+                if meta:
+                    headers = extract_headers(meta)
+                    msg.thread_id = meta.get("threadId", "")
+                    msg.history_id = meta.get("historyId")
+                    msg.subject = headers["subject"]
+                    msg.from_address = headers["from"]
+                    msg.to_address = headers["to"]
+                    msg.date = parse_date(headers["date"])
+                    msg.snippet = meta.get("snippet", "")
+                    msg.labels = meta.get("labelIds", [])
+                    msg.size_estimate = meta.get("sizeEstimate", 0)
+                    msg.has_attachments = has_attachments(meta)
+
             raw = get_message_raw(msg.gmail_id)
             if not raw:
                 msg.error = "Empty raw response"
@@ -266,7 +260,11 @@ def gmail_download(request, limit: int = 20):
             msg.downloaded_at = timezone.now()
             msg.state = GmailMessage.STATE_DOWNLOADED
             msg.error = None
-            msg.save(update_fields=["raw_path", "sha256", "downloaded_at", "state", "error"])
+            msg.save(update_fields=[
+                "thread_id", "history_id", "subject", "from_address", "to_address",
+                "date", "snippet", "labels", "size_estimate", "has_attachments",
+                "raw_path", "sha256", "downloaded_at", "state", "error",
+            ])
             downloaded += 1
         except Exception as e:
             msg.error = str(e)
