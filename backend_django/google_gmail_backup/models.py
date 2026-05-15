@@ -44,8 +44,8 @@ class GmailMessage(models.Model):
 
     # Metadata (populated on DISCOVERED)
     subject = models.TextField(blank=True, default="")
-    from_address = models.CharField(max_length=500, blank=True, default="")
-    to_address = models.CharField(max_length=500, blank=True, default="")
+    from_address = models.CharField(max_length=1000, blank=True, default="")
+    to_address = models.TextField(blank=True, default="")
     date = models.DateTimeField(blank=True, null=True, db_index=True)
     snippet = models.TextField(blank=True, default="")
     labels = models.JSONField(default=list)
