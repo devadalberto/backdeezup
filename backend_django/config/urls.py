@@ -14,19 +14,32 @@ try:
 except Exception:
     HAS_QUERY_PAGE = False
 
-# Admin custom pages
+# Admin custom pages — Drive/Photos
 from google_media_backup.admin_views import reports_view, ops_console
 
+# Admin custom pages — Gmail
+from google_gmail_backup.admin_views import gmail_dashboard, gmail_ops
+
+# Gmail API
+from google_gmail_backup.api import gmail_api
+
 urlpatterns = [
-    # Admin custom dashboards
+    # Drive/Photos admin dashboards
     path("admin/reports/", reports_view, name="admin_reports"),
     path("admin/ops/", ops_console, name="admin_ops"),
+
+    # Gmail admin dashboards
+    path("admin/gmail/dashboard/", gmail_dashboard, name="admin_gmail_dashboard"),
+    path("admin/gmail/ops/", gmail_ops, name="admin_gmail_ops"),
 
     # Django admin
     path("admin/", admin.site.urls),
 
-    # Ninja API
+    # Drive/Photos Ninja API
     path("api/", api.urls),
+
+    # Gmail Ninja API
+    path("api/gmail/", gmail_api.urls),
 ]
 
 if HAS_QUERY_PAGE:
