@@ -130,7 +130,7 @@ sync-commit-delete:
 
 # ── Gmail pipeline ────────────────────────────────────────────────────────────
 gmail-discover:
-	curl -s -X POST "$(HOST)/api/gmail/sync/discover?max_pages=10&page_size=500" | python3 -m json.tool || true
+	curl -s -X POST "$(HOST)/api/gmail/sync/discover?max_pages=5&page_size=50" | python3 -m json.tool || true
 
 gmail-incremental:
 	curl -s -X POST "$(HOST)/api/gmail/sync/incremental" | python3 -m json.tool || true
