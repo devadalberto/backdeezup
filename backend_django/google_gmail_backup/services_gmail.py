@@ -12,42 +12,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
 from google_media_backup.utils import get_fernet
-
-# Gmail scopes — readonly for backup; modify for label/trash operations
-GMAIL_SCOPES = [
-    "https://www.googleapis.com/auth/gmail.readonly",
-    "https://www.googleapis.com/auth/gmail.modify",
-    # Full access required for permanent hard delete
-    # "https://mail.google.com/",
-]
+from google_media_backup.services_google import SCOPES, _load_creds, _save_creds
 
 CLIENT_SECRETS = config("GOOGLE_CLIENT_SECRETS", default="secrets/google_client.json")
 TOKEN_FILE_ENC = config("GOOGLE_TOKEN_FILE", default="secrets/google_token.json")
-
-# ── Credential helpers (reuses same encrypted token as Drive/Photos) ──────────
-
-def _load_creds() -> Optional[Credentials]:
-    if not os.path.exists(TOKEN_FILE_ENC):
-        return None
-    try:
-        with open(TOKEN_FILE_ENC) as f:
-            data = json.load(f)
-        token_json = get_fernet().decrypt(data["payload"].encode()).decode()
-        all_scopes = GMAIL_SCOPES + [
-            "https://www.googleapis.com/auth/drive.readonly",
-            "https://www.googleapis.com/auth/drive",
-            "https://www.googleapis.com/auth/photoslibrary.readonly",
-        ]
-        return Credentials.from_authorized_user_info(json.loads(token_json), all_scopes)
-    except Exception:
-        return None
-
-
-def _save_creds(creds: Credentials) -> None:
-    os.makedirs(os.path.dirname(TOKEN_FILE_ENC), exist_ok=True)
-    wrapped = {"payload": get_fernet().encrypt(creds.to_json().encode()).decode()}
-    with open(TOKEN_FILE_ENC, "w") as f:
-        json.dump(wrapped, f, indent=2)
 
 
 def gmail_service():

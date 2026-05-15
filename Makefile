@@ -4,6 +4,7 @@ DJ    := backend_django/manage.py
 .PHONY: help \
         build up down restart logs ps \
         migrate superuser shell check \
+        auth \
         deploy redeploy \
         run docs \
         discover discover-files discover-photos \
@@ -26,6 +27,7 @@ help:
 	@echo "    make ps                 Show container status"
 	@echo ""
 	@echo "  Django"
+	@echo "    make auth               Google OAuth — prints URL, paste code back (headless)"
 	@echo "    make migrate            Run database migrations"
 	@echo "    make superuser          Create Django superuser"
 	@echo "    make shell              Django shell inside container"
@@ -81,6 +83,9 @@ ps:
 	docker compose ps
 
 # ── Django ────────────────────────────────────────────────────────────────────
+auth:
+	docker compose exec -it web python manage.py shell -c "from google_media_backup.services_google import start_oauth_local; start_oauth_local()"
+
 migrate:
 	docker compose exec web python manage.py migrate
 

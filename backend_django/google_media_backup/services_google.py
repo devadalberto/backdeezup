@@ -12,6 +12,8 @@ SCOPES = [
     "https://www.googleapis.com/auth/drive.readonly",
     "https://www.googleapis.com/auth/drive",
     "https://www.googleapis.com/auth/photoslibrary.readonly",
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.modify",
 ]
 
 CLIENT_SECRETS = config('GOOGLE_CLIENT_SECRETS', default='secrets/google_client.json')
@@ -33,10 +35,23 @@ def _save_creds(creds: Credentials) -> None:
     with open(TOKEN_FILE_ENC, 'w') as f: json.dump(wrapped, f, indent=2)
 
 def start_oauth_local() -> str:
-    if not os.path.exists(CLIENT_SECRETS): return "Missing client secrets at secrets/google_client.json"
+    """
+    Headless OAuth flow — prints a URL for the user to open in any browser.
+    Works on servers with no display. Paste the redirected localhost URL back
+    when prompted, or use run_local_server() on a machine with a browser.
+    """
+    if not os.path.exists(CLIENT_SECRETS):
+        return "Missing client secrets at secrets/google_client.json"
     flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS, SCOPES)
-    creds = flow.run_local_server(port=0)
-    _save_creds(creds)
+    flow.redirect_uri = "urn:ietf:wg:oauth:2.0:oob"
+    auth_url, _ = flow.authorization_url(prompt="consent")
+    print("\n" + "="*60)
+    print("Open this URL in your browser:")
+    print(auth_url)
+    print("="*60)
+    code = input("\nPaste the authorization code here: ").strip()
+    flow.fetch_token(code=code)
+    _save_creds(flow.credentials)
     return "OAuth completed and token saved."
 
 def drive_service():

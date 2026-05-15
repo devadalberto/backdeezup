@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-05-15
+
+### Fixed
+- OAuth flow now works headless (no browser on server) — uses `urn:ietf:wg:oauth:2.0:oob` redirect, prints URL, prompts for code paste
+- Gmail scopes (`gmail.readonly`, `gmail.modify`) merged into Drive/Photos SCOPES so one auth flow covers all services
+- `services_gmail.py` now imports `_load_creds`, `_save_creds`, `SCOPES` from `services_google.py` (single source of truth)
+
+### Added
+- `make auth` — runs headless OAuth inside container with `-it` flag
+- `docs/authentication.md` — full headless OAuth walkthrough with step-by-step instructions
+- Authentication page added to MkDocs navigation
+
 ## [0.6.0] - 2026-05-15
 
 ### Added

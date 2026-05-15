@@ -43,8 +43,9 @@ nav:
   - Home: index.md
   - Getting Started:
       - Quick Start: quickstart.md
-      - Configuration: configuration.md
       - Installation: installation.md
+      - Configuration: configuration.md
+      - Authentication: authentication.md
   - Architecture:
       - Overview: architecture.md
       - State Machine: states.md
