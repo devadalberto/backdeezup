@@ -84,6 +84,9 @@ ps:
 
 # ── Django ────────────────────────────────────────────────────────────────────
 auth:
+	@echo "Starting OAuth on port 18444..."
+	@echo "Add http://localhost:18444/ to your Google OAuth client redirect URIs first."
+	@echo "Then open the printed URL in your browser."
 	docker compose exec -it web python manage.py shell -c "from google_media_backup.services_google import start_oauth_local; start_oauth_local()"
 
 migrate:

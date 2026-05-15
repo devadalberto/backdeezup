@@ -30,45 +30,49 @@ The token includes these Google scopes:
 
 ## Authenticate (headless server — no browser on server)
 
-Since the server has no browser, the OAuth flow prints a URL for you to open on any device.
+The OAuth flow starts a temporary local server on port `18444` inside the container. Your browser hits that port directly, Google redirects back to it, and the token is saved automatically.
 
-### Step 1 — Run the auth command
+### Step 0 — Add redirect URI in Google Cloud Console
+
+Do this once. Go to **Google Cloud Console → APIs & Services → Credentials → your OAuth client → Edit**.
+
+Add this to **Authorized redirect URIs**:
+```
+http://localhost:18444/
+```
+
+Save.
+
+### Step 1 — Expose port 18444 from WSL to Windows (if on WSL2)
+
+Run in PowerShell (as Administrator):
+```powershell
+$wslIp = wsl -d Debian -- hostname -I | ForEach-Object { $_.Trim().Split(" ")[0] }
+netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=18444 connectaddress=$wslIp connectport=18444
+```
+
+### Step 2 — Run the auth command
 
 ```bash
 make auth
 ```
 
-This runs inside the container and prints something like:
-
+The container prints a URL like:
 ```
-============================================================
+Starting local OAuth server on port 18444...
 Open this URL in your browser:
-https://accounts.google.com/o/oauth2/auth?client_id=...&scope=...
-============================================================
-
-Paste the authorization code here:
+https://accounts.google.com/o/oauth2/auth?...
 ```
 
-### Step 2 — Open the URL in your browser
+### Step 3 — Open the URL in your browser
 
-Copy the full URL and open it on any machine (your laptop, phone, Windows browser). Log in with the Google account you want to back up.
+Copy the URL and open it in your Windows browser (or any browser that can reach `localhost:18444`). Log in with the Google account you want to back up and click Allow.
 
-### Step 3 — Copy the authorization code
+### Step 4 — Done
 
-After approving, Google shows a page with a code like:
-
-```
-4/0AX4XfWh...
-```
-
-Copy it.
-
-### Step 4 — Paste the code back
-
-Paste it into the terminal where `make auth` is waiting and press Enter.
+Google redirects to `http://localhost:18444/` automatically. The container catches the callback, saves the encrypted token, and prints:
 
 ```
-Paste the authorization code here: 4/0AX4XfWh...
 OAuth completed and token saved.
 ```
 

@@ -34,24 +34,35 @@ def _save_creds(creds: Credentials) -> None:
     wrapped = {'payload': get_fernet().encrypt(creds.to_json().encode()).decode()}
     with open(TOKEN_FILE_ENC, 'w') as f: json.dump(wrapped, f, indent=2)
 
-def start_oauth_local() -> str:
+def start_oauth_local(port: int = 18444) -> str:
     """
-    Headless OAuth flow — prints a URL for the user to open in any browser.
-    Works on servers with no display. Paste the redirected localhost URL back
-    when prompted, or use run_local_server() on a machine with a browser.
+    OAuth flow for headless servers.
+    Starts a temporary local server on `port` inside the container.
+    Requires port `port` to be forwarded from the host to the container.
+
+    Step 1 — forward the port (run on the host before calling this):
+        docker compose exec -it web sh  (then in another terminal)
+        OR just ensure port 18444 is exposed in docker-compose if needed.
+
+    Step 2 — run: make auth
+    Step 3 — open the printed URL in a browser on any machine that can reach
+              http://localhost:18444 (or the host IP on port 18444).
+    Step 4 — Google redirects to localhost:18444 automatically and saves token.
     """
     if not os.path.exists(CLIENT_SECRETS):
         return "Missing client secrets at secrets/google_client.json"
     flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS, SCOPES)
-    flow.redirect_uri = "urn:ietf:wg:oauth:2.0:oob"
-    auth_url, _ = flow.authorization_url(prompt="consent")
     print("\n" + "="*60)
-    print("Open this URL in your browser:")
-    print(auth_url)
-    print("="*60)
-    code = input("\nPaste the authorization code here: ").strip()
-    flow.fetch_token(code=code)
-    _save_creds(flow.credentials)
+    print(f"Starting local OAuth server on port {port}...")
+    print(f"Make sure port {port} is reachable from your browser.")
+    print("="*60 + "\n")
+    creds = flow.run_local_server(
+        host="0.0.0.0",
+        port=port,
+        open_browser=False,
+        success_message="OAuth completed! You can close this tab.",
+    )
+    _save_creds(creds)
     return "OAuth completed and token saved."
 
 def drive_service():

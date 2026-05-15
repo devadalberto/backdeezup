@@ -24,7 +24,9 @@ services:
     volumes:
       - media:/app/media
       - staticfiles:/app/staticfiles
-      - ./secrets:/app/backend_django/secrets:ro
+      - ./secrets:/app/backend_django/secrets:rw
+    ports:
+      - "18444:18444"
     depends_on:
       db:
         condition: service_healthy
