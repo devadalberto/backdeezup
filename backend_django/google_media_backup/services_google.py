@@ -66,16 +66,21 @@ def start_oauth_local() -> str:
 
     flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS, SCOPES)
 
-    # redirect_uri MUST exactly match the registered URI in google_client.json.
-    # Desktop/installed clients register "http://localhost" (no port).
-    flow.redirect_uri = "http://localhost"
+    # redirect_uri MUST exactly match one of the registered URIs in google_client.json.
+    # Reads the first redirect_uri from the client secrets file automatically.
+    client_type = list(json.load(open(CLIENT_SECRETS)).keys())[0]
+    registered = json.load(open(CLIENT_SECRETS))[client_type].get("redirect_uris", [])
+    # Prefer localhost:8844 callback, then 18444, then first available
+    preferred = [u for u in registered if "8844" in u or "18444" in u]
+    flow.redirect_uri = preferred[0] if preferred else registered[0]
+
     auth_url, _ = flow.authorization_url(prompt="consent", access_type="offline")
 
     print("\n" + "=" * 60)
     print("Step 1: Open this URL in your browser:\n")
     print(auth_url)
-    print("\nStep 2: After approving, Google redirects to http://localhost/?code=...")
-    print("        That page will fail to load — that is expected.")
+    print(f"\nStep 2: After approving, Google redirects to:\n  {flow.redirect_uri}?code=...")
+    print("        The page may fail to load — that is expected.")
     print("        Copy the FULL URL from the browser address bar and paste below.")
     print("=" * 60)
 
