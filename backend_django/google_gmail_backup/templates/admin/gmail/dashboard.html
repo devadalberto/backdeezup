@@ -1,0 +1,73 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Gmail Dashboard</h1>
+
+<style>
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 18px 0; }
+  .module h2 { font-size: 14px; margin: 0 0 8px 0; }
+  .stat { font-size: 28px; font-weight: bold; }
+  .form-row { margin: 4px 0; }
+  table.grp-table { width: 100%; border-collapse: collapse; }
+  table.grp-table th, table.grp-table td { padding: 6px 10px; border-bottom: 1px solid #eee; text-align: left; }
+  .actions { margin: 16px 0; }
+  .btn { display: inline-block; padding: 8px 14px; background: #417690; color: #fff; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; margin-right: 8px; }
+</style>
+
+<div class="grid">
+  <div class="module">
+    <h2>Totals</h2>
+    <div class="form-row">Total Messages: <b>{{ totals.messages }}</b></div>
+    <div class="form-row">Downloaded (.eml): <b>{{ totals.downloaded }}</b></div>
+    <div class="form-row">Verified: <b>{{ totals.verified }}</b></div>
+    <div class="form-row">With Attachments: <b>{{ totals.with_attachments }}</b></div>
+    <div class="form-row">Total Size: <b>{{ totals.bytes_total|filesizeformat }}</b></div>
+  </div>
+
+  <div class="module">
+    <h2>By State</h2>
+    <table class="grp-table">
+      <thead><tr><th>State</th><th>Count</th><th>Size</th></tr></thead>
+      <tbody>
+        {% for row in by_state %}
+        <tr><td>{{ row.state }}</td><td>{{ row.n }}</td><td>{{ row.bytes|default:0|filesizeformat }}</td></tr>
+        {% empty %}<tr><td colspan="3">No data yet</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="module">
+    <h2>Accounts</h2>
+    {% for a in accounts %}
+    <div class="form-row"><b>{{ a.email }}</b></div>
+    <div class="form-row">Last full sync: {{ a.last_full_sync_at|default:"never" }}</div>
+    <div class="form-row">Last incremental: {{ a.last_incremental_at|default:"never" }}</div>
+    <div class="form-row">Messages: {{ a.total_messages }}</div>
+    <hr>
+    {% empty %}<div>No accounts synced yet. Run POST /api/gmail/sync/discover</div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="module">
+  <h2>Top Senders (by message count)</h2>
+  <table class="grp-table">
+    <thead><tr><th>Sender</th><th>Messages</th><th>Size</th></tr></thead>
+    <tbody>
+      {% for s in top_senders %}
+      <tr>
+        <td>{{ s.from_address }}</td>
+        <td>{{ s.n }}</td>
+        <td>{{ s.bytes|default:0|filesizeformat }}</td>
+      </tr>
+      {% empty %}<tr><td colspan="3">No data yet</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="actions">
+  <a class="btn" href="/admin/gmail/ops/">Go to Gmail Ops Console</a>
+  <a class="btn" href="/api/gmail/docs">Gmail API Docs</a>
+</div>
+{% endblock %}

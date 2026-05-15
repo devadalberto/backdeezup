@@ -1,0 +1,122 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Gmail Operations Console</h1>
+
+<style>
+  .card { border: 1px solid #e5e5e5; border-radius: 6px; padding: 16px; margin: 12px 0; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .btn { padding: 6px 12px; border: 1px solid #bbb; background: #fafafa; border-radius: 4px; cursor: pointer; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-danger { background: #fde8e8; border-color: #e57373; }
+  .badge { background: #eee; border-radius: 4px; padding: 2px 6px; font-size: 12px; }
+  pre { background: #f7f7f7; border: 1px solid #eee; padding: 10px; overflow: auto; max-height: 300px; }
+</style>
+
+<div class="card">
+  <b>Accounts</b><br>
+  {% for a in accounts %}
+    <span class="badge">{{ a.email }}</span>
+    historyId: {{ a.last_history_id|default:"none" }}
+    &nbsp;|&nbsp; Last full: {{ a.last_full_sync_at|default:"never" }}
+    &nbsp;|&nbsp; Last incremental: {{ a.last_incremental_at|default:"never" }}
+    <br>
+  {% empty %}
+    <span>No accounts yet. Run POST /api/gmail/sync/discover to start.</span>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <div class="row">
+    <label>Limit&nbsp;<input id="limit" type="number" value="20" style="width:70px"></label>
+    <label>Search (q)&nbsp;<input id="qfilter" type="text" placeholder="e.g. from:newsletter older_than:1y" style="width:300px"></label>
+  </div>
+
+  <ol>
+    <li class="row">
+      <button class="btn" onclick="call('gmail/sync/discover?max_pages=5&page_size=500', this, {q: document.getElementById('qfilter').value})">
+        1) Discover messages
+      </button>
+      <span class="badge">Full snapshot — lists all message IDs and fetches metadata</span>
+    </li>
+    <li class="row">
+      <button class="btn" onclick="call('gmail/sync/incremental', this)">
+        2) Incremental sync
+      </button>
+      <span class="badge">Fast — only fetches changes since last historyId</span>
+    </li>
+    <li class="row">
+      <button class="btn" onclick="call('gmail/sync/download?limit=' + L(), this)">
+        3) Download (.eml)
+      </button>
+      <span class="badge">Downloads raw email files to disk</span>
+    </li>
+    <li class="row">
+      <button class="btn" onclick="call('gmail/sync/verify?limit=' + L(), this)">
+        4) Verify
+      </button>
+      <span class="badge">Confirms .eml files exist on disk</span>
+    </li>
+    <li class="row">
+      <button class="btn btn-danger" onclick="trashSelected(this)">
+        5) Trash selected (dry-run)
+      </button>
+      <span class="badge">Enter gmail_ids below, runs dry_run=true by default</span>
+    </li>
+  </ol>
+
+  <div class="row">
+    <label>Gmail IDs to trash (comma-separated)&nbsp;
+      <input id="trashIds" type="text" placeholder="18a1b2c3,18a1b2c4" style="width:400px">
+    </label>
+    <label><input type="checkbox" id="dryRun" checked> Dry run</label>
+  </div>
+</div>
+
+<div class="card">
+  <b>Output</b>
+  <pre id="out">(results appear here)</pre>
+</div>
+
+<script>
+function L() { return document.getElementById('limit').value || '20'; }
+
+async function call(path, btn, extra_params) {
+  const out = document.getElementById('out');
+  btn.disabled = true;
+  out.textContent = 'Calling /api/' + path + ' ...';
+  try {
+    let url = '/api/' + path;
+    if (extra_params && extra_params.q) url += (url.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(extra_params.q);
+    const res = await fetch(url, { method: 'POST', headers: {'X-CSRFToken': getCookie('csrftoken')} });
+    const txt = await res.text();
+    out.textContent = 'HTTP ' + res.status + '\n\n' + txt;
+  } catch(e) {
+    out.textContent = 'ERROR: ' + e;
+  } finally { btn.disabled = false; }
+}
+
+async function trashSelected(btn) {
+  const ids = document.getElementById('trashIds').value.split(',').map(s => s.trim()).filter(Boolean);
+  const dryRun = document.getElementById('dryRun').checked;
+  if (!ids.length) { alert('Enter at least one Gmail ID'); return; }
+  const out = document.getElementById('out');
+  btn.disabled = true;
+  out.textContent = 'Trashing ' + ids.length + ' message(s), dry_run=' + dryRun + ' ...';
+  try {
+    const res = await fetch('/api/gmail/cleanup/trash?dry_run=' + dryRun, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+      body: JSON.stringify(ids),
+    });
+    out.textContent = 'HTTP ' + res.status + '\n\n' + await res.text();
+  } catch(e) {
+    out.textContent = 'ERROR: ' + e;
+  } finally { btn.disabled = false; }
+}
+
+function getCookie(name) {
+  const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return v ? v[2] : '';
+}
+</script>
+{% endblock %}
