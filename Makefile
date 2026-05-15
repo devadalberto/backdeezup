@@ -155,26 +155,19 @@ sync-run:
 		bar=$$(python3 -c "f=$$filled; print(\"=\"*f + \"-\"*(20-f))" 2>/dev/null); \
 		echo "  [$$bar] $$pct% ($$done_n/$$total verified)"; \
 	}; \
-	echo "Running full pipeline: download -> import -> verify (loops until done)"; \
-	while true; do \
-		result=$$(curl -s -X POST "$$HOST/api/sync/download?limit=$$LIMIT"); \
-		n=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"downloaded\",0))" 2>/dev/null || echo 0); \
-		echo "  download: $$n"; show_progress; \
-		[ "$$n" -gt 0 ] || break; \
-	done; \
-	while true; do \
-		result=$$(curl -s -X POST "$$HOST/api/sync/import?limit=$$LIMIT"); \
-		n=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"imported\",0))" 2>/dev/null || echo 0); \
-		echo "  import: $$n"; show_progress; \
-		[ "$$n" -gt 0 ] || break; \
-	done; \
-	while true; do \
-		result=$$(curl -s -X POST "$$HOST/api/sync/verify?limit=$$LIMIT"); \
-		n=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"verified\",0))" 2>/dev/null || echo 0); \
-		echo "  verify: $$n"; show_progress; \
-		[ "$$n" -gt 0 ] || break; \
-	done; \
-	echo "Pipeline complete!"; show_progress'
+	echo "Running full pipeline: download -> import -> verify (single pass)"; \
+	dl=0; imp=0; ver=0; \
+	result=$$(curl -s -X POST "$$HOST/api/sync/download?limit=$$LIMIT"); \
+	dl=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"downloaded\",0))" 2>/dev/null || echo 0); \
+	echo "  download: $$dl"; show_progress; \
+	result=$$(curl -s -X POST "$$HOST/api/sync/import?limit=$$LIMIT"); \
+	imp=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"imported\",0))" 2>/dev/null || echo 0); \
+	echo "  import: $$imp"; show_progress; \
+	result=$$(curl -s -X POST "$$HOST/api/sync/verify?limit=$$LIMIT"); \
+	ver=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"verified\",0))" 2>/dev/null || echo 0); \
+	echo "  verify: $$ver"; show_progress; \
+	echo "Pass done (dl=$$dl imp=$$imp ver=$$ver). Run again or use: while make sync-run | grep -q \"dl=0 imp=0 ver=0\"; do break; done"; \
+	[ "$$dl" -gt 0 ] || [ "$$imp" -gt 0 ] || [ "$$ver" -gt 0 ]'
 
 sync-import:
 	curl -s -X POST "$(HOST)/api/sync/import?limit=$(LIMIT)" | python3 -m json.tool || true
