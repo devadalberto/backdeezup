@@ -9,7 +9,7 @@ DJ    := backend_django/manage.py
         deploy redeploy \
         run docs \
         discover discover-files discover-photos \
-        gmail-discover gmail-incremental gmail-download gmail-verify \
+        gmail-discover gmail-incremental gmail-download gmail-verify gmail-run \
         progress \
         sync-download sync-import sync-verify sync-mark-delete sync-commit-delete sync-run \
         lint test test-full \
@@ -193,6 +193,25 @@ gmail-download:
 
 gmail-verify:
 	curl -s -X POST "$(HOST)/api/gmail/sync/verify?limit=$(LIMIT)" | python3 -m json.tool || true
+
+gmail-run:
+	@bash -c '\
+	HOST=$(HOST); LIMIT=$(LIMIT); \
+	show_progress() { \
+		total=$$(curl -s "$$HOST/api/gmail/messages" 2>/dev/null | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "?"); \
+		ver=$$(curl -s "$$HOST/api/gmail/messages?state=VERIFIED" 2>/dev/null | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "?"); \
+		dl=$$(curl -s "$$HOST/api/gmail/messages?state=DOWNLOADED" 2>/dev/null | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "?"); \
+		echo "  [Gmail] downloaded=$$dl verified=$$ver total=$$total"; \
+	}; \
+	echo "Gmail pipeline: download -> verify (single pass)"; \
+	result=$$(curl -s -X POST "$$HOST/api/gmail/sync/download?limit=$$LIMIT"); \
+	n=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"downloaded\",0))" 2>/dev/null || echo 0); \
+	echo "  download: $$n"; show_progress; \
+	result=$$(curl -s -X POST "$$HOST/api/gmail/sync/verify?limit=$$LIMIT"); \
+	v=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"verified\",0))" 2>/dev/null || echo 0); \
+	echo "  verify: $$v"; show_progress; \
+	echo "Pass done (dl=$$n ver=$$v)."; \
+	[ "$$n" -gt 0 ] || [ "$$v" -gt 0 ]'
 
 # ── Local dev ─────────────────────────────────────────────────────────────────
 run:
