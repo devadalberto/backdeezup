@@ -2,6 +2,7 @@ SHELL := /bin/bash
 DJ    := backend_django/manage.py
 
 .PHONY: help \
+        preflight \
         build up down restart logs ps \
         migrate superuser shell check \
         auth \
@@ -10,12 +11,32 @@ DJ    := backend_django/manage.py
         discover discover-files discover-photos \
         gmail-discover gmail-incremental gmail-download gmail-verify \
         sync-download sync-import sync-verify sync-mark-delete sync-commit-delete \
+        lint test test-full \
         wsl-proxy
+
+# ── Pre-flight checks ─────────────────────────────────────────────────────────
+preflight:
+	@echo "Running pre-flight checks..."
+	@command -v docker >/dev/null 2>&1 || { echo "FAIL: docker not found"; exit 1; }
+	@docker info >/dev/null 2>&1 || { echo "FAIL: docker daemon not running — run: sudo service docker start"; exit 1; }
+	@test -f .env || { echo "FAIL: .env not found — run: cp .env.sample .env and fill in values"; exit 1; }
+	@test -f secrets/google_client.json || { echo "FAIL: secrets/google_client.json missing"; exit 1; }
+	@python3 -c "import json; d=json.load(open('secrets/google_client.json')); t=list(d.keys())[0]; exit(0 if t=='installed' else 1)" 2>/dev/null || { echo "FAIL: google_client.json is type 'web' — must be Desktop app (installed). Download Desktop app credentials from Google Cloud Console."; exit 1; }
+	@grep -q "CHANGE_ME" .env 2>/dev/null && { echo "FAIL: .env still has CHANGE_ME placeholders — fill in all values"; exit 1; } || true
+	@grep -q "GOOGLE_ENCRYPTION_KEY=" .env || { echo "FAIL: GOOGLE_ENCRYPTION_KEY not set in .env"; exit 1; }
+	@echo "OK: docker running"
+	@echo "OK: .env present"
+	@echo "OK: google_client.json is Desktop app (installed) type"
+	@echo "OK: no CHANGE_ME placeholders"
+	@echo "All pre-flight checks passed. Run: make build && make up && make migrate && make auth"
 
 # ── Default ───────────────────────────────────────────────────────────────────
 help:
 	@echo ""
 	@echo "BackDeezUp — Makefile reference"
+	@echo ""
+	@echo "  Pre-flight"
+	@echo "    make preflight          Check all prerequisites before deploying"
 	@echo ""
 	@echo "  Docker (production)"
 	@echo "    make build              Build Docker image"
