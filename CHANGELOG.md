@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-15
+
+### Added
+- Comprehensive Makefile with targets for Docker, Django, Drive/Photos pipeline, Gmail pipeline, local dev, and WSL2 proxy
+- `make help` shows all targets with descriptions
+- `make redeploy` — one-command pull + build + restart + migrate
+- `make wsl-proxy` — auto-detects WSL2 IP and sets Windows port proxy
+- Pipeline targets support `HOST=` override (e.g. `make discover HOST=http://192.168.88.60:8844`)
+- Updated deployment docs with full Makefile reference and Gmail pipeline steps
+
 ## [0.5.1] - 2026-05-14
 
 ### Changed
