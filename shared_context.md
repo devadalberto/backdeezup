@@ -322,3 +322,7 @@ Graph output: `graphify-out/` (graph.json, graph.html, GRAPH_REPORT.md)
 - **Admin UI (v0.5.0)** — `/admin/reports/` (live dashboard) and `/admin/ops/` (pipeline ops console) added via `admin_views.py` + templates.
 - **Ubuntu remote** — hostname: DTC-5CG4155DQ9, IP: 192.168.88.20, user: jose, SSH port 2222 (WSL2 port-forward). Connect: `wsl -d Debian -- bash -c "ssh -p 2222 jose@192.168.88.20 '<cmd>'"`. Secrets path: `/home/jose/repos/github/devadalberto/gmail_cleanup/jose.valdes/secrets/`.
 - **Google OAuth secrets** — copied to `secrets/` on both WINWEB01 and Debian WSL repos. Git-ignored, never committed.
+- **OAuth headless flow** — `make auth` runs inside container. Uses `redirect_uri=http://localhost` (no port) to match the registered URI in `google_client.json` (type: installed/Desktop). Google redirects to `http://localhost/?code=...` — page fails to load, copy full URL from address bar, paste back. `OAUTHLIB_INSECURE_TRANSPORT=1` set in `start_oauth_local()`.
+- **google_gmail_backup app** — Gmail backup Django app alongside `google_media_backup`. Models: `GmailMessage`, `GmailAttachment`, `GmailSyncState`. API at `/api/gmail/*`. Full snapshot + historyId incremental sync. Stores .eml files at `gmail/<account>/<year>/<month>/<id>.eml`.
+- **Tests** — 23 unit tests across both apps. Run: `make test`. CI: lint (ruff) + tests + Playwright smoke on every push/PR.
+- **Current version: 0.6.3**

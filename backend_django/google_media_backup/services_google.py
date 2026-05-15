@@ -1,7 +1,6 @@
 import io
 import json
 import os
-import socket
 from typing import Optional
 
 from decouple import config
@@ -67,19 +66,17 @@ def start_oauth_local() -> str:
 
     flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS, SCOPES)
 
-    sock = socket.socket()
-    sock.bind(("localhost", 0))
-    port = sock.getsockname()[1]
-    sock.close()
-
-    flow.redirect_uri = f"http://localhost:{port}/"
+    # redirect_uri MUST exactly match the registered URI in google_client.json.
+    # Desktop/installed clients register "http://localhost" (no port).
+    flow.redirect_uri = "http://localhost"
     auth_url, _ = flow.authorization_url(prompt="consent", access_type="offline")
 
     print("\n" + "=" * 60)
     print("Step 1: Open this URL in your browser:\n")
     print(auth_url)
-    print(f"\nStep 2: Google redirects to http://localhost:{port}/?code=...")
-    print("        ERR_EMPTY_RESPONSE is expected — copy the full URL.")
+    print("\nStep 2: After approving, Google redirects to http://localhost/?code=...")
+    print("        That page will fail to load — that is expected.")
+    print("        Copy the FULL URL from the browser address bar and paste below.")
     print("=" * 60)
 
     redirect_response = input("\nPaste the full redirect URL here: ").strip()
