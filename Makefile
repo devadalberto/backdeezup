@@ -148,6 +148,14 @@ run:
 docs:
 	mkdocs serve -a 0.0.0.0:8001
 
+lint:
+	uv run ruff check backend_django/ --select E,F,W --ignore E501,E701,E702
+
+test:
+	DATABASE_URL="" uv run python $(DJ) test google_media_backup google_gmail_backup --verbosity=2
+
+test-full: lint test
+
 # ── WSL2 / Windows (run in PowerShell as admin) ───────────────────────────────
 wsl-proxy:
 	@WSL_IP=$$(wsl hostname -I | awk '{print $$1}'); \

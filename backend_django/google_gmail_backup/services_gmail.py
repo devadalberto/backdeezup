@@ -1,18 +1,13 @@
 import base64
-import email
 import hashlib
-import json
 import os
 from typing import Optional
 
 from decouple import config
 from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-from google_media_backup.utils import get_fernet
-from google_media_backup.services_google import SCOPES, _load_creds, _save_creds
+from google_media_backup.services_google import _load_creds, _save_creds
 
 CLIENT_SECRETS = config("GOOGLE_CLIENT_SECRETS", default="secrets/google_client.json")
 TOKEN_FILE_ENC = config("GOOGLE_TOKEN_FILE", default="secrets/google_token.json")

@@ -1,6 +1,6 @@
 [project]
 name = "backdeezup"
-version = "0.6.2"
+version = "0.6.3"
 description = "Google Photos/Drive backup service with Django REST API"
 requires-python = ">=3.12"
 dependencies = [
@@ -41,6 +41,15 @@ packages = ["backend_django"]
 [dependency-groups]
 dev = [
     "pre-commit>=4.0",
+    "ruff>=0.15.13",
 ]
+
+[tool.ruff]
+line-length = 100
+exclude = ["backend_django/*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = ["E501", "E701", "E702"]
 
 [tool.uv.sources]

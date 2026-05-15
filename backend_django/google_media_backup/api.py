@@ -1,11 +1,20 @@
-import os, uuid, datetime as dt
+import os
+import uuid
+import datetime as dt
 from typing import List, Optional
 from ninja import NinjaAPI, Schema, Query
 from django.utils import timezone
 from django.conf import settings
 from .models import DriveAsset, MediaItem, RunLog
 from .utils import sha256_file, deterministic_path, copy_into_media
-from .services_google import start_oauth_local, list_media_files, download_file, trash_or_delete
+from .services_google import (
+    start_oauth_local,
+    list_media_files,
+    list_common_files,
+    list_photos_items,
+    download_file,
+    trash_or_delete,
+)
 from decouple import config
 
 api = NinjaAPI(
@@ -198,7 +207,10 @@ def sync_verify(request, limit: int = 50):
 
 @api.post("/sync/mark-delete")
 def sync_mark_delete(request, limit: int = 100):
-    updated = DriveAsset.objects.filter(state='VERIFIED').order_by('id')[:limit].update(state='DELETE_PENDING')
+    ids = list(
+        DriveAsset.objects.filter(state="VERIFIED").order_by("id").values_list("id", flat=True)[:limit]
+    )
+    updated = DriveAsset.objects.filter(id__in=ids).update(state="DELETE_PENDING")
     return {"queued_for_delete": updated}
 
 @api.post("/sync/commit-delete")

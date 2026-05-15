@@ -3,19 +3,16 @@ from typing import List, Optional
 import datetime as dt
 
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
 from ninja import NinjaAPI, Schema, Query
 from googleapiclient.errors import HttpError
 
-from .models import GmailMessage, GmailAttachment, GmailSyncState
+from .models import GmailMessage, GmailSyncState
 from .services_gmail import (
     get_authenticated_email,
     list_message_ids,
     get_message_metadata,
     get_message_raw,
-    get_message_full,
     extract_headers,
-    extract_attachment_metadata,
     has_attachments,
     parse_date,
     eml_path,
@@ -129,7 +126,7 @@ def gmail_discover(request, q: str = "", max_pages: int = 10, page_size: int = 5
                 if not latest_history_id:
                     latest_history_id = msg.get("historyId")
                 discovered += 1
-            except Exception as e:
+            except Exception:
                 errors += 1
 
         pages += 1

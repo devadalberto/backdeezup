@@ -1,7 +1,4 @@
 from django.contrib import admin
-from django.db.models import Count, Sum
-from django.shortcuts import render
-from django.urls import path
 
 from .models import GmailMessage, GmailAttachment, GmailSyncState
 

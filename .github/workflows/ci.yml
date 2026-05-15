@@ -6,10 +6,37 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  DJANGO_SECRET_KEY: ci-insecure-key
+  DEBUG: "True"
+  GOOGLE_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+  DATABASE_URL: ""
+
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Ruff lint
+        run: uv run ruff check backend_django/ --select E,F,W --ignore E501,E701,E702
+
   test:
     runs-on: ubuntu-latest
-
+    needs: lint
     steps:
       - uses: actions/checkout@v4
 
@@ -27,23 +54,14 @@ jobs:
         run: uv sync
 
       - name: Django system check
-        env:
-          DJANGO_SECRET_KEY: ci-insecure-key
-          DEBUG: "True"
-          GOOGLE_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
         run: uv run python backend_django/manage.py check
 
-      - name: Run Django tests
-        env:
-          DJANGO_SECRET_KEY: ci-insecure-key
-          DEBUG: "True"
-          GOOGLE_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-        run: uv run python backend_django/manage.py test --verbosity=2
+      - name: Run tests (SQLite)
+        run: uv run python backend_django/manage.py test google_media_backup google_gmail_backup --verbosity=2
 
   playwright:
     runs-on: ubuntu-latest
     needs: test
-
     steps:
       - uses: actions/checkout@v4
 
@@ -64,10 +82,6 @@ jobs:
         run: uv run playwright install --with-deps chromium
 
       - name: Start Django server
-        env:
-          DJANGO_SECRET_KEY: ci-insecure-key
-          DEBUG: "True"
-          GOOGLE_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
         run: |
           uv run python backend_django/manage.py migrate --run-syncdb
           uv run python backend_django/manage.py runserver 0.0.0.0:8844 &
@@ -83,6 +97,9 @@ jobs:
               page.goto('http://localhost:8844/api/docs')
               assert 'swagger' in page.content().lower() or page.title() != '', f'Swagger UI not loaded, title={page.title()}'
               print('Swagger UI OK:', page.title())
+              page.goto('http://localhost:8844/api/gmail/docs')
+              assert 'swagger' in page.content().lower(), 'Gmail Swagger UI not loaded'
+              print('Gmail Swagger UI OK')
               page.goto('http://localhost:8844/admin/login/')
               assert page.locator('input[name=username]').count() > 0, 'Admin login not found'
               print('Admin login OK')

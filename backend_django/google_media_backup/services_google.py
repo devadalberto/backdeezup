@@ -1,11 +1,16 @@
-import io, json, os
-from typing import List, Tuple, Optional
+import io
+import json
+import os
+import socket
+from typing import Optional
+
 from decouple import config
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
+from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
+
 from .utils import get_fernet
 
 SCOPES = [
@@ -16,46 +21,52 @@ SCOPES = [
     "https://www.googleapis.com/auth/gmail.modify",
 ]
 
-CLIENT_SECRETS = config('GOOGLE_CLIENT_SECRETS', default='secrets/google_client.json')
-TOKEN_FILE_ENC = config('GOOGLE_TOKEN_FILE', default='secrets/google_token.json')
-MIME_ALLOWLIST = [m.strip() for m in config('GOOGLE_MIME_ALLOWLIST', default='image/jpeg').split(',') if m.strip()]
+CLIENT_SECRETS = config("GOOGLE_CLIENT_SECRETS", default="secrets/google_client.json")
+TOKEN_FILE_ENC = config("GOOGLE_TOKEN_FILE", default="secrets/google_token.json")
+MIME_ALLOWLIST = [
+    m.strip()
+    for m in config("GOOGLE_MIME_ALLOWLIST", default="image/jpeg").split(",")
+    if m.strip()
+]
+
 
 def _load_creds() -> Optional[Credentials]:
-    if not os.path.exists(TOKEN_FILE_ENC): return None
+    if not os.path.exists(TOKEN_FILE_ENC):
+        return None
     try:
-        with open(TOKEN_FILE_ENC) as f: data = json.load(f)
-        token_json = get_fernet().decrypt(data['payload'].encode()).decode()
+        with open(TOKEN_FILE_ENC) as f:
+            data = json.load(f)
+        token_json = get_fernet().decrypt(data["payload"].encode()).decode()
         return Credentials.from_authorized_user_info(json.loads(token_json), SCOPES)
     except Exception:
         return None
 
+
 def _save_creds(creds: Credentials) -> None:
     os.makedirs(os.path.dirname(TOKEN_FILE_ENC), exist_ok=True)
-    wrapped = {'payload': get_fernet().encrypt(creds.to_json().encode()).decode()}
-    with open(TOKEN_FILE_ENC, 'w') as f: json.dump(wrapped, f, indent=2)
+    wrapped = {"payload": get_fernet().encrypt(creds.to_json().encode()).decode()}
+    with open(TOKEN_FILE_ENC, "w") as f:
+        json.dump(wrapped, f, indent=2)
+
 
 def start_oauth_local() -> str:
-    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
     """
     Headless OAuth for Desktop App (installed) client type.
-    The registered redirect URI is http://localhost — Google sends the code
-    to localhost on a random port. We bind there, catch the response.
 
     On a server with no browser:
       1. Run: make auth
-      2. Copy the printed URL and open it in any browser.
-      3. Google redirects to http://localhost:<random_port>/?code=...
+      2. Open the printed URL in any browser.
+      3. Approve access — Google redirects to http://localhost:<port>/?code=...
          The page shows ERR_EMPTY_RESPONSE — that is expected.
-      4. Copy the FULL redirect URL from the address bar and paste it back.
+      4. Copy the FULL URL from the browser address bar and paste it back.
     """
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+
     if not os.path.exists(CLIENT_SECRETS):
         return "Missing client secrets at secrets/google_client.json"
 
     flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS, SCOPES)
 
-    # For installed/Desktop clients, redirect_uri must be http://localhost (no port).
-    # We use port=0 so the OS picks a free port, then tell the user the exact URL.
-    import socket
     sock = socket.socket()
     sock.bind(("localhost", 0))
     port = sock.getsockname()[1]
@@ -64,15 +75,12 @@ def start_oauth_local() -> str:
     flow.redirect_uri = f"http://localhost:{port}/"
     auth_url, _ = flow.authorization_url(prompt="consent", access_type="offline")
 
-    print("\n" + "="*60)
-    print("Step 1: Open this URL in your browser:")
-    print()
+    print("\n" + "=" * 60)
+    print("Step 1: Open this URL in your browser:\n")
     print(auth_url)
-    print()
-    print(f"Step 2: Google will redirect to http://localhost:{port}/?code=...")
-    print("        The page shows ERR_EMPTY_RESPONSE — that is normal.")
-    print("        Copy the FULL URL from the browser address bar.")
-    print("="*60)
+    print(f"\nStep 2: Google redirects to http://localhost:{port}/?code=...")
+    print("        ERR_EMPTY_RESPONSE is expected — copy the full URL.")
+    print("=" * 60)
 
     redirect_response = input("\nPaste the full redirect URL here: ").strip()
 
@@ -83,36 +91,33 @@ def start_oauth_local() -> str:
     _save_creds(flow.credentials)
     return "OAuth completed and token saved."
 
+
 def drive_service():
     creds = _load_creds()
-    if not creds: return None
+    if not creds:
+        return None
     if creds.expired and creds.refresh_token:
-        creds.refresh(Request()); _save_creds(creds)
-    return build('drive', 'v3', credentials=creds)
+        creds.refresh(Request())
+        _save_creds(creds)
+    return build("drive", "v3", credentials=creds)
+
 
 def list_media_files(page_size: int = 200, page_token: str | None = None):
-    """
-    Return one page of media-like files (images/videos or shortcuts to them).
-    Looks across My Drive + Shared Drives and skips trashed.
-    """
+    """Return one page of media files (images/videos) from Drive."""
     svc = drive_service()
     if not svc:
         return ([], None)
 
-    # Build a permissive query: any image/* or video/* or a shortcut to one.
     q_parts = [
         "(mimeType contains 'image/' or mimeType contains 'video/')",
         "trashed = false",
+        "(mimeType = 'application/vnd.google-apps.shortcut' and "
+        "(shortcutDetails.targetMimeType contains 'image/' or "
+        " shortcutDetails.targetMimeType contains 'video/'))",
     ]
-    # Also include shortcuts that point to media
-    q_parts.append(
-        "(mimeType = 'application/vnd.google-apps.shortcut' and "\
-        "(shortcutDetails.targetMimeType contains 'image/' or "\
-        " shortcutDetails.targetMimeType contains 'video/'))"
-    )
     q = f"({q_parts[0]}) and {q_parts[1]} or ({q_parts[2]})"
 
-    req = svc.files().list(
+    res = svc.files().list(
         pageSize=min(int(page_size or 200), 1000),
         pageToken=page_token,
         q=q,
@@ -123,10 +128,9 @@ def list_media_files(page_size: int = 200, page_token: str | None = None):
         ),
         includeItemsFromAllDrives=True,
         supportsAllDrives=True,
-        corpora="user",  # change to 'allDrives' if you want org-wide search
+        corpora="user",
         spaces="drive",
-    )
-    res = req.execute()
+    ).execute()
     return (res.get("files", []), res.get("nextPageToken"))
 
 
@@ -136,16 +140,13 @@ def photos_service():
     if not creds:
         return None
     if creds.expired and creds.refresh_token:
-        creds.refresh(Request()); _save_creds(creds)
-    # Photos requires discovery via HTTP; static_discovery=False lets googleapiclient fetch it
+        creds.refresh(Request())
+        _save_creds(creds)
     return build("photoslibrary", "v1", credentials=creds, static_discovery=False)
 
 
 def list_photos_items(page_size: int = 200, page_token: str | None = None):
-    """
-    Return mediaItems from Google Photos Library.
-    Note: these are NOT Drive files; they’ll have different IDs.
-    """
+    """Return mediaItems from Google Photos Library."""
     svc = photos_service()
     if not svc:
         return ([], None)
@@ -156,35 +157,27 @@ def list_photos_items(page_size: int = 200, page_token: str | None = None):
     return (res.get("mediaItems", []) or [], res.get("nextPageToken"))
 
 
-# ---- Common “documents” in Drive (pdf/office/text/archives) ----
 _COMMON_MIME_LIST = [
-    # PDF
     "application/pdf",
-    # MS Office
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "application/vnd.ms-powerpoint",
     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    # Text / CSV
     "text/plain",
     "text/csv",
-    # Archives
     "application/zip",
     "application/x-7z-compressed",
     "application/x-rar-compressed",
-    # Apple iWork
     "application/vnd.apple.pages",
     "application/vnd.apple.numbers",
     "application/vnd.apple.keynote",
 ]
 
+
 def list_common_files(page_size: int = 200, page_token: str | None = None):
-    """
-    Return one page of commonly-used document types in Drive.
-    Searches My Drive + Shared drives, no trashed.
-    """
+    """Return one page of document-type files from Drive."""
     svc = drive_service()
     if not svc:
         return ([], None)
@@ -207,26 +200,35 @@ def list_common_files(page_size: int = 200, page_token: str | None = None):
 
 def download_file(file_id: str, out_path: str) -> bool:
     svc = drive_service()
-    if not svc: return False
+    if not svc:
+        return False
     req = svc.files().get_media(fileId=file_id)
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    with io.FileIO(out_path, 'wb') as fh:
-        dl = MediaIoBaseDownload(fh, req); done = False
+    with io.FileIO(out_path, "wb") as fh:
+        dl = MediaIoBaseDownload(fh, req)
+        done = False
         try:
-            while not done: _, done = dl.next_chunk()
+            while not done:
+                _, done = dl.next_chunk()
             return True
         except Exception:
             try:
-                if os.path.exists(out_path): os.remove(out_path)
-            except Exception: pass
+                if os.path.exists(out_path):
+                    os.remove(out_path)
+            except Exception:
+                pass
             return False
 
-def trash_or_delete(file_id: str, mode: str = 'trash') -> bool:
+
+def trash_or_delete(file_id: str, mode: str = "trash") -> bool:
     svc = drive_service()
-    if not svc: return False
+    if not svc:
+        return False
     try:
-        if mode == 'hard': svc.files().delete(fileId=file_id).execute()
-        else: svc.files().update(fileId=file_id, body={"trashed": True}).execute()
+        if mode == "hard":
+            svc.files().delete(fileId=file_id).execute()
+        else:
+            svc.files().update(fileId=file_id, body={"trashed": True}).execute()
         return True
     except Exception:
         return False
