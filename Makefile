@@ -123,7 +123,8 @@ check:
 	docker compose exec web python manage.py check
 
 # ── Drive / Photos pipeline ───────────────────────────────────────────────────
-HOST ?= http://localhost:8844
+HOST  ?= http://localhost:8844
+LIMIT ?= 500
 
 discover:
 	curl -s -X POST "$(HOST)/api/sync/discover?page_size=200&max_pages=10" | python3 -m json.tool || true
@@ -135,32 +136,32 @@ discover-photos:
 	curl -s -X POST "$(HOST)/api/sync/discover-photos?page_size=200&max_pages=20" | python3 -m json.tool || true
 
 sync-download:
-	curl -s -X POST "$(HOST)/api/sync/download?limit=20" | python3 -m json.tool || true
+	curl -s -X POST "$(HOST)/api/sync/download?limit=$(LIMIT)" | python3 -m json.tool || true
 
 sync-import:
-	curl -s -X POST "$(HOST)/api/sync/import?limit=20" | python3 -m json.tool || true
+	curl -s -X POST "$(HOST)/api/sync/import?limit=$(LIMIT)" | python3 -m json.tool || true
 
 sync-verify:
-	curl -s -X POST "$(HOST)/api/sync/verify?limit=50" | python3 -m json.tool || true
+	curl -s -X POST "$(HOST)/api/sync/verify?limit=$(LIMIT)" | python3 -m json.tool || true
 
 sync-mark-delete:
-	curl -s -X POST "$(HOST)/api/sync/mark-delete?limit=100" | python3 -m json.tool || true
+	curl -s -X POST "$(HOST)/api/sync/mark-delete?limit=$(LIMIT)" | python3 -m json.tool || true
 
 sync-commit-delete:
-	curl -s -X POST "$(HOST)/api/sync/commit-delete?limit=50" | python3 -m json.tool || true
+	curl -s -X POST "$(HOST)/api/sync/commit-delete?limit=$(LIMIT)" | python3 -m json.tool || true
 
 # ── Gmail pipeline ────────────────────────────────────────────────────────────
 gmail-discover:
-	curl -s -X POST "$(HOST)/api/gmail/sync/discover?max_pages=5&page_size=50" | python3 -m json.tool || true
+	curl -s -X POST "$(HOST)/api/gmail/sync/discover?max_pages=10&page_size=50" | python3 -m json.tool || true
 
 gmail-incremental:
 	curl -s -X POST "$(HOST)/api/gmail/sync/incremental" | python3 -m json.tool || true
 
 gmail-download:
-	curl -s -X POST "$(HOST)/api/gmail/sync/download?limit=20" | python3 -m json.tool || true
+	curl -s -X POST "$(HOST)/api/gmail/sync/download?limit=$(LIMIT)" | python3 -m json.tool || true
 
 gmail-verify:
-	curl -s -X POST "$(HOST)/api/gmail/sync/verify?limit=50" | python3 -m json.tool || true
+	curl -s -X POST "$(HOST)/api/gmail/sync/verify?limit=$(LIMIT)" | python3 -m json.tool || true
 
 # ── Local dev ─────────────────────────────────────────────────────────────────
 run:
