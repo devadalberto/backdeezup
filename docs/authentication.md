@@ -10,6 +10,11 @@ BackDeezUp uses Google OAuth 2.0. One authentication flow covers all services �
 - `GOOGLE_ENCRYPTION_KEY` must be set in `.env`
 - Containers must be running (`make up`)
 
+!!! warning "Google no longer allows downloading existing client secrets"
+    As of 2025, Google Cloud Console does not show or allow downloading existing OAuth client secrets ([policy change](https://support.google.com/cloud/answer/15549257#client-secret-hashing)). If your `google_client.json` was copied from another machine or the secret is invalid, you **must add a new client secret** in Google Cloud Console — you cannot recover the old one.
+
+    Go to **APIs & Services → Credentials → your OAuth 2.0 Client → Add Secret**, then download the updated JSON and replace `secrets/google_client.json`.
+
 ---
 
 ## How it works
