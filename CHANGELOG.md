@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-05-15
+
+### Added
+- `GET /api/progress` endpoint — pipeline counts and percentage verified across all states
+- `make sync-run` — full pipeline loop (download→import→verify) with ASCII progress bar
+- `make preflight` — pre-flight checks: Docker, .env, no CHANGE_ME, google_client.json type `installed`
+- `LIMIT` variable for all pipeline Makefile targets (default 100)
+- graphify installed in Debian: `uv tool install graphifyy`, graph: 591 nodes, 657 edges
+- `google_gmail_backup` Django app with full Gmail backup pipeline
+
+### Fixed
+- sync-run progress bar using `bash -c` to maintain function scope
+- Drive query simplified (removed shortcut clause causing Google 500)
+- Photos API pageSize capped at 100 (Google API limit)
+- Gmail parse_date returns timezone-aware datetimes
+- Gunicorn timeout increased to 300s
+- OAuth: Desktop app client auto-detects redirect_uri from google_client.json
+- OAuth callback URL registered in Django urls.py
+
+### Known Issues
+- Google Photos blocked project-wide — old web client has non-HTTPS redirect URIs
+
 ## [0.6.1] - 2026-05-15
 
 ### Fixed

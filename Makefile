@@ -10,6 +10,7 @@ DJ    := backend_django/manage.py
         run docs \
         discover discover-files discover-photos \
         gmail-discover gmail-incremental gmail-download gmail-verify \
+        progress \
         sync-download sync-import sync-verify sync-mark-delete sync-commit-delete sync-run \
         lint test test-full \
         wsl-proxy
@@ -135,6 +136,9 @@ discover-files:
 
 discover-photos:
 	curl -s -X POST "$(HOST)/api/sync/discover-photos?page_size=200&max_pages=20" | python3 -m json.tool || true
+
+progress:
+	curl -s "$(HOST)/api/progress" | python3 -m json.tool || true
 
 sync-download:
 	curl -s -X POST "$(HOST)/api/sync/download?limit=$(LIMIT)" | python3 -m json.tool || true

@@ -331,4 +331,12 @@ Graph output: `graphify-out/` (graph.json, graph.html, GRAPH_REPORT.md)
 - **Verify client type before auth** — run `python3 -c "import json; d=json.load(open('secrets/google_client.json')); print(list(d.keys())[0])"` — must print `installed`, not `web`.
 - **google_gmail_backup app** — Gmail backup Django app alongside `google_media_backup`. Models: `GmailMessage`, `GmailAttachment`, `GmailSyncState`. API at `/api/gmail/*`. Full snapshot + historyId incremental sync. Stores .eml files at `gmail/<account>/<year>/<month>/<id>.eml`.
 - **Tests** — 23 unit tests across both apps. Run: `make test`. CI: lint (ruff) + tests + Playwright smoke on every push/PR.
-- **Current version: 0.6.3**
+- **make preflight** — checks Docker running, .env present, no CHANGE_ME, google_client.json is type `installed`. Run before every deploy.
+- **make sync-run** — full pipeline loop (download→import→verify) with ASCII progress bar. LIMIT=100 default, override with `make sync-run LIMIT=200`.
+- **make sync-run LIMIT=X** — override batch size. 100 safe, 500 causes 504 timeout.
+- **GET /api/progress** — returns pipeline counts and % verified across all states.
+- **Google Photos blocked** — photoslibrary.readonly scope blocked because old web client (1ql0o9aj) still has non-HTTPS redirect URIs in the project. Project-wide restriction. Photos skipped for now.
+- **Google Auth Platform** (new UI 2025+) — replaces "APIs & Services → OAuth consent screen". Scopes at: Google Auth Platform → Data Access → Add or remove scopes.
+- **Desktop app OAuth client** — client_id: `486053539237-c454bqj13or711a74tfc8t493qlna64d`, named `backdeezup-desktop`. MUST be `installed` type, not `web`.
+- **Current pipeline status** — 548/2176 verified (25.2%) as of 2026-05-15. Running `make sync-run` to complete.
+- **Current version: 0.6.4**
