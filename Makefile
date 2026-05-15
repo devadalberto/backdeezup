@@ -10,7 +10,7 @@ DJ    := backend_django/manage.py
         run docs \
         discover discover-files discover-photos \
         gmail-discover gmail-incremental gmail-download gmail-verify \
-        sync-download sync-import sync-verify sync-mark-delete sync-commit-delete \
+        sync-download sync-import sync-verify sync-mark-delete sync-commit-delete sync-run \
         lint test test-full \
         wsl-proxy
 
@@ -61,7 +61,8 @@ help:
 	@echo "    make sync-download      Download DISCOVERED assets (limit=20)"
 	@echo "    make sync-import        Import + SHA-256 hash (limit=20)"
 	@echo "    make sync-verify        Verify both proofs (limit=50)"
-	@echo "    make sync-mark-delete   Queue VERIFIED for deletion (limit=100)"
+	@echo "    make sync-run           Loop download→import→verify until done (LIMIT=100)"
+	@echo "    make sync-mark-delete   Queue VERIFIED for deletion (LIMIT=100)"
 	@echo "    make sync-commit-delete Execute Drive deletion (trash mode)"
 	@echo ""
 	@echo "  Gmail pipeline"
@@ -124,7 +125,7 @@ check:
 
 # ── Drive / Photos pipeline ───────────────────────────────────────────────────
 HOST  ?= http://localhost:8844
-LIMIT ?= 500
+LIMIT ?= 100
 
 discover:
 	curl -s -X POST "$(HOST)/api/sync/discover?page_size=200&max_pages=10" | python3 -m json.tool || true
@@ -137,6 +138,25 @@ discover-photos:
 
 sync-download:
 	curl -s -X POST "$(HOST)/api/sync/download?limit=$(LIMIT)" | python3 -m json.tool || true
+
+sync-run:
+	@echo "Running full pipeline: download → import → verify (loops until done)"
+	@while true; do \
+		result=$$(curl -s -X POST "$(HOST)/api/sync/download?limit=$(LIMIT)"); \
+		echo "download: $$result"; \
+		echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); exit(0 if d.get('downloaded',0)>0 else 1)" || break; \
+	done
+	@while true; do \
+		result=$$(curl -s -X POST "$(HOST)/api/sync/import?limit=$(LIMIT)"); \
+		echo "import: $$result"; \
+		echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); exit(0 if d.get('imported',0)>0 else 1)" || break; \
+	done
+	@while true; do \
+		result=$$(curl -s -X POST "$(HOST)/api/sync/verify?limit=$(LIMIT)"); \
+		echo "verify: $$result"; \
+		echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); exit(0 if d.get('verified',0)>0 else 1)" || break; \
+	done
+	@echo "Pipeline complete."
 
 sync-import:
 	curl -s -X POST "$(HOST)/api/sync/import?limit=$(LIMIT)" | python3 -m json.tool || true
