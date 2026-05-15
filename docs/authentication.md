@@ -103,12 +103,23 @@ Or via the Swagger UI at **http://localhost:8844/api/gmail/docs** → `GET /prof
 
 The token auto-refreshes using the refresh token. You only need to re-authenticate if:
 
-- `secrets/google_token.json` is deleted
-- `GOOGLE_ENCRYPTION_KEY` changes
+- `secrets/google_token.json` is deleted or corrupted
+- `GOOGLE_ENCRYPTION_KEY` changes (token was encrypted with a different key)
 - You revoke access in your Google account settings
 - You want to switch to a different Google account
+- You see `InvalidToken`, `invalid_client`, or "Not authenticated" errors despite the file existing
 
-To re-authenticate, just run `make auth` again.
+### Reset auth (force fresh token)
+
+If the token file exists but is invalid or was encrypted with a different key, delete it first then re-authenticate:
+
+```bash
+rm secrets/google_token.json
+make auth
+```
+
+!!! warning "When migrating between machines"
+    If you copied `google_token.json` from another machine that used a different `GOOGLE_ENCRYPTION_KEY`, the token will fail to decrypt. Always delete the old token and run `make auth` fresh on the new machine with its own `GOOGLE_ENCRYPTION_KEY`.
 
 ---
 
