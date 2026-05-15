@@ -10,10 +10,26 @@ BackDeezUp uses Google OAuth 2.0. One authentication flow covers all services �
 - `GOOGLE_ENCRYPTION_KEY` must be set in `.env`
 - Containers must be running (`make up`)
 
-!!! warning "Google no longer allows downloading existing client secrets"
-    As of 2025, Google Cloud Console does not show or allow downloading existing OAuth client secrets ([policy change](https://support.google.com/cloud/answer/15549257#client-secret-hashing)). If your `google_client.json` was copied from another machine or the secret is invalid, you **must add a new client secret** in Google Cloud Console — you cannot recover the old one.
+!!! warning "OAuth client type MUST be Desktop app"
+    Web application clients block restricted scopes (`photoslibrary.readonly`, `gmail.modify`) unless HTTPS redirect URIs are used. Always create a **Desktop app** OAuth client, not a Web application.
 
-    Go to **APIs & Services → Credentials → your OAuth 2.0 Client → Add Secret**, then download the updated JSON and replace `secrets/google_client.json`.
+    In Google Cloud Console: **APIs & Services → Credentials → + Create Credentials → OAuth client ID → Desktop app**
+
+!!! warning "Google no longer allows downloading existing client secrets"
+    As of 2025, Google Cloud Console does not show or allow downloading existing OAuth client secrets ([policy change](https://support.google.com/cloud/answer/15549257#client-secret-hashing)). If `invalid_client` occurs, go to APIs & Services → Credentials → your OAuth client → Add Secret → download the updated JSON.
+
+!!! tip "Copying credentials from Windows to Debian WSL"
+    Google appends `(1)` to the filename if the file already exists in Downloads. Always use the latest file:
+
+```bash
+cp '/mnt/c/Users/Administrator/Downloads/client_secret_486053539237-c454bqj13or711a74tfc8t493qlna64d.apps.googleusercontent.com (1).json' ~/repos/github/devadalberto/backdeezup/secrets/google_client.json
+```
+
+    Verify the client type before running auth (must print `installed`, not `web`):
+
+```bash
+python3 -c "import json; d=json.load(open('secrets/google_client.json')); print(list(d.keys())[0])"
+```
 
 ---
 
