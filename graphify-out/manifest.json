@@ -1,126 +1,352 @@
 {
-  "/home/saitama/backdeezup/backend_django/manage.py": {
-    "mtime": 1761291208.3902798,
-    "hash": "09ce28f22db4398409f377833475117f"
+  "/home/saitama/repos/github/devadalberto/backdeezup/dev.ps1": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "2c8206d76c00ead53de387913775d04e",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/google_media_backup/tests.py": {
-    "mtime": 1761291208.3902798,
-    "hash": "465b7e9f69bfd158c850cdfbc7306818"
+  "/home/saitama/repos/github/devadalberto/backdeezup/main.py": {
+    "mtime": 1778735855.474108,
+    "ast_hash": "a9bdcc197c3deb16a3a4b9d27d4d337f",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/google_media_backup/__init__.py": {
-    "mtime": 1761291208.3902798,
-    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  "/home/saitama/repos/github/devadalberto/backdeezup/entrypoint.sh": {
+    "mtime": 1778740144.0461135,
+    "ast_hash": "e15155e57d08d8ed14053629ab5f1541",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/google_media_backup/models.py": {
-    "mtime": 1761291208.3902798,
-    "hash": "0ba9eb0da6458f84f20b4b3cd6842449"
+  "/home/saitama/repos/github/devadalberto/backdeezup/dev.sh": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "77f1099766237c8228cb480454d548c8",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/google_media_backup/admin_ops.py": {
-    "mtime": 1761291208.3902798,
-    "hash": "9adea64358edc6d3f20a5823ca82851c"
+  "/home/saitama/repos/github/devadalberto/backdeezup/.claude/settings.json": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "9276b535256dc065bd7b8b84e15abd95",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/google_media_backup/services_google.py": {
-    "mtime": 1761291208.3902798,
-    "hash": "a706f28f4bb6d98d9283d9e2c0c01376"
+  "/home/saitama/repos/github/devadalberto/backdeezup/.gemini/settings.json": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "8ce69198b56a0694f81e85bd4f33373b",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/google_media_backup/utils.py": {
-    "mtime": 1761291208.3902798,
-    "hash": "bbc3e43f2a15a7842ae641da4fe5b09d"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/manage.py": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "09ce28f22db4398409f377833475117f",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/google_media_backup/api.py": {
-    "mtime": 1761291208.3902798,
-    "hash": "e49b18acbb2da4c2309f5fe52c0e8d2f"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/api.py": {
+    "mtime": 1778811498.5026357,
+    "ast_hash": "5150148064cb152630c441c98d3ec307",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/google_media_backup/apps.py": {
-    "mtime": 1761291208.3902798,
-    "hash": "0130284209d123d9c8ae19b957fd1794"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/admin_views.py": {
+    "mtime": 1778807105.1626837,
+    "ast_hash": "b2b47a7601ec26ede1a63e869e39815f",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/google_media_backup/views.py": {
-    "mtime": 1761291208.3902798,
-    "hash": "0f111d35a3b2ddf4ceaec3699aee0c52"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/models.py": {
+    "mtime": 1778807105.1666837,
+    "ast_hash": "b487f90825f8695a41db1be5637ed98a",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/google_media_backup/admin.py": {
-    "mtime": 1761291208.3902798,
-    "hash": "69b7e7c52b9635e28d99a17652e1a7d6"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/apps.py": {
+    "mtime": 1778807105.1626837,
+    "ast_hash": "16fcc6fd82513a4760471d9664f3583e",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/google_media_backup/migrations/__init__.py": {
-    "mtime": 1761291208.3902798,
-    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/admin.py": {
+    "mtime": 1778811498.5026357,
+    "ast_hash": "9c1e8e49d9a61a90ee17ae23594ce78c",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/google_media_backup/migrations/0001_initial.py": {
-    "mtime": 1761291208.3902798,
-    "hash": "29ddd8d020fb46e43998f634b6546990"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/services_gmail.py": {
+    "mtime": 1778835603.6066442,
+    "ast_hash": "19a0d385ecf80812de4dcc7868e2f74f",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/config/urls.py": {
-    "mtime": 1761291208.3902798,
-    "hash": "527904d3386489e9bf47b65dc689015a"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/tests.py": {
+    "mtime": 1778811498.5026357,
+    "ast_hash": "549f2144a814e20aeb6d6f7c40446b3d",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/config/asgi.py": {
-    "mtime": 1761291208.3892796,
-    "hash": "63d5777b090ac063ecd29c3dfa786ba5"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/__init__.py": {
+    "mtime": 1778807105.1626837,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/config/__init__.py": {
-    "mtime": 1761291208.3892796,
-    "hash": "d41d8cd98f00b204e9800998ecf8427e"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/migrations/0001_initial.py": {
+    "mtime": 1778807105.1666837,
+    "ast_hash": "77f5094501311908c9ff4b87775505c4",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/config/wsgi.py": {
-    "mtime": 1761291208.3902798,
-    "hash": "412e3606d946f0fb4dbc98443c4cf8bb"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/migrations/__init__.py": {
+    "mtime": 1778807105.1666837,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/config/settings.py": {
-    "mtime": 1761327072.1056826,
-    "hash": "fbce17dabb177c7f421db819d661d312"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/config/urls.py": {
+    "mtime": 1778835178.8185885,
+    "ast_hash": "6e302523d74ff81bd2f013adbfe018f3",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/docker-compose.yml": {
-    "mtime": 1761291208.3902798,
-    "hash": "27c3927f09d7dd405513e33521906a3c"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/config/__init__.py": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/requirements.txt": {
-    "mtime": 1761291208.3912797,
-    "hash": "5dedc2d88e3c9225b12c1d6514839328"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/config/asgi.py": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "63d5777b090ac063ecd29c3dfa786ba5",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/mkdocs.yml": {
-    "mtime": 1761291208.3902798,
-    "hash": "030e9a1a59315e80b8feba09afc7aaa1"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/config/wsgi.py": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "412e3606d946f0fb4dbc98443c4cf8bb",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/AGENTS.md": {
-    "mtime": 1778574404.3235407,
-    "hash": "da79aa9343cd2b362206f03762160abc"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/config/settings.py": {
+    "mtime": 1778811498.5026357,
+    "ast_hash": "990c7215a67232ae8672fd230f475f7b",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/GEMINI.md": {
-    "mtime": 1778574404.2165415,
-    "hash": "da79aa9343cd2b362206f03762160abc"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/services_google.py": {
+    "mtime": 1778835603.6066442,
+    "ast_hash": "f5f01a7e032af175b9a8b23899b2d95a",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/README.md": {
-    "mtime": 1761290551.1828132,
-    "hash": "31c5f25e25260cb3d1642ef336cfe5cd"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/api.py": {
+    "mtime": 1778811498.5026357,
+    "ast_hash": "d1575a86aa3c6ffc28db4e432c4b59a6",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/CLAUDE.md": {
-    "mtime": 1778573885.0845447,
-    "hash": "da79aa9343cd2b362206f03762160abc"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/admin_views.py": {
+    "mtime": 1778800317.5625746,
+    "ast_hash": "a52a624a8a6a3fefd5b95a69018f84b6",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/docs/api.md": {
-    "mtime": 1761291208.3902798,
-    "hash": "bfb4dffec928f4e332a1ac7e7b524694"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/models.py": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "0ba9eb0da6458f84f20b4b3cd6842449",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/docs/states.md": {
-    "mtime": 1761291208.3902798,
-    "hash": "6b3428719795440a93973499f55772ec"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/apps.py": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "0130284209d123d9c8ae19b957fd1794",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/docs/index.md": {
-    "mtime": 1761291208.3902798,
-    "hash": "fa342c439fe56f1bf225c267b5e053e5"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/utils.py": {
+    "mtime": 1778811498.5066357,
+    "ast_hash": "8270c5de39374a955120422af2571086",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/docs/setup.md": {
-    "mtime": 1761291208.3902798,
-    "hash": "65b6256815f1e2938b9f050f5e25b7ec"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/admin.py": {
+    "mtime": 1778800317.5625746,
+    "ast_hash": "224856481b1b867edd4852eb7a64fab4",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/google_media_backup/templates/query.html": {
-    "mtime": 1761291208.3902798,
-    "hash": "8e65b8466b6e080df6df24f123577281"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/admin_ops.py": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "9adea64358edc6d3f20a5823ca82851c",
+    "semantic_hash": ""
   },
-  "/home/saitama/backdeezup/backend_django/google_media_backup/templates/admin/gmb_ops.html": {
-    "mtime": 1761291208.3902798,
-    "hash": "655c7f8a6badd1cb0cf1c50ff2d8e776"
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/tests.py": {
+    "mtime": 1778811498.5066357,
+    "ast_hash": "167d005be6a7dea4b4610389bd6011ef",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/__init__.py": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/views.py": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "0f111d35a3b2ddf4ceaec3699aee0c52",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/migrations/0001_initial.py": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "29ddd8d020fb46e43998f634b6546990",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/migrations/__init__.py": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/secrets/google_client.json": {
+    "mtime": 1778872797.9616528,
+    "ast_hash": "f28358fda898f98cd61b2e34c6bfe00d",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/.codex/hooks.json": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "320706584e2cda077a181a6d7e6b1b06",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/CLAUDE.md": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "da79aa9343cd2b362206f03762160abc",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/mkdocs.yml": {
+    "mtime": 1778808218.8145802,
+    "ast_hash": "4d2d186c3a2ad8073608ac3c525d6bbe",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/CHANGELOG.md": {
+    "mtime": 1778808218.8105803,
+    "ast_hash": "65f2c3ddb8fb04f485e4b9e6a24c5262",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/requirements.txt": {
+    "mtime": 1778800317.5625746,
+    "ast_hash": "e6beabcc6df511db62d2a8bdb5a73a3f",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/README.md": {
+    "mtime": 1778800317.5625746,
+    "ast_hash": "344f8790bd7275e1ba80c93811219609",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/AGENTS.md": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "da79aa9343cd2b362206f03762160abc",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docker-compose.yml": {
+    "mtime": 1778808714.0787024,
+    "ast_hash": "a0f73089ee6ace2ae3ab94e76b592a3f",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/GEMINI.md": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "da79aa9343cd2b362206f03762160abc",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/shared_context.md": {
+    "mtime": 1778833256.0545685,
+    "ast_hash": "594efeffdf3455ffea577b01e9dee9cd",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/templates/admin/gmail/ops.html": {
+    "mtime": 1778807105.1666837,
+    "ast_hash": "220c548ec1fed9b22bfb1bce80f08b31",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/templates/admin/gmail/dashboard.html": {
+    "mtime": 1778807105.1666837,
+    "ast_hash": "2741620f2f205806431a65422d1e31fd",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/templates/query.html": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "8e65b8466b6e080df6df24f123577281",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/templates/admin/ops_console.html": {
+    "mtime": 1778800317.5625746,
+    "ast_hash": "d481d5600724121765a73b37fd84b592",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/templates/admin/reports.html": {
+    "mtime": 1778800317.5625746,
+    "ast_hash": "5d1344a2bd55480dbdd05a8bd01a28a1",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/templates/admin/gmb_ops.html": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "655c7f8a6badd1cb0cf1c50ff2d8e776",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/deployment.md": {
+    "mtime": 1778807370.378683,
+    "ast_hash": "f3536641cb021ece36387bdece5de90c",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/api.md": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "4a8756b9f698f7c25df725a007ab83a5",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/acknowledgements.md": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "95a4231cea75bb6496c3246c8c72fc8e",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/handover.md": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "b2ec61e409e21eafd66edcb62ab5f071",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/architecture.md": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "9d30fc24585bda3cd0f97efd0e27f426",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/contributing.md": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "efd0129172e31f5f099fd6ea5dee1e63",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/data-model.md": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "935e4444dce2925d8450cede026fc3bb",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/authentication.md": {
+    "mtime": 1778833256.0545685,
+    "ast_hash": "29bec2f443301dae9504fe050a6ed4db",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/setup.md": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "65b6256815f1e2938b9f050f5e25b7ec",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/project-comparison.md": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "c0887816a3e98aa159bf6019c34c63e8",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/installation.md": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "737371313f40991a40bbfa20d04b171c",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/states.md": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "fe8fdac6804e527927f42b1f7d4318b8",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/index.md": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "51da818464ec6edb0c40776c2903f408",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/quickstart.md": {
+    "mtime": 1778800317.5625746,
+    "ast_hash": "e7eb3d39729cb1c61b28136ec670f152",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/configuration.md": {
+    "mtime": 1778800317.5625746,
+    "ast_hash": "58c40b84f14db906b6c93ff365b36690",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/docs/changelog.md": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "30d7b50d21ef0a826853b473148a6f75",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/.github/workflows/ci.yml": {
+    "mtime": 1778811498.5026357,
+    "ast_hash": "a0398281fc86930eae101268cefd513a",
+    "semantic_hash": ""
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/.github/workflows/gh-pages.yml": {
+    "mtime": 1778735855.4701078,
+    "ast_hash": "e9e4a493e1c2113fa33a798cb464927a",
+    "semantic_hash": ""
   }
 }
