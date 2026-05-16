@@ -146,3 +146,91 @@ class GmailAPITest(TestCase):
         data = r.json()
         self.assertTrue(data["dry_run"])
         self.assertEqual(data["would_trash"], 2)
+
+
+class CleanupRulesEngineTest(TestCase):
+    """Tests for services_rules.py — the core cleanup engine."""
+
+    def setUp(self):
+        from django.utils import timezone
+        from datetime import timedelta
+        from .models import CleanupRule, ProtectedSender
+
+        # Create old verified messages
+        self.old_date = timezone.now() - timedelta(days=60)
+        self.recent_date = timezone.now() - timedelta(days=5)
+
+        self.msg_old = GmailMessage.objects.create(
+            gmail_id="old1", thread_id="t1", subject="Old newsletter",
+            from_address="news@example.com", date=self.old_date,
+            state=GmailMessage.STATE_VERIFIED, account_email="me@test.com",
+        )
+        self.msg_recent = GmailMessage.objects.create(
+            gmail_id="recent1", thread_id="t2", subject="Recent newsletter",
+            from_address="news@example.com", date=self.recent_date,
+            state=GmailMessage.STATE_VERIFIED, account_email="me@test.com",
+        )
+        self.msg_protected = GmailMessage.objects.create(
+            gmail_id="protected1", thread_id="t3", subject="Family email",
+            from_address="family@gmail.com", date=self.old_date,
+            state=GmailMessage.STATE_VERIFIED, account_email="me@test.com",
+        )
+        self.protected_sender = ProtectedSender.objects.create(
+            email="family@gmail.com", label_to_apply="family", star=True,
+        )
+        self.rule = CleanupRule.objects.create(
+            name="Test trash old",
+            gmail_query="",
+            action=CleanupRule.ACTION_TRASH,
+            min_age_days=30,
+            enabled=True,
+            dry_run_default=True,
+        )
+
+    def test_dry_run_counts_candidates(self):
+        from .services_rules import apply_rule
+        audit = apply_rule(self.rule, dry_run=True)
+        self.assertEqual(audit.status, "DRY_RUN")
+        # Only old message qualifies (recent one is < 30 days)
+        # Protected sender excluded
+        self.assertEqual(audit.affected_count, 1)
+        self.assertIn(self.msg_old.gmail_id, audit.affected_gmail_ids)
+
+    def test_dry_run_excludes_recent_messages(self):
+        from .services_rules import apply_rule
+        audit = apply_rule(self.rule, dry_run=True)
+        self.assertNotIn(self.msg_recent.gmail_id, audit.affected_gmail_ids)
+
+    def test_dry_run_excludes_protected_senders(self):
+        from .services_rules import apply_rule
+        audit = apply_rule(self.rule, dry_run=True)
+        self.assertNotIn(self.msg_protected.gmail_id, audit.affected_gmail_ids)
+
+    def test_dry_run_does_not_change_state(self):
+        from .services_rules import apply_rule
+        apply_rule(self.rule, dry_run=True)
+        # Messages should remain VERIFIED after dry run
+        self.msg_old.refresh_from_db()
+        self.assertEqual(self.msg_old.state, GmailMessage.STATE_VERIFIED)
+
+    def test_audit_log_truncation_flag(self):
+        from .services_rules import apply_rule
+        from .models import CleanupAuditLog
+        audit = apply_rule(self.rule, dry_run=True)
+        # With only 1 candidate, should not be truncated
+        self.assertFalse(audit.affected_ids_truncated)
+
+    def test_normalize_email_extracts_from_angle_brackets(self):
+        from .services_rules import _normalize_email
+        self.assertEqual(_normalize_email("Name <email@test.com>"), "email@test.com")
+        self.assertEqual(_normalize_email("plain@test.com"), "plain@test.com")
+        self.assertEqual(_normalize_email("  UPPER@TEST.COM  "), "upper@test.com")
+
+    def test_rule_min_age_days_cutoff(self):
+        """Rule with min_age_days=7 should include recent message but exclude nothing old."""
+        from .services_rules import apply_rule
+        self.rule.min_age_days = 3
+        self.rule.save()
+        audit = apply_rule(self.rule, dry_run=True)
+        # Both old and recent should qualify (both > 3 days old)
+        self.assertEqual(audit.affected_count, 2)

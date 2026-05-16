@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     # Project apps
     'corsheaders',
     'django_apscheduler',
+    'django_ratelimit',
     'google_media_backup',
     'google_gmail_backup',
     'media_vault',
@@ -190,6 +191,18 @@ WAGTAILSEARCH_BACKENDS = {"default": {"BACKEND": "wagtail.search.backends.databa
 
 # ── Pydantic v2 project-wide ──────────────────────────────────────────────────
 # Schemas in backend_django/schemas.py — use model_validate() in all views.
+
+# ── Cache (Redis) ─────────────────────────────────────────────────────────────
+REDIS_URL = config('REDIS_URL', default='redis://redis:6379/0')
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {"socket_connect_timeout": 2},
+        "KEY_PREFIX": "backdeezup",
+    }
+}
+RATELIMIT_USE_CACHE = "default"
 
 # ── APScheduler ───────────────────────────────────────────────────────────────
 BACKDEEZUP_SCHEDULER = config('BACKDEEZUP_SCHEDULER', cast=bool, default=False)

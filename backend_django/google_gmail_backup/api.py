@@ -3,6 +3,7 @@ from typing import List, Optional
 import datetime as dt
 
 from django.utils import timezone
+from django_ratelimit.decorators import ratelimit
 from ninja import NinjaAPI, Schema, Query
 from ninja.security import django_auth
 from googleapiclient.errors import HttpError
@@ -77,6 +78,7 @@ def gmail_profile(request):
 # ── Discovery ─────────────────────────────────────────────────────────────────
 
 @gmail_api.post("/sync/discover")
+@ratelimit(key="user", rate="5/h", block=True)
 def gmail_discover(request, q: str = "", max_pages: int = 20, page_size: int = 500):
     """
     Fast discovery — stores only message IDs (no per-message API calls).
@@ -416,6 +418,7 @@ def rule_dry_run(request, rule_id: int):
 
 
 @gmail_api.post("/rules/{rule_id}/execute")
+@ratelimit(key="user", rate="10/h", block=True)
 def rule_execute(request, rule_id: int):
     from .models import CleanupRule
     from .services_rules import apply_rule
@@ -429,6 +432,7 @@ def rule_execute(request, rule_id: int):
 
 
 @gmail_api.post("/rules/run-all")
+@ratelimit(key="user", rate="3/h", block=True)
 def rules_run_all(request, dry_run: bool = True):
     from .services_rules import run_all_enabled_rules
     results = run_all_enabled_rules(dry_run=dry_run, actor_label="api")

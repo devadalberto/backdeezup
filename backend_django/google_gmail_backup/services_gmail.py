@@ -1,13 +1,17 @@
 import base64
 import hashlib
+import logging
 import os
 from typing import Optional
 
 from decouple import config
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 from google_media_backup.services_google import _load_creds, _save_creds
+
+log = logging.getLogger(__name__)
 
 CLIENT_SECRETS = config("GOOGLE_CLIENT_SECRETS", default="secrets/google_client.json")
 TOKEN_FILE_ENC = config("GOOGLE_TOKEN_FILE", default="secrets/google_token.json")
@@ -116,30 +120,63 @@ def list_history(start_history_id: str, history_types=None):
 
 # ── Cleanup actions ───────────────────────────────────────────────────────────
 
-def trash_message(msg_id: str) -> bool:
+def trash_message(msg_id: str, user_id: str = "me") -> bool:
+    """Move a single message to Gmail trash. Logs errors instead of silently returning False."""
     svc = gmail_service()
     if not svc:
         return False
     try:
-        svc.users().messages().trash(userId="me", id=msg_id).execute()
+        svc.users().messages().trash(userId=user_id, id=msg_id).execute()
         return True
-    except Exception:
+    except HttpError as exc:
+        if exc.resp.status == 429:
+            log.warning("Gmail quota exceeded trashing %s: %s", msg_id, exc)
+        else:
+            log.warning("Failed to trash message %s (HTTP %s): %s", msg_id, exc.resp.status, exc)
+        return False
+    except Exception as exc:
+        log.error("Unexpected error trashing message %s: %s", msg_id, exc)
         return False
 
 
-def delete_message_permanent(msg_id: str) -> bool:
-    """Requires https://mail.google.com/ scope."""
+def batch_trash_messages(msg_ids: list, user_id: str = "me") -> int:
+    """Trash multiple messages using Gmail batchModify. Returns count of successful trashes."""
+    if not msg_ids:
+        return 0
+    svc = gmail_service()
+    if not svc:
+        return 0
+    try:
+        svc.users().messages().batchModify(
+            userId=user_id,
+            body={"ids": msg_ids, "addLabelIds": ["TRASH"], "removeLabelIds": ["INBOX"]},
+        ).execute()
+        return len(msg_ids)
+    except HttpError as exc:
+        log.warning("batchModify trash failed (HTTP %s): %s", exc.resp.status, exc)
+        return 0
+    except Exception as exc:
+        log.error("Unexpected error in batch trash: %s", exc)
+        return 0
+
+
+def delete_message_permanent(msg_id: str, user_id: str = "me") -> bool:
+    """Permanently delete a message. Requires https://mail.google.com/ scope."""
     svc = gmail_service()
     if not svc:
         return False
     try:
-        svc.users().messages().delete(userId="me", id=msg_id).execute()
+        svc.users().messages().delete(userId=user_id, id=msg_id).execute()
         return True
-    except Exception:
+    except HttpError as exc:
+        log.warning("Failed to permanently delete %s (HTTP %s): %s", msg_id, exc.resp.status, exc)
+        return False
+    except Exception as exc:
+        log.error("Unexpected error deleting message %s: %s", msg_id, exc)
         return False
 
 
-def modify_labels(msg_id: str, add_labels=None, remove_labels=None) -> bool:
+def modify_labels(msg_id: str, add_labels=None, remove_labels=None, user_id: str = "me") -> bool:
     svc = gmail_service()
     if not svc:
         return False
@@ -149,23 +186,60 @@ def modify_labels(msg_id: str, add_labels=None, remove_labels=None) -> bool:
             body["addLabelIds"] = add_labels
         if remove_labels:
             body["removeLabelIds"] = remove_labels
-        svc.users().messages().modify(userId="me", id=msg_id, body=body).execute()
+        svc.users().messages().modify(userId=user_id, id=msg_id, body=body).execute()
         return True
-    except Exception:
+    except HttpError as exc:
+        log.warning("Failed to modify labels on %s (HTTP %s): %s", msg_id, exc.resp.status, exc)
+        return False
+    except Exception as exc:
+        log.error("Unexpected error modifying labels on %s: %s", msg_id, exc)
+        return False
+
+
+def batch_modify_labels(msg_ids: list, add_labels=None, remove_labels=None, user_id: str = "me") -> bool:
+    """Apply label changes to multiple messages in one API call — O(1) instead of O(n)."""
+    if not msg_ids:
+        return True
+    svc = gmail_service()
+    if not svc:
+        return False
+    try:
+        body: dict = {"ids": msg_ids}
+        if add_labels:
+            body["addLabelIds"] = add_labels
+        if remove_labels:
+            body["removeLabelIds"] = remove_labels
+        svc.users().messages().batchModify(userId=user_id, body=body).execute()
+        return True
+    except HttpError as exc:
+        log.warning("batchModify labels failed (HTTP %s): %s", exc.resp.status, exc)
+        return False
+    except Exception as exc:
+        log.error("Unexpected error in batch label modify: %s", exc)
         return False
 
 
 # ── Storage helpers ───────────────────────────────────────────────────────────
 
-def eml_path(account_email: str, msg_date, gmail_id: str) -> str:
-    """Returns deterministic .eml path: gmail/<account>/<year>/<month>/<gmail_id>.eml"""
+def eml_dir(account_email: str, msg_date) -> str:
+    """Returns the directory path for .eml storage. Does NOT create the directory."""
     from django.conf import settings
     year = msg_date.strftime("%Y") if msg_date else "unknown"
     month = msg_date.strftime("%m") if msg_date else "00"
     safe_email = account_email.replace("@", "_at_").replace(".", "_")
-    base = os.path.join(settings.MEDIA_ROOT, "gmail", safe_email, year, month)
+    return os.path.join(settings.MEDIA_ROOT, "gmail", safe_email, year, month)
+
+
+def ensure_eml_path(account_email: str, msg_date, gmail_id: str) -> str:
+    """Returns .eml path AND creates the directory. Use when writing files."""
+    base = eml_dir(account_email, msg_date)
     os.makedirs(base, exist_ok=True)
     return os.path.join(base, f"{gmail_id}.eml")
+
+
+def eml_path(account_email: str, msg_date, gmail_id: str) -> str:
+    """Alias for ensure_eml_path — kept for backward compatibility."""
+    return ensure_eml_path(account_email, msg_date, gmail_id)
 
 
 def sha256_bytes(data: bytes) -> str:
