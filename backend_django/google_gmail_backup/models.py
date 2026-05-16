@@ -236,7 +236,8 @@ class CleanupAuditLog(models.Model):
     actor_label = models.CharField(max_length=100, default="system")
 
     affected_count = models.IntegerField(default=0)
-    affected_gmail_ids = models.JSONField(default=list)
+    affected_gmail_ids = models.JSONField(default=list, help_text="First 100 IDs max")
+    affected_ids_truncated = models.BooleanField(default=False, help_text="True when >100 IDs were affected")
     sample_subjects = models.JSONField(default=list)
 
     started_at = models.DateTimeField(default=timezone.now)

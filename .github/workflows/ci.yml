@@ -30,7 +30,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
+          # No pip cache — project uses uv which has its own cache above
 
       - name: Install dependencies
         run: uv sync
@@ -40,7 +40,6 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    # no longer needs: lint — runs in parallel
     steps:
       - uses: actions/checkout@v4
 
@@ -55,7 +54,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
 
       - name: Install dependencies
         run: uv sync
@@ -68,7 +66,7 @@ jobs:
 
   playwright:
     runs-on: ubuntu-latest
-    needs: [lint, test]   # waits for both parallel jobs
+    needs: [lint, test]
     steps:
       - uses: actions/checkout@v4
 
@@ -83,7 +81,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
 
       - name: Install dependencies
         run: uv sync

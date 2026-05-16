@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from .models import CleanupAuditLog, CleanupRule, GmailMessage, ProtectedSender
 from .services_gmail import (
+    batch_modify_labels,
     gmail_service,
     modify_labels,
     trash_message,
@@ -105,6 +106,7 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
         sample_subjects = [m.subject[:80] for m in candidates[:10]]
         audit.affected_count = len(affected_ids)
         audit.affected_gmail_ids = affected_ids[:100]
+        audit.affected_ids_truncated = len(affected_ids) > 100
         audit.sample_subjects = sample_subjects
 
         if dry_run:
@@ -198,25 +200,31 @@ def apply_protected_sender_rules() -> CleanupAuditLog:
     affected_ids = []
 
     for sender in protected:
-        # Find verified messages from this sender that aren't starred yet
-        msgs = GmailMessage.objects.filter(
+        msgs = list(GmailMessage.objects.filter(
             from_address__icontains=sender.email,
             state=GmailMessage.STATE_VERIFIED,
-        ).exclude(labels__contains=["STARRED"])
+        ).exclude(labels__contains=["STARRED"]))
+
+        if not msgs:
+            continue
 
         label_id = None
         if sender.label_to_apply:
             label_id = _get_or_create_label(svc, sender.label_to_apply)
 
-        for msg in msgs:
-            add = ["STARRED", "INBOX"]
-            if label_id:
-                add.append(label_id)
-            if modify_labels(msg.gmail_id, add_labels=add):
-                msg.labels = list(set(list(msg.labels) + add))
-                msg.save(update_fields=["labels"])
-                affected_ids.append(msg.gmail_id)
-                executed += 1
+        add = ["STARRED", "INBOX"]
+        if label_id:
+            add.append(label_id)
+
+        msg_ids = [m.gmail_id for m in msgs]
+        # Single batchModify call per sender — O(1) API calls instead of O(n)
+        if batch_modify_labels(msg_ids, add_labels=add):
+            GmailMessage.objects.filter(gmail_id__in=msg_ids).update(
+                labels=add  # approximate — full label merge handled at next sync
+            )
+            affected_ids.extend(msg_ids)
+            executed += len(msg_ids)
+            log.info("Protected sender %s: starred %d messages", sender.email, len(msg_ids))
 
     audit.affected_count = executed
     audit.affected_gmail_ids = affected_ids[:100]

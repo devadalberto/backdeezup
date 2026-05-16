@@ -26,6 +26,7 @@ dependencies = [
     "reportlab>=4.5.1",
     "wagtail>=7.4,<7.5",
     "wagtailmedia>=0.17,<0.18",
+    "django-ratelimit>=4.1.0",
 ]
 
 [project.optional-dependencies]
