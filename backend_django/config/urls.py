@@ -29,8 +29,9 @@ from google_gmail_backup.admin_views import gmail_dashboard, gmail_ops, gmail_ru
 # Gmail API
 from google_gmail_backup.api import gmail_api
 
-# Media Vault API
+# Media Vault API + views
 from media_vault.api import vault_api
+from media_vault.views import review_view
 
 urlpatterns = [
     # Drive/Photos admin dashboards
@@ -51,8 +52,9 @@ urlpatterns = [
     # Gmail Ninja API
     path("api/gmail/", gmail_api.urls),
 
-    # Media Vault API
+    # Media Vault API + review UI
     path("api/vault/", vault_api.urls),
+    path("vault/review/", review_view, name="vault_review"),
 ]
 
 if HAS_QUERY_PAGE:
