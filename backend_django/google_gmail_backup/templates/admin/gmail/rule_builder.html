@@ -1,0 +1,389 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>&#9608; Smart Rule Builder</h1>
+<p style="color:var(--gd);font-family:monospace">Build compound email rules visually. No query syntax needed.</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+<!-- ── LEFT: Builder ─────────────────────────────────────────────────────── -->
+<div>
+
+<div class="card">
+  <b>Rule Details</b>
+  <div style="margin-top:10px;display:grid;gap:8px">
+    <div class="row">
+      <label style="width:120px">Name</label>
+      <input type="text" id="ruleName" placeholder="e.g. LinkedIn job emails" style="flex:1">
+    </div>
+    <div class="row">
+      <label style="width:120px">Description</label>
+      <input type="text" id="ruleDesc" placeholder="What this rule does" style="flex:1">
+    </div>
+    <div class="row">
+      <label style="width:120px">Action</label>
+      <select id="ruleAction" style="flex:1">
+        <option value="trash">Move to Trash</option>
+        <option value="label">Apply Label</option>
+        <option value="star">Star</option>
+        <option value="archive">Archive (remove INBOX)</option>
+      </select>
+    </div>
+    <div class="row" id="labelRow" style="display:none">
+      <label style="width:120px">Label Name</label>
+      <input type="text" id="ruleLabel" placeholder="e.g. work/jobs" style="flex:1">
+    </div>
+    <div class="row">
+      <label style="width:120px">Min Age (days)</label>
+      <input type="number" id="ruleAge" value="0" style="width:80px">
+      <span style="color:var(--gd);font-size:12px">0 = any age</span>
+    </div>
+    <div class="row">
+      <label style="width:120px">Start Enabled</label>
+      <input type="checkbox" id="ruleEnabled">
+      <span style="color:var(--gd);font-size:12px">off = saved as disabled for review</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <b>Conditions</b>
+  <span style="color:var(--gd);font-size:12px;margin-left:8px">Each row: IF [field] [operator] [value] [join-next-with]</span>
+  <table style="width:100%;margin-top:10px;font-size:12px" id="condTable">
+    <thead>
+      <tr>
+        <th style="width:30px">#</th>
+        <th>Field</th>
+        <th>Operator</th>
+        <th>Value</th>
+        <th style="width:70px">Join</th>
+        <th style="width:30px"></th>
+      </tr>
+    </thead>
+    <tbody id="condBody"></tbody>
+  </table>
+  <div class="row" style="margin-top:10px">
+    <button class="btn btn-primary" onclick="addCondition()">+ Add Condition</button>
+    <button class="btn" onclick="clearConditions()">Clear All</button>
+  </div>
+</div>
+
+<div class="card">
+  <b>Actions</b>
+  <div class="row" style="margin-top:10px">
+    <button class="btn btn-warn" onclick="previewQuery()">Preview Query</button>
+    <button class="btn btn-warn" onclick="dryRun()">Dry-run (count matches)</button>
+    <button class="btn btn-primary" onclick="saveRule()">Save Rule</button>
+  </div>
+</div>
+
+</div>
+
+<!-- ── RIGHT: Preview + Templates ─────────────────────────────────────────── -->
+<div>
+
+<div class="card">
+  <b>Compiled Gmail Query</b>
+  <pre id="queryPreview" style="margin-top:8px;min-height:40px">(add conditions to see preview)</pre>
+</div>
+
+<div class="card">
+  <b>Dry-run Result</b>
+  <pre id="dryRunResult" style="min-height:60px">(run dry-run to see matches)</pre>
+</div>
+
+<div class="card">
+  <b>Templates — click to load</b>
+  <div style="display:grid;gap:6px;margin-top:10px">
+
+    <button class="btn btn-sm" onclick="loadTemplate('linkedin_jobs')">
+      LinkedIn — job-related emails → label: work/jobs
+    </button>
+    <button class="btn btn-sm" onclick="loadTemplate('linkedin_spam')">
+      LinkedIn — non-job notifications → trash after 30d
+    </button>
+    <button class="btn btn-sm" onclick="loadTemplate('job_boards')">
+      Job boards (Monster, Indeed, Glassdoor) → label: work/jobs
+    </button>
+    <button class="btn btn-sm" onclick="loadTemplate('recruiters')">
+      Recruiter outreach → label: work/recruiters
+    </button>
+    <button class="btn btn-sm" onclick="loadTemplate('marketing_tools')">
+      Marketing platforms (Mailchimp, HubSpot, etc.) → trash after 30d
+    </button>
+    <button class="btn btn-sm" onclick="loadTemplate('newsletters')">
+      Newsletter/unsubscribe emails → trash after 30d
+    </button>
+    <button class="btn btn-sm" onclick="loadTemplate('no_reply')">
+      No-reply automated senders → trash after 60d
+    </button>
+    <button class="btn btn-sm" onclick="loadTemplate('social_old')">
+      Social notifications older than 30d → trash
+    </button>
+    <button class="btn btn-sm btn-warn" onclick="loadTemplate('promotions')">
+      Promotions category older than 30d → trash
+    </button>
+
+  </div>
+</div>
+
+<div class="card">
+  <b>Existing Rules</b>
+  <div id="existingRules" style="font-size:12px;margin-top:8px;color:var(--gd)">Loading...</div>
+</div>
+
+</div>
+</div>
+
+<script>
+const FIELDS = [
+  {value:"sender",       label:"Sender (from)"},
+  {value:"to",           label:"Recipient (to)"},
+  {value:"subject",      label:"Subject"},
+  {value:"body",         label:"Body"},
+  {value:"label",        label:"Label"},
+  {value:"category",     label:"Category"},
+  {value:"has_attachment",label:"Has Attachment"},
+  {value:"age_days",     label:"Age (days)"},
+];
+const OPS = [
+  {value:"contains",      label:"contains"},
+  {value:"not_contains",  label:"does not contain"},
+  {value:"equals",        label:"equals"},
+  {value:"not_equals",    label:"does not equal"},
+  {value:"starts_with",   label:"starts with"},
+  {value:"older_than",    label:"older than"},
+  {value:"newer_than",    label:"newer than"},
+  {value:"is_true",       label:"is true"},
+];
+const LOGIC = [{value:"AND",label:"AND"},{value:"OR",label:"OR"}];
+
+let condCount = 0;
+
+function sel(opts, selected='') {
+  return opts.map(o => `<option value="${o.value}"${o.value===selected?' selected':''}>${o.label}</option>`).join('');
+}
+
+function addCondition(f='sender', op='contains', val='', logic='AND') {
+  condCount++;
+  const id = condCount;
+  const tbody = document.getElementById('condBody');
+  const tr = document.createElement('tr');
+  tr.id = `cond-${id}`;
+  tr.dataset.id = id;
+  tr.innerHTML = `
+    <td style="color:var(--gd)">${id}</td>
+    <td><select class="cond-field" onchange="updatePreview()">${sel(FIELDS,f)}</select></td>
+    <td><select class="cond-op" onchange="updatePreview()">${sel(OPS,op)}</select></td>
+    <td><input type="text" class="cond-val" value="${val}" oninput="updatePreview()" style="width:100%"></td>
+    <td><select class="cond-logic" onchange="updatePreview()">${sel(LOGIC,logic)}</select></td>
+    <td><button class="btn btn-sm btn-danger" onclick="removeCond(${id})">×</button></td>`;
+  tbody.appendChild(tr);
+  updatePreview();
+}
+
+function removeCond(id) {
+  document.getElementById(`cond-${id}`).remove();
+  updatePreview();
+}
+
+function clearConditions() {
+  document.getElementById('condBody').innerHTML = '';
+  condCount = 0;
+  updatePreview();
+}
+
+function getConditions() {
+  const rows = document.querySelectorAll('#condBody tr');
+  return Array.from(rows).map((tr, i) => ({
+    order: i + 1,
+    field:    tr.querySelector('.cond-field').value,
+    operator: tr.querySelector('.cond-op').value,
+    value:    tr.querySelector('.cond-val').value.trim(),
+    logic:    tr.querySelector('.cond-logic').value,
+  }));
+}
+
+async function updatePreview() {
+  const conds = getConditions();
+  if (!conds.length) { document.getElementById('queryPreview').textContent='(add conditions)'; return; }
+  try {
+    const r = await fetch('/api/gmail/rule-builder/preview', {
+      method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+      body: JSON.stringify({conditions: conds})
+    });
+    const d = await r.json();
+    document.getElementById('queryPreview').textContent = d.query || '(empty)';
+  } catch(e) { document.getElementById('queryPreview').textContent = 'preview error: ' + e; }
+}
+
+async function previewQuery() { await updatePreview(); }
+
+async function dryRun() {
+  const out = document.getElementById('dryRunResult');
+  out.textContent = 'Running...';
+  const body = {
+    conditions: getConditions(),
+    min_age_days: parseInt(document.getElementById('ruleAge').value)||0,
+    name: document.getElementById('ruleName').value
+  };
+  try {
+    const r = await fetch('/api/gmail/rule-builder/dry-run', {
+      method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    out.textContent = `Query: ${d.query}\n\nMatches in DB: ${d.match_count}\n\nSample subjects:\n` +
+      (d.samples||[]).map(s=>`  • ${s.subject} — ${s.from}`).join('\n');
+  } catch(e) { out.textContent = 'error: '+e; }
+}
+
+async function saveRule() {
+  const name = document.getElementById('ruleName').value.trim();
+  if (!name) { alert('Enter a rule name first'); return; }
+  const body = {
+    name, description: document.getElementById('ruleDesc').value,
+    action: document.getElementById('ruleAction').value,
+    label_name: document.getElementById('ruleLabel').value,
+    min_age_days: parseInt(document.getElementById('ruleAge').value)||0,
+    enabled: document.getElementById('ruleEnabled').checked,
+    conditions: getConditions()
+  };
+  try {
+    const r = await fetch('/api/gmail/rule-builder/save', {
+      method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+      body: JSON.stringify(body)
+    });
+    const d = await r.json();
+    if (d.error) { alert('Error: '+d.error); return; }
+    alert(`Rule "${d.name}" saved! (id=${d.id})\nCompiled query: ${d.compiled_query}`);
+    loadExistingRules();
+  } catch(e) { alert('save error: '+e); }
+}
+
+// ── Templates ──────────────────────────────────────────────────────────────
+const TEMPLATES = {
+  linkedin_jobs: {
+    name:'LinkedIn — job emails', action:'label', label:'work/jobs', age:0,
+    conds:[
+      {f:'sender',  op:'contains', v:'linkedin.com',   logic:'AND'},
+      {f:'subject', op:'contains', v:'job',            logic:'OR'},
+      {f:'subject', op:'contains', v:'recruiter',      logic:'OR'},
+      {f:'subject', op:'contains', v:'applied',        logic:'OR'},
+      {f:'subject', op:'contains', v:'hiring',         logic:'OR'},
+      {f:'subject', op:'contains', v:'interview',      logic:'OR'},
+      {f:'subject', op:'contains', v:'offer',          logic:'AND'},
+    ]
+  },
+  linkedin_spam: {
+    name:'LinkedIn — non-job notifications', action:'trash', label:'', age:30,
+    conds:[
+      {f:'sender',  op:'contains',     v:'linkedin.com',  logic:'AND'},
+      {f:'subject', op:'not_contains', v:'job',           logic:'AND'},
+      {f:'subject', op:'not_contains', v:'recruiter',     logic:'AND'},
+      {f:'subject', op:'not_contains', v:'applied',       logic:'AND'},
+      {f:'subject', op:'not_contains', v:'interview',     logic:'AND'},
+    ]
+  },
+  job_boards: {
+    name:'Job boards — job alerts', action:'label', label:'work/jobs', age:0,
+    conds:[
+      {f:'sender', op:'contains', v:'monster.com',     logic:'OR'},
+      {f:'sender', op:'contains', v:'indeed.com',      logic:'OR'},
+      {f:'sender', op:'contains', v:'glassdoor.com',   logic:'OR'},
+      {f:'sender', op:'contains', v:'ziprecruiter.com',logic:'OR'},
+      {f:'sender', op:'contains', v:'dice.com',        logic:'AND'},
+    ]
+  },
+  recruiters: {
+    name:'Recruiter outreach', action:'label', label:'work/recruiters', age:0,
+    conds:[
+      {f:'subject', op:'contains', v:'opportunity',    logic:'OR'},
+      {f:'subject', op:'contains', v:'recruiter',      logic:'OR'},
+      {f:'subject', op:'contains', v:'I came across',  logic:'OR'},
+      {f:'subject', op:'contains', v:'your background',logic:'OR'},
+      {f:'subject', op:'contains', v:'your profile',   logic:'AND'},
+    ]
+  },
+  marketing_tools: {
+    name:'Marketing platforms', action:'trash', label:'', age:30,
+    conds:[
+      {f:'sender', op:'contains', v:'mailchimp.com',  logic:'OR'},
+      {f:'sender', op:'contains', v:'hubspot.com',    logic:'OR'},
+      {f:'sender', op:'contains', v:'salesforce.com', logic:'OR'},
+      {f:'sender', op:'contains', v:'constantcontact.com', logic:'OR'},
+      {f:'sender', op:'contains', v:'marketo.com',    logic:'AND'},
+    ]
+  },
+  newsletters: {
+    name:'Newsletters (unsubscribe)', action:'trash', label:'', age:30,
+    conds:[
+      {f:'body',    op:'contains', v:'unsubscribe', logic:'AND'},
+      {f:'subject', op:'not_contains', v:'receipt', logic:'AND'},
+      {f:'subject', op:'not_contains', v:'order',   logic:'AND'},
+    ]
+  },
+  no_reply: {
+    name:'No-reply senders', action:'trash', label:'', age:60,
+    conds:[
+      {f:'sender', op:'contains', v:'no-reply',    logic:'OR'},
+      {f:'sender', op:'contains', v:'noreply',     logic:'OR'},
+      {f:'sender', op:'contains', v:'donotreply',  logic:'AND'},
+    ]
+  },
+  social_old: {
+    name:'Social notifications old', action:'trash', label:'', age:30,
+    conds:[
+      {f:'category', op:'equals', v:'social', logic:'AND'},
+    ]
+  },
+  promotions: {
+    name:'Promotions older 30d', action:'trash', label:'', age:30,
+    conds:[
+      {f:'category', op:'equals', v:'promotions', logic:'AND'},
+    ]
+  },
+};
+
+function loadTemplate(key) {
+  const t = TEMPLATES[key];
+  if (!t) return;
+  document.getElementById('ruleName').value  = t.name;
+  document.getElementById('ruleAction').value = t.action;
+  document.getElementById('ruleLabel').value  = t.label;
+  document.getElementById('ruleAge').value    = t.age;
+  document.getElementById('labelRow').style.display = t.action==='label' ? 'flex' : 'none';
+  clearConditions();
+  t.conds.forEach(c => addCondition(c.f, c.op, c.v, c.logic));
+}
+
+// Show/hide label field
+document.getElementById('ruleAction').addEventListener('change', function() {
+  document.getElementById('labelRow').style.display = this.value==='label' ? 'flex' : 'none';
+});
+
+async function loadExistingRules() {
+  const el = document.getElementById('existingRules');
+  try {
+    const r = await fetch('/api/gmail/rules');
+    const rules = await r.json();
+    if (!rules.length) { el.textContent = 'No rules yet.'; return; }
+    el.innerHTML = rules.map(r => `
+      <div style="padding:4px 0;border-bottom:1px solid var(--ga)">
+        <span style="color:${r.enabled?'var(--gx)':'var(--gd)'}">${r.enabled?'ON':'OFF'}</span>
+        &nbsp;<b style="color:var(--fw)">${r.name}</b>
+        &nbsp;<code style="color:var(--gt);font-size:11px">${r.action}</code>
+        &nbsp;<span style="color:var(--gd);font-size:11px">dry:${r.last_dry_run_count}</span>
+      </div>`).join('');
+  } catch(e) { el.textContent = 'error loading'; }
+}
+
+function getCookie(name) {
+  const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return v ? v[2] : '';
+}
+
+// Init
+loadExistingRules();
+addCondition();
+</script>
+{% endblock %}

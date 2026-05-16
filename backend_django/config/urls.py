@@ -19,7 +19,7 @@ except Exception:
 from google_media_backup.admin_views import reports_view, ops_console
 
 # Admin custom pages — Gmail
-from google_gmail_backup.admin_views import gmail_dashboard, gmail_ops
+from google_gmail_backup.admin_views import gmail_dashboard, gmail_ops, gmail_rule_builder
 
 # Gmail API
 from google_gmail_backup.api import gmail_api
@@ -32,6 +32,7 @@ urlpatterns = [
     # Gmail admin dashboards
     path("admin/gmail/dashboard/", gmail_dashboard, name="admin_gmail_dashboard"),
     path("admin/gmail/ops/", gmail_ops, name="admin_gmail_ops"),
+    path("admin/gmail/rule-builder/", gmail_rule_builder, name="admin_gmail_rule_builder"),
 
     # Django admin
     path("admin/", admin.site.urls),

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-05-16
+
+### Added
+- **Smart Rule Builder** — `/admin/gmail/rule-builder/` visual compound rule editor
+  - Conditions table: field, operator, value, AND/OR join per row
+  - Real-time Gmail query preview (calls `/api/gmail/rule-builder/preview`)
+  - Dry-run count before saving (DB-only, no Gmail API call)
+  - Save as new CleanupRule with RuleCondition rows
+  - 9 built-in templates: LinkedIn jobs, LinkedIn spam, job boards, recruiters, marketing tools, newsletters, no-reply, social old, promotions
+- **RuleCondition model** — FK to CleanupRule, fields: field/operator/value/logic/order
+  - Supports: sender, recipient, subject, body, label, category, has_attachment, age_days
+  - Operators: contains, not_contains, equals, not_equals, starts_with, older_than, newer_than, is_true
+- **query_compiler.py** — translates RuleCondition rows to Gmail `q=` syntax with AND/OR grouping
+- **Global Matrix theme** — `backend_django/templates/admin/base_site.html` overrides Django Admin with phosphor green on black, applies to ALL admin pages
+- **Top navigation bar** — sticky dropdown menus: Gmail, Drive, Pipeline, Admin
+- **Export engine** — `/api/gmail/export/messages`, `/api/gmail/export/audit-log`, `/api/export/assets` supporting CSV, XLSX, JSON, XML, PDF
+- **KPI dashboard** in Gmail ops console: Total messages, Verified %, Trashed, Rules active, Cleanup actions (auto-refreshes every 60s)
+- **RuleCondition inline** in CleanupRule admin page
+
 ## [0.8.0] - 2026-05-15
 
 ### Added

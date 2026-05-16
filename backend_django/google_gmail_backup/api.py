@@ -6,7 +6,7 @@ from django.utils import timezone
 from ninja import NinjaAPI, Schema, Query
 from googleapiclient.errors import HttpError
 
-from .models import GmailMessage, GmailSyncState
+from .models import CleanupRule, GmailMessage, GmailSyncState
 from .services_gmail import (
     get_authenticated_email,
     list_message_ids,
@@ -455,6 +455,126 @@ def get_audit_log(request, limit: int = 50):
         }
         for a in logs
     ]
+
+
+# ── Rule builder API ─────────────────────────────────────────────────────────
+
+@gmail_api.post("/rule-builder/preview")
+def rule_builder_preview(request):
+    """
+    POST body: {"conditions": [...], "action": "trash", "min_age_days": 30}
+    Returns the compiled Gmail query string (no DB write, no Gmail API call).
+    """
+    import json as _json
+    from .query_compiler import preview_query
+    try:
+        body = _json.loads(request.body)
+    except Exception:
+        return {"error": "Invalid JSON"}
+    conditions = body.get("conditions", [])
+    query = preview_query(conditions)
+    return {"query": query, "condition_count": len(conditions)}
+
+
+@gmail_api.post("/rule-builder/dry-run")
+def rule_builder_dry_run(request):
+    """
+    POST body: {"conditions": [...], "action": "trash", "min_age_days": 30, "name": "My Rule"}
+    Compiles query, counts matching local messages, returns sample subjects.
+    No DB write, no Gmail API call.
+    """
+    import json as _json
+    from datetime import timedelta
+    from .query_compiler import preview_query
+    try:
+        body = _json.loads(request.body)
+    except Exception:
+        return {"error": "Invalid JSON"}
+    conditions = body.get("conditions", [])
+    min_age = int(body.get("min_age_days", 0))
+    query = preview_query(conditions)
+    qs = GmailMessage.objects.filter(state=GmailMessage.STATE_VERIFIED)
+    if min_age:
+        cutoff = timezone.now() - timedelta(days=min_age)
+        qs = qs.filter(date__lte=cutoff)
+    count = qs.count()
+    samples = list(qs.values_list("subject", "from_address")[:10])
+    return {
+        "query": query,
+        "match_count": count,
+        "samples": [{"subject": s, "from": f} for s, f in samples],
+    }
+
+
+@gmail_api.post("/rule-builder/save")
+def rule_builder_save(request):
+    """
+    POST body: {
+        "name": "LinkedIn jobs", "description": "...",
+        "action": "label", "label_name": "work/jobs",
+        "min_age_days": 0, "enabled": false,
+        "conditions": [
+            {"field": "sender", "operator": "contains", "value": "linkedin.com", "logic": "AND", "order": 1},
+            {"field": "subject", "operator": "contains", "value": "job", "logic": "OR", "order": 2},
+        ]
+    }
+    Creates CleanupRule + RuleCondition rows, compiles gmail_query.
+    """
+    import json as _json
+    from .models import CleanupRule, RuleCondition
+    from .query_compiler import preview_query
+    try:
+        body = _json.loads(request.body)
+    except Exception:
+        return {"error": "Invalid JSON"}
+
+    name = body.get("name", "").strip()
+    if not name:
+        return {"error": "name is required"}
+
+    conditions_data = body.get("conditions", [])
+    compiled_query = preview_query(conditions_data)
+
+    rule = CleanupRule.objects.create(
+        name=name,
+        description=body.get("description", ""),
+        gmail_query=compiled_query,
+        action=body.get("action", CleanupRule.ACTION_TRASH),
+        label_name=body.get("label_name", ""),
+        min_age_days=int(body.get("min_age_days", 0)),
+        enabled=bool(body.get("enabled", False)),
+        dry_run_default=True,
+    )
+
+    for i, cdata in enumerate(sorted(conditions_data, key=lambda x: x.get("order", i))):
+        RuleCondition.objects.create(
+            rule=rule,
+            order=cdata.get("order", i),
+            field=cdata.get("field", ""),
+            operator=cdata.get("operator", ""),
+            value=cdata.get("value", ""),
+            logic=cdata.get("logic", "AND"),
+        )
+
+    return {
+        "id": rule.id,
+        "name": rule.name,
+        "compiled_query": compiled_query,
+        "condition_count": len(conditions_data),
+        "enabled": rule.enabled,
+    }
+
+
+@gmail_api.get("/rule-builder/fields")
+def rule_builder_fields(request):
+    """Return field/operator/logic choices for the frontend builder."""
+    from .models import RuleCondition as RC
+    return {
+        "fields": [{"value": v, "label": lbl} for v, lbl in RC.FIELD_CHOICES],
+        "operators": [{"value": v, "label": lbl} for v, lbl in RC.OP_CHOICES],
+        "logic": [{"value": v, "label": lbl} for v, lbl in RC.LOGIC_CHOICES],
+        "actions": [{"value": v, "label": lbl} for v, lbl in CleanupRule.ACTION_CHOICES if hasattr(CleanupRule, 'ACTION_CHOICES')],
+    }
 
 
 # ── Export endpoints ──────────────────────────────────────────────────────────
