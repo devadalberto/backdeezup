@@ -205,6 +205,7 @@ li { margin: 3px 0; }
 <!-- Cleanup rules -->
 <div class="card">
   <b>Cleanup Rules</b>
+  <div id="cleanup-live" hx-get="/htmx/gmail/cleanup-status/" hx-trigger="load, every 3s" hx-swap="innerHTML" style="margin:8px 0;min-height:20px;"></div>
   <div class="row" style="margin-top:10px">
     <button class="btn btn-warn" onclick="call('gmail/rules/run-all?dry_run=true', 'POST', this)">
       Dry-run All Enabled Rules
@@ -298,7 +299,7 @@ li { margin: 3px 0; }
         <th>Actor</th><th>Status</th><th>Started</th><th>Duration</th>
       </tr>
     </thead>
-    <tbody id="auditBody">
+    <tbody id="auditBody" hx-get="/htmx/gmail/audit-log/" hx-trigger="load, every 15s" hx-swap="innerHTML">
     {% for entry in audit_log %}
     <tr>
       <td>{{ entry.rule_name }}</td>
