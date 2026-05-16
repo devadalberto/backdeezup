@@ -14,7 +14,10 @@ from wagtail.admin import urls as wagtailadmin_urls
 from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
-# Optional landing view (keep if you have it)
+# Landing page
+from core.views import landing_page, htmx_stats
+
+# Optional query page
 try:
     from google_media_backup.views import query_page
     HAS_QUERY_PAGE = True
@@ -26,6 +29,7 @@ from google_media_backup.admin_views import reports_view, ops_console
 
 # Admin custom pages — Gmail
 from google_gmail_backup.admin_views import gmail_dashboard, gmail_ops, gmail_rule_builder
+from google_gmail_backup.htmx_views import htmx_audit_log, htmx_cleanup_status, htmx_gmail_progress
 
 # Gmail API
 from google_gmail_backup.api import gmail_api
@@ -35,6 +39,10 @@ from media_vault.api import vault_api
 from media_vault.views import review_view
 
 urlpatterns = [
+    # Landing page
+    path("", landing_page, name="landing"),
+    path("htmx/stats/", htmx_stats, name="htmx_stats"),
+
     # Drive/Photos admin dashboards
     path("admin/reports/", reports_view, name="admin_reports"),
     path("admin/ops/", ops_console, name="admin_ops"),
@@ -43,6 +51,9 @@ urlpatterns = [
     path("admin/gmail/dashboard/", gmail_dashboard, name="admin_gmail_dashboard"),
     path("admin/gmail/ops/", gmail_ops, name="admin_gmail_ops"),
     path("admin/gmail/rule-builder/", gmail_rule_builder, name="admin_gmail_rule_builder"),
+    path("htmx/gmail/cleanup-status/", htmx_cleanup_status, name="htmx_cleanup_status"),
+    path("htmx/gmail/audit-log/", htmx_audit_log, name="htmx_audit_log"),
+    path("htmx/gmail/progress/", htmx_gmail_progress, name="htmx_gmail_progress"),
 
     # Django admin
     path("admin/", admin.site.urls),

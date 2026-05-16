@@ -71,9 +71,11 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_apscheduler',
     'django_ratelimit',
+    'django_htmx',
     'google_media_backup',
     'google_gmail_backup',
     'accounts',
+    'core',
     'media_vault',
 ]
 
@@ -81,6 +83,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django_htmx.middleware.HtmxMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
