@@ -3,120 +3,254 @@
 <h1>Gmail Operations Console</h1>
 
 <style>
-  .card { border: 1px solid #e5e5e5; border-radius: 6px; padding: 16px; margin: 12px 0; }
-  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
-  .btn { padding: 6px 12px; border: 1px solid #bbb; background: #fafafa; border-radius: 4px; cursor: pointer; }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-danger { background: #fde8e8; border-color: #e57373; }
-  .badge { background: #eee; border-radius: 4px; padding: 2px 6px; font-size: 12px; }
-  pre { background: #f7f7f7; border: 1px solid #eee; padding: 10px; overflow: auto; max-height: 300px; }
+.card { border:1px solid #e5e5e5; border-radius:6px; padding:16px; margin:12px 0; }
+.row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+.btn { padding:6px 12px; border:1px solid #bbb; background:#fafafa; border-radius:4px; cursor:pointer; font-size:13px; }
+.btn:disabled { opacity:.5; cursor:not-allowed; }
+.btn-primary { background:#417690; color:#fff; border-color:#417690; }
+.btn-danger { background:#ba2121; color:#fff; border-color:#ba2121; }
+.btn-warn { background:#c09b00; color:#fff; border-color:#c09b00; }
+.btn-sm { padding:3px 8px; font-size:12px; }
+.badge-on { color:green; font-weight:bold; }
+.badge-off { color:#999; }
+.tag { display:inline-block; padding:2px 6px; border-radius:3px; font-size:11px; background:#eee; }
+.tag-dry { background:#d0e8ff; color:#0050a0; }
+.tag-ok { background:#d4edda; color:#155724; }
+.tag-err { background:#f8d7da; color:#721c24; }
+pre#out { background:#1a1a1a; color:#eee; border-radius:4px; padding:12px; overflow:auto; max-height:250px; font-size:12px; white-space:pre-wrap; }
+table.audit-table { width:100%; border-collapse:collapse; font-size:12px; }
+table.audit-table th,td { padding:5px 8px; border-bottom:1px solid #eee; text-align:left; }
+table.audit-table th { background:#f5f5f5; font-weight:bold; }
+.confirm-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:9999; align-items:center; justify-content:center; }
+.confirm-box { background:#fff; border-radius:8px; padding:24px; max-width:400px; width:90%; }
 </style>
 
+<!-- Confirmation dialog -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h3 id="confirmTitle">Confirm action</h3>
+    <p id="confirmMsg"></p>
+    <div class="row">
+      <button class="btn btn-danger" id="confirmYes">Execute</button>
+      <button class="btn" onclick="closeConfirm()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Accounts status -->
 <div class="card">
-  <b>Accounts</b><br>
+  <b>Accounts</b>
   {% for a in accounts %}
-    <span class="badge">{{ a.email }}</span>
-    historyId: {{ a.last_history_id|default:"none" }}
-    &nbsp;|&nbsp; Last full: {{ a.last_full_sync_at|default:"never" }}
-    &nbsp;|&nbsp; Last incremental: {{ a.last_incremental_at|default:"never" }}
-    <br>
+  <div style="margin-top:8px">
+    <b>{{ a.email }}</b>
+    &nbsp;|&nbsp; historyId: {{ a.last_history_id|default:"none" }}
+    &nbsp;|&nbsp; last full sync: {{ a.last_full_sync_at|default:"never" }}
+    &nbsp;|&nbsp; last incremental: {{ a.last_incremental_at|default:"never" }}
+    &nbsp;|&nbsp; messages: {{ a.total_messages }}
+  </div>
   {% empty %}
-    <span>No accounts yet. Run POST /api/gmail/sync/discover to start.</span>
+    <p>No accounts synced yet. Run: <code>make gmail-discover</code></p>
   {% endfor %}
 </div>
 
+<!-- Pipeline operations -->
 <div class="card">
-  <div class="row">
-    <label>Limit&nbsp;<input id="limit" type="number" value="20" style="width:70px"></label>
-    <label>Search (q)&nbsp;<input id="qfilter" type="text" placeholder="e.g. from:newsletter older_than:1y" style="width:300px"></label>
+  <b>Pipeline</b>
+  <div class="row" style="margin-top:10px">
+    <label>Limit&nbsp;<input id="limit" type="number" value="100" style="width:70px"></label>
+    <label>Search (q)&nbsp;<input id="qfilter" type="text" placeholder="e.g. from:newsletter" style="width:260px"></label>
   </div>
-
-  <ol>
-    <li class="row">
-      <button class="btn" onclick="call('gmail/sync/discover?max_pages=5&page_size=500', this, {q: document.getElementById('qfilter').value})">
-        1) Discover messages
-      </button>
-      <span class="badge">Full snapshot — lists all message IDs and fetches metadata</span>
-    </li>
-    <li class="row">
-      <button class="btn" onclick="call('gmail/sync/incremental', this)">
-        2) Incremental sync
-      </button>
-      <span class="badge">Fast — only fetches changes since last historyId</span>
-    </li>
-    <li class="row">
-      <button class="btn" onclick="call('gmail/sync/download?limit=' + L(), this)">
-        3) Download (.eml)
-      </button>
-      <span class="badge">Downloads raw email files to disk</span>
-    </li>
-    <li class="row">
-      <button class="btn" onclick="call('gmail/sync/verify?limit=' + L(), this)">
-        4) Verify
-      </button>
-      <span class="badge">Confirms .eml files exist on disk</span>
-    </li>
-    <li class="row">
-      <button class="btn btn-danger" onclick="trashSelected(this)">
-        5) Trash selected (dry-run)
-      </button>
-      <span class="badge">Enter gmail_ids below, runs dry_run=true by default</span>
-    </li>
-  </ol>
-
   <div class="row">
-    <label>Gmail IDs to trash (comma-separated)&nbsp;
-      <input id="trashIds" type="text" placeholder="18a1b2c3,18a1b2c4" style="width:400px">
-    </label>
-    <label><input type="checkbox" id="dryRun" checked> Dry run</label>
+    <button class="btn btn-primary" onclick="call('gmail/sync/discover?max_pages=20&page_size=500', 'POST', this)">Discover</button>
+    <button class="btn btn-primary" onclick="call('gmail/sync/incremental', 'POST', this)">Incremental sync</button>
+    <button class="btn" onclick="callLimit('gmail/sync/download', this)">Download .eml</button>
+    <button class="btn" onclick="callLimit('gmail/sync/verify', this)">Verify</button>
   </div>
 </div>
 
+<!-- Protected senders -->
+<div class="card">
+  <b>Protected Senders</b>&nbsp;
+  <span style="font-size:12px;color:#666">— starred + labeled, never trashed by any cleanup rule</span>
+  <div class="row" style="margin-top:10px">
+    <button class="btn btn-primary" onclick="call('gmail/protected-senders/apply', 'POST', this)">
+      Apply Protected Sender Rules (star + label all family emails)
+    </button>
+  </div>
+  <ul style="margin:8px 0 0 16px; font-size:13px; color:#444">
+    <li>mony.bello@gmail.com → family</li>
+    <li>mony_littleowls@outlook.com → family</li>
+    <li>virlochov@gmail.com → family</li>
+    <li>julietvlhr@gmail.com → family</li>
+  </ul>
+</div>
+
+<!-- Cleanup rules -->
+<div class="card">
+  <b>Cleanup Rules</b>
+  <div class="row" style="margin-top:10px">
+    <button class="btn btn-warn" onclick="call('gmail/rules/run-all?dry_run=true', 'POST', this)">
+      Dry-run All Enabled Rules
+    </button>
+    <button class="btn btn-danger"
+      onclick="confirmAction('Run ALL enabled rules for real?', 'This will trash/label/archive matching emails.', () => call(\'gmail/rules/run-all?dry_run=false\', \'POST\', null))">
+      Execute All Enabled Rules
+    </button>
+    <a href="/admin/google_gmail_backup/cleanuprule/" class="btn">Manage Rules in Admin</a>
+  </div>
+
+  <table style="width:100%; border-collapse:collapse; margin-top:12px; font-size:13px;">
+    <thead>
+      <tr style="background:#f5f5f5">
+        <th style="padding:6px 8px; text-align:left">Rule</th>
+        <th style="padding:6px 8px">Status</th>
+        <th style="padding:6px 8px">Action</th>
+        <th style="padding:6px 8px">Min age</th>
+        <th style="padding:6px 8px">Last dry-run</th>
+        <th style="padding:6px 8px">Last real run</th>
+        <th style="padding:6px 8px">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for rule in rules %}
+    <tr style="border-bottom:1px solid #eee">
+      <td style="padding:6px 8px">
+        <b>{{ rule.name }}</b><br>
+        <span style="color:#888;font-size:11px">{{ rule.gmail_query }}</span>
+      </td>
+      <td style="padding:6px 8px; text-align:center">
+        {% if rule.enabled %}<span class="badge-on">ON</span>{% else %}<span class="badge-off">OFF</span>{% endif %}
+      </td>
+      <td style="padding:6px 8px; text-align:center"><code>{{ rule.action }}</code></td>
+      <td style="padding:6px 8px; text-align:center">{{ rule.min_age_days }}d</td>
+      <td style="padding:6px 8px; text-align:center">{{ rule.last_dry_run_count }} msgs</td>
+      <td style="padding:6px 8px; text-align:center">
+        {% if rule.last_run_at %}{{ rule.last_run_at|date:"M d H:i" }} ({{ rule.last_affected_count }}){% else %}never{% endif %}
+      </td>
+      <td style="padding:6px 8px">
+        <button class="btn btn-sm btn-warn" onclick="call('gmail/rules/{{ rule.id }}/dry-run', 'POST', this)">
+          Dry-run
+        </button>
+        <button class="btn btn-sm btn-danger" style="margin-left:4px"
+          onclick="confirmAction('Execute rule: {{ rule.name }}?', 'This will {{ rule.action }} matching emails for real.', () => call(\'gmail/rules/{{ rule.id }}/execute\', \'POST\', null))">
+          Execute
+        </button>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" style="padding:12px;color:#888">No rules seeded yet. Run: <code>make seed-rules</code></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Output -->
 <div class="card">
   <b>Output</b>
   <pre id="out">(results appear here)</pre>
 </div>
 
+<!-- Audit log -->
+<div class="card">
+  <b>Audit Log</b>&nbsp;<span style="font-size:12px;color:#666">last 20 entries — append-only</span>
+  <table class="audit-table" style="margin-top:8px">
+    <thead>
+      <tr>
+        <th>Rule</th><th>Action</th><th>Dry-run</th><th>Affected</th>
+        <th>Actor</th><th>Status</th><th>Started</th><th>Duration</th>
+      </tr>
+    </thead>
+    <tbody id="auditBody">
+    {% for entry in audit_log %}
+    <tr>
+      <td>{{ entry.rule_name }}</td>
+      <td><code>{{ entry.action }}</code></td>
+      <td>{% if entry.dry_run %}<span class="tag tag-dry">dry</span>{% else %}<b>REAL</b>{% endif %}</td>
+      <td>{{ entry.affected_count }}</td>
+      <td>{{ entry.actor_label }}</td>
+      <td>
+        {% if entry.status == "OK" or entry.status == "DRY_RUN" %}
+          <span class="tag tag-ok">{{ entry.status }}</span>
+        {% elif entry.status == "ERROR" %}
+          <span class="tag tag-err">ERROR</span>
+        {% else %}
+          <span class="tag">{{ entry.status }}</span>
+        {% endif %}
+      </td>
+      <td>{{ entry.started_at|date:"M d H:i:s" }}</td>
+      <td>{% if entry.finished_at %}{{ entry.started_at|timesince:entry.finished_at }}{% else %}—{% endif %}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="8" style="color:#888;padding:8px">No audit entries yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <button class="btn btn-sm" style="margin-top:8px" onclick="refreshAudit()">Refresh audit log</button>
+</div>
+
 <script>
-function L() { return document.getElementById('limit').value || '20'; }
-
-async function call(path, btn, extra_params) {
-  const out = document.getElementById('out');
-  btn.disabled = true;
-  out.textContent = 'Calling /api/' + path + ' ...';
-  try {
-    let url = '/api/' + path;
-    if (extra_params && extra_params.q) url += (url.includes('?') ? '&' : '?') + 'q=' + encodeURIComponent(extra_params.q);
-    const res = await fetch(url, { method: 'POST', headers: {'X-CSRFToken': getCookie('csrftoken')} });
-    const txt = await res.text();
-    out.textContent = 'HTTP ' + res.status + '\n\n' + txt;
-  } catch(e) {
-    out.textContent = 'ERROR: ' + e;
-  } finally { btn.disabled = false; }
-}
-
-async function trashSelected(btn) {
-  const ids = document.getElementById('trashIds').value.split(',').map(s => s.trim()).filter(Boolean);
-  const dryRun = document.getElementById('dryRun').checked;
-  if (!ids.length) { alert('Enter at least one Gmail ID'); return; }
-  const out = document.getElementById('out');
-  btn.disabled = true;
-  out.textContent = 'Trashing ' + ids.length + ' message(s), dry_run=' + dryRun + ' ...';
-  try {
-    const res = await fetch('/api/gmail/cleanup/trash?dry_run=' + dryRun, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
-      body: JSON.stringify(ids),
-    });
-    out.textContent = 'HTTP ' + res.status + '\n\n' + await res.text();
-  } catch(e) {
-    out.textContent = 'ERROR: ' + e;
-  } finally { btn.disabled = false; }
-}
-
 function getCookie(name) {
   const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
   return v ? v[2] : '';
+}
+
+async function call(path, method, btn) {
+  const out = document.getElementById('out');
+  if (btn) btn.disabled = true;
+  out.textContent = 'Calling /api/' + path + ' ...';
+  try {
+    const res = await fetch('/api/' + path, {
+      method: method || 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    });
+    const txt = await res.text();
+    try {
+      out.textContent = 'HTTP ' + res.status + '\n\n' + JSON.stringify(JSON.parse(txt), null, 2);
+    } catch { out.textContent = 'HTTP ' + res.status + '\n\n' + txt; }
+  } catch(e) {
+    out.textContent = 'ERROR: ' + e;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function callLimit(path, btn) {
+  const limit = document.getElementById('limit').value || '100';
+  call(path + '?limit=' + limit, 'POST', btn);
+}
+
+let _confirmCallback = null;
+function confirmAction(title, msg, callback) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent = msg;
+  _confirmCallback = callback;
+  document.getElementById('confirmOverlay').style.display = 'flex';
+}
+function closeConfirm() {
+  document.getElementById('confirmOverlay').style.display = 'none';
+  _confirmCallback = null;
+}
+document.getElementById('confirmYes').onclick = function() {
+  closeConfirm();
+  if (_confirmCallback) _confirmCallback();
+};
+
+async function refreshAudit() {
+  const res = await fetch('/api/gmail/audit-log');
+  const data = await res.json();
+  const tbody = document.getElementById('auditBody');
+  if (!data.length) return;
+  tbody.innerHTML = data.map(e => `
+    <tr>
+      <td>${e.rule}</td>
+      <td><code>${e.action}</code></td>
+      <td>${e.dry_run ? '<span class="tag tag-dry">dry</span>' : '<b>REAL</b>'}</td>
+      <td>${e.affected}</td>
+      <td>${e.actor}</td>
+      <td><span class="tag ${e.status==='OK'||e.status==='DRY_RUN'?'tag-ok':e.status==='ERROR'?'tag-err':''}">${e.status}</span></td>
+      <td>${new Date(e.started_at).toLocaleString()}</td>
+      <td>—</td>
+    </tr>`).join('');
 }
 </script>
 {% endblock %}

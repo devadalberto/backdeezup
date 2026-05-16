@@ -37,9 +37,14 @@ def gmail_dashboard(request):
 
 @staff_member_required
 def gmail_ops(request):
+    from .models import CleanupAuditLog, CleanupRule
     accounts = GmailSyncState.objects.all()
+    rules = CleanupRule.objects.all().order_by("name")
+    audit_log = CleanupAuditLog.objects.order_by("-started_at")[:20]
     ctx = {
         "title": "Gmail Operations",
         "accounts": accounts,
+        "rules": rules,
+        "audit_log": audit_log,
     }
     return render(request, "admin/gmail/ops.html", ctx)
