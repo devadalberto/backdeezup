@@ -1,6 +1,16 @@
-<div style="font-family:monospace;font-size:13px;">
-  <div style="color:var(--gx);">[{{ bar }}] {{ pct }}%</div>
-  <div style="color:var(--gd);font-size:11px;margin-top:4px;">
-    {{ verified }} verified &middot; {{ discovered }} pending &middot; {{ sync_total }} total
-  </div>
+<div class="progress-label">Gmail Backup Progress — auto-refreshes every 10s</div>
+<div style="display:flex;align-items:baseline;gap:16px;flex-wrap:wrap">
+  <div class="progress-pct">{{ pct }}%</div>
+  <div class="progress-detail">{{ verified }} verified &nbsp;/&nbsp; {{ sync_total }} total</div>
+</div>
+<div class="progress-bar-wrap">
+  <div class="progress-bar-fill" style="width:{{ pct }}%"></div>
+</div>
+<div class="progress-detail" style="font-size:12px">
+  {{ discovered }} still pending download &nbsp;·&nbsp;
+  {% if pct >= 90 %}
+    <span class="progress-ready">&#10003; ≥90% — Empty Trash unlocked</span>
+  {% else %}
+    <span class="progress-blocked">&#9888; {{ pct }}% — need ≥90% to empty trash ({{ sync_total|add:"-0" }} - {{ verified }} = pending)</span>
+  {% endif %}
 </div>
