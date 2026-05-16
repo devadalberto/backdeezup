@@ -119,6 +119,9 @@ migrate:
 seed-rules:
 	docker compose exec web python manage.py seed_rules
 
+vault-setup:
+	docker compose exec web python manage.py vault_setup
+
 superuser:
 	docker compose exec web python manage.py createsuperuser
 
