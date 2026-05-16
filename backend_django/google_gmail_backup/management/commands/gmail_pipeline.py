@@ -70,67 +70,89 @@ class Command(BaseCommand):
 
     def _download(self, limit):
         import os
+        import sys
+        import time
         from django.utils import timezone
         from google_gmail_backup.models import GmailMessage
         from google_gmail_backup.services_gmail import (
             get_message_metadata, get_message_raw, extract_headers,
             has_attachments, parse_date, ensure_eml_path, sha256_bytes,
         )
-        from tqdm import tqdm
 
         qs = list(GmailMessage.objects.filter(state=GmailMessage.STATE_DISCOVERED).order_by("discovered_at")[:limit])
         if not qs:
             self.stdout.write("No messages to download.")
             return
 
+        total = len(qs)
         downloaded = errors = 0
-        with tqdm(qs, desc="downloading", unit="msg", file=self.stderr, dynamic_ncols=True) as pbar:
-            for msg in pbar:
-                try:
-                    if not msg.subject and not msg.from_address:
-                        meta = get_message_metadata(msg.gmail_id)
-                        if meta:
-                            headers = extract_headers(meta)
-                            msg.thread_id = meta.get("threadId", "")
-                            msg.subject = headers["subject"]
-                            msg.from_address = headers["from"]
-                            msg.to_address = headers["to"]
-                            msg.date = parse_date(headers["date"])
-                            msg.snippet = meta.get("snippet", "")
-                            msg.labels = meta.get("labelIds", [])
-                            msg.size_estimate = meta.get("sizeEstimate", 0)
-                            msg.has_attachments = has_attachments(meta)
+        start = time.time()
+        # Print a status line every N messages (works in both TTY and non-TTY)
+        REPORT_EVERY = max(1, total // 20)  # ~5% increments, at least every 1 msg
 
-                    raw = get_message_raw(msg.gmail_id)
-                    if not raw:
-                        msg.error = "Empty raw response"
-                        msg.last_attempt_at = timezone.now()
-                        msg.save(update_fields=["error", "last_attempt_at"])
-                        errors += 1
-                        continue
+        def _print_progress(n):
+            elapsed = time.time() - start
+            rate = n / elapsed if elapsed > 0 else 0
+            pct = n / total * 100
+            bar_filled = int(pct / 5)
+            bar = "=" * bar_filled + "-" * (20 - bar_filled)
+            eta = (total - n) / rate if rate > 0 else 0
+            self.stderr.write(
+                f"\r  [{bar}] {pct:5.1f}%  {n}/{total}  "
+                f"{rate:.1f} msg/s  ETA {int(eta//60):02d}:{int(eta%60):02d}  "
+                f"ok={downloaded} err={errors}          "
+            )
+            self.stderr.flush()
 
-                    path = ensure_eml_path(msg.account_email, msg.date, msg.gmail_id)
-                    with open(path, "wb") as f:
-                        f.write(raw)
+        for i, msg in enumerate(qs, 1):
+            try:
+                if not msg.subject and not msg.from_address:
+                    meta = get_message_metadata(msg.gmail_id)
+                    if meta:
+                        headers = extract_headers(meta)
+                        msg.thread_id = meta.get("threadId", "")
+                        msg.subject = headers["subject"]
+                        msg.from_address = headers["from"]
+                        msg.to_address = headers["to"]
+                        msg.date = parse_date(headers["date"])
+                        msg.snippet = meta.get("snippet", "")
+                        msg.labels = meta.get("labelIds", [])
+                        msg.size_estimate = meta.get("sizeEstimate", 0)
+                        msg.has_attachments = has_attachments(meta)
 
-                    msg.raw_path = path
-                    msg.sha256 = sha256_bytes(raw)
-                    msg.downloaded_at = timezone.now()
-                    msg.state = GmailMessage.STATE_DOWNLOADED
-                    msg.error = None
-                    msg.save(update_fields=[
-                        "thread_id", "subject", "from_address", "to_address", "date",
-                        "snippet", "labels", "size_estimate", "has_attachments",
-                        "raw_path", "sha256", "downloaded_at", "state", "error",
-                    ])
-                    downloaded += 1
-                    pbar.set_postfix(ok=downloaded, err=errors)
-                except Exception as exc:
-                    msg.error = str(exc)
+                raw = get_message_raw(msg.gmail_id)
+                if not raw:
+                    msg.error = "Empty raw response"
                     msg.last_attempt_at = timezone.now()
                     msg.save(update_fields=["error", "last_attempt_at"])
                     errors += 1
+                    continue
 
+                path = ensure_eml_path(msg.account_email, msg.date, msg.gmail_id)
+                with open(path, "wb") as f:
+                    f.write(raw)
+
+                msg.raw_path = path
+                msg.sha256 = sha256_bytes(raw)
+                msg.downloaded_at = timezone.now()
+                msg.state = GmailMessage.STATE_DOWNLOADED
+                msg.error = None
+                msg.save(update_fields=[
+                    "thread_id", "subject", "from_address", "to_address", "date",
+                    "snippet", "labels", "size_estimate", "has_attachments",
+                    "raw_path", "sha256", "downloaded_at", "state", "error",
+                ])
+                downloaded += 1
+            except Exception as exc:
+                msg.error = str(exc)
+                msg.last_attempt_at = timezone.now()
+                msg.save(update_fields=["error", "last_attempt_at"])
+                errors += 1
+
+            if i % REPORT_EVERY == 0 or i == total:
+                _print_progress(i)
+
+        self.stderr.write("\n")
         self.stdout.write(self.style.SUCCESS(f"Downloaded {downloaded} messages ({errors} errors)"))
 
     def _verify(self, limit):
