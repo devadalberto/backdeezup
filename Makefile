@@ -70,11 +70,11 @@ help:
 	@echo "    make sync-mark-delete   Queue VERIFIED for deletion (LIMIT=100)"
 	@echo "    make sync-commit-delete Execute Drive deletion (trash mode)"
 	@echo ""
-	@echo "  Gmail pipeline"
-	@echo "    make gmail-discover     Full Gmail snapshot discovery"
-	@echo "    make gmail-incremental  Incremental sync via historyId"
-	@echo "    make gmail-download     Download .eml files (limit=20)"
-	@echo "    make gmail-verify       Verify .eml files on disk (limit=50)"
+	@echo "  Gmail pipeline (uses management command, no HTTP auth needed)"
+	@echo "    make gmail-discover     Full Gmail snapshot discovery (max 20 pages)"
+	@echo "    make gmail-download     Download .eml files (LIMIT=$(LIMIT))"
+	@echo "    make gmail-verify       Verify .eml files on disk (LIMIT=$(LIMIT))"
+	@echo "    make gmail-run          Full pass: discover+download+verify (LIMIT=$(LIMIT))"
 	@echo ""
 	@echo "  Local dev (uv)"
 	@echo "    make run                Django dev server on :8844"
@@ -226,37 +226,22 @@ sync-commit-delete:
 
 # ── Gmail pipeline ────────────────────────────────────────────────────────────
 gmail-discover:
-	curl -s -X POST "$(HOST)/api/gmail/sync/discover?max_pages=20&page_size=500" | python3 -m json.tool || true
+	docker compose exec web python manage.py gmail_pipeline discover --max-pages 20 --page-size 500
 
 gmail-incremental:
 	curl -s -X POST "$(HOST)/api/gmail/sync/incremental" | python3 -m json.tool || true
 
 gmail-download:
-	curl -s -X POST "$(HOST)/api/gmail/sync/download?limit=$(LIMIT)" | python3 -m json.tool || true
+	docker compose exec web python manage.py gmail_pipeline download --limit $(LIMIT)
 
 gmail-verify:
-	curl -s -X POST "$(HOST)/api/gmail/sync/verify?limit=$(LIMIT)" | python3 -m json.tool || true
+	docker compose exec web python manage.py gmail_pipeline verify --limit $(LIMIT)
 
 gmail-progress:
 	curl -s "$(HOST)/api/gmail/progress" | python3 -m json.tool || true
 
 gmail-run:
-	@bash -c '\
-	HOST=$(HOST); LIMIT=$(LIMIT); \
-	show_progress() { \
-		p=$$(curl -s "$$HOST/api/gmail/progress" 2>/dev/null); \
-		bar=$$(echo "$$p" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('bar','?'))" 2>/dev/null || echo "?"); \
-		echo "  $$bar"; \
-	}; \
-	echo "Gmail pipeline: download -> verify (single pass)"; \
-	result=$$(curl -s -X POST "$$HOST/api/gmail/sync/download?limit=$$LIMIT"); \
-	n=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"downloaded\",0))" 2>/dev/null || echo 0); \
-	echo "  download: $$n"; show_progress; \
-	result=$$(curl -s -X POST "$$HOST/api/gmail/sync/verify?limit=$$LIMIT"); \
-	v=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"verified\",0))" 2>/dev/null || echo 0); \
-	echo "  verify: $$v"; show_progress; \
-	echo "Pass done (dl=$$n ver=$$v)."; \
-	[ "$$n" -gt 0 ] || [ "$$v" -gt 0 ]'
+	docker compose exec web python manage.py gmail_pipeline all --limit $(LIMIT)
 
 # ── Local dev ─────────────────────────────────────────────────────────────────
 run:
