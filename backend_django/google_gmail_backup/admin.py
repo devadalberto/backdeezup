@@ -60,13 +60,23 @@ class CleanupRuleAdmin(admin.ModelAdmin):
     search_fields = ["name", "gmail_query"]
     readonly_fields = ["last_run_at", "last_run_dry", "last_affected_count",
                        "last_dry_run_count", "created_at", "updated_at"]
-    actions = ["run_dry_run", "run_execute"]
+    actions = ["enable_rules", "disable_rules", "run_dry_run", "run_execute"]
 
     def enabled_badge(self, obj):
         color = "green" if obj.enabled else "gray"
         label = "ON" if obj.enabled else "OFF"
         return format_html('<span style="color:{}; font-weight:bold">{}</span>', color, label)
     enabled_badge.short_description = "Status"
+
+    @admin.action(description="Enable selected rules")
+    def enable_rules(self, request, queryset):
+        updated = queryset.update(enabled=True)
+        self.message_user(request, f"{updated} rule(s) enabled.")
+
+    @admin.action(description="Disable selected rules")
+    def disable_rules(self, request, queryset):
+        updated = queryset.update(enabled=False)
+        self.message_user(request, f"{updated} rule(s) disabled.")
 
     @admin.action(description="Dry-run selected rules (no changes)")
     def run_dry_run(self, request, queryset):

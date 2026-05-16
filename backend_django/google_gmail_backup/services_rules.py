@@ -73,8 +73,9 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
             date__lte=cutoff,
         )
 
-        # Also filter by gmail_query results if query is set
-        if rule.gmail_query.strip():
+        # For dry-run: count from local DB only (fast, no Gmail API call)
+        # For real run: also cross-reference live Gmail query to catch label changes
+        if not dry_run and rule.gmail_query.strip():
             svc = gmail_service()
             if svc:
                 matching_ids = set()
@@ -100,7 +101,7 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
         affected_ids = [m.gmail_id for m in candidates]
         sample_subjects = [m.subject[:80] for m in candidates[:10]]
         audit.affected_count = len(affected_ids)
-        audit.affected_gmail_ids = affected_ids[:100]  # store first 100
+        audit.affected_gmail_ids = affected_ids[:100]
         audit.sample_subjects = sample_subjects
 
         if dry_run:
