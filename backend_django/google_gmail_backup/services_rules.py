@@ -12,7 +12,6 @@ from django.utils import timezone
 from .models import CleanupAuditLog, CleanupRule, GmailMessage, ProtectedSender
 from .services_gmail import (
     gmail_service,
-    list_message_ids,
     modify_labels,
     trash_message,
 )
