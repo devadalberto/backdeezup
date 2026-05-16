@@ -1,7 +1,9 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 
 from .models import DriveAsset, MediaItem, RunLog
+
+User = get_user_model()
 
 
 class DriveAssetModelTest(TestCase):
