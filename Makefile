@@ -54,8 +54,10 @@ help:
 	@echo "    make migrate            Run database migrations"
 	@echo "    make superuser          Create Django superuser"
 	@echo "    make shell              Django shell inside container"
-	@echo "    make check              Django system check
-    make fix-user-migration Apply accounts 0002 migration (create table from auth_user)"
+	@echo "    make check              Django system check"
+	@echo "    make fix-user-migration Apply accounts 0002 migration"
+	@echo "    make gmail-empty-trash-dry  Show Gmail trash count (dry run)"
+	@echo "    make gmail-empty-trash      Permanently delete Gmail trash"
 	@echo ""
 	@echo "  Drive / Photos pipeline"
 	@echo "    make discover           Discover Drive media (images/videos)"
