@@ -16,8 +16,9 @@
     </div>
   </div>
   <div class="card" style="text-align:center">
-    <div style="font-size:11px;color:var(--gd);letter-spacing:2px">TRASHED</div>
+    <div style="font-size:11px;color:var(--gd);letter-spacing:2px">PENDING DL</div>
     <div style="font-size:28px;font-weight:bold;color:var(--gy)" id="kpiTrashed">—</div>
+    <div style="font-size:10px;color:var(--gd)" id="kpiDownloaded"></div>
   </div>
   <div class="card" style="text-align:center">
     <div style="font-size:11px;color:var(--gd);letter-spacing:2px">WITH ATTACHMENTS</div>
@@ -419,6 +420,8 @@ async function loadKPIs() {
     document.getElementById('kpiVerified').textContent = verified.toLocaleString() + ' (' + pct + '%)';
     document.getElementById('kpiVerifiedBar').style.width = pct + '%';
     document.getElementById('kpiTrashed').textContent  = (prog.discovered||0).toLocaleString();
+    const dl = prog.downloaded || 0;
+    if (dl) document.getElementById('kpiDownloaded').textContent = dl.toLocaleString() + ' downloaded';
   } catch(e) {}
   try {
     const rules = await fetch('/api/gmail/rules').then(r=>r.json());
