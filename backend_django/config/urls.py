@@ -4,6 +4,7 @@ from django.http import HttpResponse
 from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.decorators.csrf import csrf_exempt
 
 # API (Ninja)
 from google_media_backup.api import api
@@ -60,7 +61,9 @@ urlpatterns = [
 if HAS_QUERY_PAGE:
     urlpatterns += [path("", query_page, name="query")]
 
-# OAuth callback — web client type redirects here; returns 200 so browser shows success
+# OAuth callback — CSRF exempt because OAuth providers cannot set CSRF tokens.
+# State parameter validation happens inside start_oauth_local() via PKCE.
+@csrf_exempt
 def oauth_callback(request):
     return HttpResponse(
         "<h2>OAuth completed.</h2><p>You can close this tab and return to the terminal.</p>",
@@ -75,5 +78,6 @@ urlpatterns += [
     path("vault/", include(wagtail_urls)),
 ]
 
-# Static/media (dev)
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Media files — dev only. In production nginx serves MEDIA_ROOT directly.
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  DJANGO_SECRET_KEY: ci-insecure-key
+  DJANGO_SECRET_KEY: ci-test-key-not-for-production-use-only-in-ci
   DEBUG: "True"
   GOOGLE_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
   DATABASE_URL: ""

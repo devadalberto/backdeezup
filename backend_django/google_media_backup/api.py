@@ -17,11 +17,14 @@ from .services_google import (
 )
 from decouple import config
 
+from ninja.security import django_auth
+
 api = NinjaAPI(
     title=config('SWAGGER_TITLE', default='API'),
     description=config('SWAGGER_DESCRIPTION', default=''),
     version=config('SWAGGER_VERSION', default='0.1.0'),
     docs_url="/docs",
+    auth=django_auth,
     openapi_extra={"servers": [{"url": "/"}]},
 )
 

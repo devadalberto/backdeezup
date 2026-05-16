@@ -7,6 +7,7 @@ Every execution is logged to CleanupAuditLog.
 import logging
 from datetime import timedelta
 
+from django.db import transaction
 from django.utils import timezone
 
 from .models import CleanupAuditLog, CleanupRule, GmailMessage, ProtectedSender
@@ -92,11 +93,13 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
                         break
                 qs = qs.filter(gmail_id__in=matching_ids)
 
-        # Exclude protected senders
+        # Exclude protected senders — push filter to DB, not Python iteration
         if rule.respect_protected_senders and protected:
-            candidates = [m for m in qs if not _is_protected(m, protected)]
-        else:
-            candidates = list(qs)
+            normalized = {e.lower() for e in protected}
+            # Filter out messages where from_address contains a protected email
+            for email in normalized:
+                qs = qs.exclude(from_address__icontains=email)
+        candidates = list(qs[:5000])  # hard cap to prevent memory exhaustion
 
         affected_ids = [m.gmail_id for m in candidates]
         sample_subjects = [m.subject[:80] for m in candidates[:10]]
@@ -119,11 +122,17 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
 
         executed = 0
         if rule.action == CleanupRule.ACTION_TRASH:
+            trashed_ids = []
             for msg in candidates:
                 if trash_message(msg.gmail_id):
-                    msg.state = GmailMessage.STATE_TRASHED
-                    msg.save(update_fields=["state"])
+                    trashed_ids.append(msg.gmail_id)
                     executed += 1
+            # Batch DB update — single query instead of N saves
+            if trashed_ids:
+                with transaction.atomic():
+                    GmailMessage.objects.filter(gmail_id__in=trashed_ids).update(
+                        state=GmailMessage.STATE_TRASHED
+                    )
 
         elif rule.action == CleanupRule.ACTION_STAR:
             for msg in candidates:

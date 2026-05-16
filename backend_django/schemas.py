@@ -82,6 +82,24 @@ class RuleConditionSchema(StrictSchema):
             raise ValueError("logic must be AND or OR")
         return v
 
+    @field_validator("field")
+    @classmethod
+    def validate_field(cls, v: str) -> str:
+        from google_gmail_backup.models import RuleCondition
+        valid = {c[0] for c in RuleCondition.FIELD_CHOICES}
+        if v not in valid:
+            raise ValueError(f"field must be one of {sorted(valid)}")
+        return v
+
+    @field_validator("operator")
+    @classmethod
+    def validate_operator(cls, v: str) -> str:
+        from google_gmail_backup.models import RuleCondition
+        valid = {c[0] for c in RuleCondition.OP_CHOICES}
+        if v not in valid:
+            raise ValueError(f"operator must be one of {sorted(valid)}")
+        return v
+
 
 class RuleBuilderPayload(StrictSchema):
     name: str = Field(..., min_length=1, max_length=200)

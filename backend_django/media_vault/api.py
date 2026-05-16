@@ -6,7 +6,9 @@ from ninja import NinjaAPI
 
 from .models import MediaDecision, VaultImage, VaultMedia
 
-vault_api = NinjaAPI(urls_namespace="vault", docs_url="/docs")
+from ninja.security import django_auth
+
+vault_api = NinjaAPI(urls_namespace="vault", docs_url="/docs", auth=django_auth)
 
 
 @vault_api.get("/status")

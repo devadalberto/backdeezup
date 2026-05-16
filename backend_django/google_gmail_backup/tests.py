@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.test import TestCase, Client
 from django.utils import timezone
 
@@ -87,6 +88,8 @@ class GmailAttachmentTest(TestCase):
 class GmailAPITest(TestCase):
     def setUp(self):
         self.client = Client()
+        user = User.objects.create_user("testuser", password="testpass")
+        self.client.force_login(user)
         GmailMessage.objects.create(
             gmail_id="g1",
             thread_id="t1",
@@ -127,10 +130,11 @@ class GmailAPITest(TestCase):
         r = self.client.get("/api/gmail/docs")
         self.assertEqual(r.status_code, 200)
 
-    def test_gmail_profile_unauthenticated(self):
-        r = self.client.get("/api/gmail/profile")
-        self.assertEqual(r.status_code, 200)
-        self.assertIn("error", r.json())
+    def test_gmail_api_requires_auth(self):
+        """API endpoints must return 401 for unauthenticated requests."""
+        anon_client = Client()
+        r = anon_client.get("/api/gmail/profile")
+        self.assertEqual(r.status_code, 401)
 
     def test_trash_dry_run(self):
         r = self.client.post(

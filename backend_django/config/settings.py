@@ -1,29 +1,45 @@
 from pathlib import Path
 
 import dj_database_url
-from decouple import config
+from decouple import config, UndefinedValueError
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = config('DJANGO_SECRET_KEY', default='insecure-key')
-DEBUG = config('DEBUG', cast=bool, default=True)
-ALLOWED_HOSTS = [h.strip() for h in config('ALLOWED_HOSTS', default='*').split(',') if h.strip()]
+# ── CRITICAL: SECRET_KEY must be explicitly set — no insecure default ─────────
+try:
+    SECRET_KEY = config('DJANGO_SECRET_KEY')
+except UndefinedValueError:
+    raise ImproperlyConfigured(
+        "DJANGO_SECRET_KEY environment variable is not set. "
+        "Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(50))\""
+    )
 
-# CORS Configuration
-cors_origins = config('CORS_ALLOWED_ORIGINS', default='').strip()
-if cors_origins == '*' or not cors_origins:
+if SECRET_KEY in ('insecure-key', 'change-me', '', 'django-insecure'):
+    raise ImproperlyConfigured("DJANGO_SECRET_KEY is set to a known insecure value.")
+
+# ── DEBUG defaults to False — must be explicitly enabled ─────────────────────
+DEBUG = config('DEBUG', cast=bool, default=False)
+
+# ── ALLOWED_HOSTS defaults to localhost only ─────────────────────────────────
+_allowed = config('ALLOWED_HOSTS', default='localhost,127.0.0.1')
+ALLOWED_HOSTS = [h.strip() for h in _allowed.split(',') if h.strip()]
+
+# ── CORS: closed by default, explicit opt-in only ────────────────────────────
+_cors = config('CORS_ALLOWED_ORIGINS', default='').strip()
+if _cors == '*':
     CORS_ALLOW_ALL_ORIGINS = True
     CORS_ALLOWED_ORIGINS = []
+elif _cors:
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = [h.strip() for h in _cors.split(',') if h.strip()]
 else:
     CORS_ALLOW_ALL_ORIGINS = False
-    CORS_ALLOWED_ORIGINS = [h.strip() for h in cors_origins.split(',') if h.strip()]
+    CORS_ALLOWED_ORIGINS = []
 
-# CSRF Configuration
-csrf_origins = config('CSRF_TRUSTED_ORIGINS', default='').strip()
-if csrf_origins and csrf_origins != '*':
-    CSRF_TRUSTED_ORIGINS = [h.strip() for h in csrf_origins.split(',') if h.strip()]
-else:
-    CSRF_TRUSTED_ORIGINS = []
+# ── CSRF trusted origins ──────────────────────────────────────────────────────
+_csrf = config('CSRF_TRUSTED_ORIGINS', default='').strip()
+CSRF_TRUSTED_ORIGINS = [h.strip() for h in _csrf.split(',') if h.strip() and h.strip() != '*']
 
 INSTALLED_APPS = [
     # Wagtail — must come before django.contrib.admin
@@ -72,6 +88,18 @@ MIDDLEWARE = [
     'wagtail.contrib.redirects.middleware.RedirectMiddleware',
 ]
 
+# ── HTTPS security headers (production only) ─────────────────────────────────
+if not DEBUG:
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', cast=bool, default=False)
+    SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', cast=int, default=0)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = False
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+
 ROOT_URLCONF = 'config.urls'
 TEMPLATES = [{
     'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -90,13 +118,11 @@ TEMPLATES = [{
 }]
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# PostgreSQL is the primary database.
-# SQLite fallback only for local testing without DATABASE_URL set.
+# ── Database: PostgreSQL primary, SQLite for tests only ───────────────────────
 DATABASE_URL = config('DATABASE_URL', default='')
 if DATABASE_URL:
     DATABASES = {'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
 else:
-    # Fallback for local dev/tests only — set DATABASE_URL in .env for all real usage
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -118,26 +144,52 @@ MEDIA_ROOT = config('MEDIA_ROOT', default=str(BASE_DIR / 'media'))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-ADMIN_SITE_HEADER = config('ADMIN_SITE_HEADER', default='Admin')
-ADMIN_SITE_TITLE = config('ADMIN_SITE_TITLE', default='Admin')
+# ── Structured logging ────────────────────────────────────────────────────────
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'console': {
+            'format': '{levelname} {asctime} {name} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'console',
+        },
+    },
+    'loggers': {
+        'google_gmail_backup': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'google_media_backup': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'media_vault':         {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'django.security':     {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+    },
+    'root': {'handlers': ['console'], 'level': 'WARNING'},
+}
+
+ADMIN_SITE_HEADER = config('ADMIN_SITE_HEADER', default='BackDeezUp Admin')
+ADMIN_SITE_TITLE  = config('ADMIN_SITE_TITLE',  default='BackDeezUp')
 ADMIN_INDEX_TITLE = config('ADMIN_INDEX_TITLE', default='Dashboard')
 
-SWAGGER_TITLE = config('SWAGGER_TITLE', default='API')
+SWAGGER_TITLE       = config('SWAGGER_TITLE',       default='BackDeezUp API')
 SWAGGER_DESCRIPTION = config('SWAGGER_DESCRIPTION', default='')
-SWAGGER_VERSION = config('SWAGGER_VERSION', default='0.1.0')
+SWAGGER_VERSION     = config('SWAGGER_VERSION',     default='0.1.0')
 
 # ── Wagtail ───────────────────────────────────────────────────────────────────
-WAGTAIL_SITE_NAME = config('WAGTAIL_SITE_NAME', default='BackDeezUp Media Vault')
-WAGTAILADMIN_BASE_URL = config('WAGTAILADMIN_BASE_URL', default='http://localhost:8844')
-WAGTAILIMAGES_IMAGE_MODEL = 'media_vault.VaultImage'
+WAGTAIL_SITE_NAME      = config('WAGTAIL_SITE_NAME',      default='BackDeezUp Media Vault')
+WAGTAILADMIN_BASE_URL  = config('WAGTAILADMIN_BASE_URL',  default='http://localhost:8844')
+WAGTAILIMAGES_IMAGE_MODEL  = 'media_vault.VaultImage'
 WAGTAILDOCS_DOCUMENT_MODEL = 'media_vault.VaultDocument'
-WAGTAILMEDIA_MEDIA_MODEL = 'media_vault.VaultMedia'
-WAGTAILIMAGES_MAX_UPLOAD_SIZE = 1024 * 1024 * 1024        # 1 GB for images
-WAGTAILMEDIA_MAX_UPLOAD_SIZE  = 256 * 1024 * 1024 * 1024  # 256 GB for video
+WAGTAILMEDIA_MEDIA_MODEL   = 'media_vault.VaultMedia'
+WAGTAILIMAGES_MAX_UPLOAD_SIZE = 1024 * 1024 * 1024
+WAGTAILMEDIA_MAX_UPLOAD_SIZE  = 256 * 1024 * 1024 * 1024
 WAGTAIL_ENABLE_UPDATE_CHECK = False
 WAGTAILSEARCH_BACKENDS = {"default": {"BACKEND": "wagtail.search.backends.database"}}
 
-# ── Pydantic v2 project-wide settings ────────────────────────────────────────
-# Pydantic v2 is already installed via django-ninja.
-# Project-wide validation helpers live in backdeezup.schemas
-# Use model_validate() / model_validate_json() in all views for input validation.
+# ── Pydantic v2 project-wide ──────────────────────────────────────────────────
+# Schemas in backend_django/schemas.py — use model_validate() in all views.
+
+# ── APScheduler ───────────────────────────────────────────────────────────────
+BACKDEEZUP_SCHEDULER = config('BACKDEEZUP_SCHEDULER', cast=bool, default=False)
