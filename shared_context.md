@@ -1,7 +1,7 @@
 # shared_context.md
 > Shared ground truth for Claude, Gemini, and Codex working on this repo.
 > Keep this file updated as the project evolves.
-> Last updated: 2026-05-14 (v0.5.0)
+> Last updated: 2026-05-16 (v0.10.0)
 
 ---
 
@@ -348,4 +348,13 @@ Graph output: `graphify-out/` (graph.json, graph.html, GRAPH_REPORT.md)
 - **Gmail ops console** — `/admin/gmail/ops/` — click buttons for pipeline steps, dry-run/execute rules, protected senders, audit log
 - **Scheduler** — APScheduler, off by default. Enable: `BACKDEEZUP_SCHEDULER=1` in `.env` then `make redeploy`
 - **Post-deploy checklist** — `make redeploy && make seed-rules && curl -X POST http://localhost:8844/api/gmail/protected-senders/apply`
-- **Current version: 0.8.0**
+- **Current version: 0.10.0**
+- **media_vault app** — Wagtail 7.4 LTS + wagtailmedia 0.17.2. VaultImage (1GB limit), VaultMedia (256GB video), VaultDocument, VaultRendition, MediaDecision models. Pages: VaultHomePage, MediaGalleryPage, PhotoReviewPage, VideoReviewPage. CMS at `/cms/`, vault front-end at `/vault/`. Matrix theme via `insert_global_admin_css` hook.
+- **Pydantic v2 project-wide** — `backend_django/schemas.py` has StrictSchema/LooseSchema base classes + domain schemas (Gmail, Drive, Rules, MediaDecision). Use `model_validate()` / `model_validate_json()` in all Django views.
+- **Smart Rule Builder** — `/admin/gmail/rule-builder/` visual compound rule editor. RuleCondition model with AND/OR logic compiled to Gmail q= syntax via `query_compiler.py`. 9 built-in templates (LinkedIn jobs/spam, job boards, recruiters, marketing tools, etc.).
+- **Global Matrix theme** — `backend_django/templates/admin/base_site.html` overrides all Django Admin pages. Wagtail CMS uses `matrix_wagtail.css` via hook.
+- **Export engine** — CSV/XLSX/JSON/XML/PDF via `exports.py`. Endpoints: `/api/gmail/export/messages`, `/api/gmail/export/audit-log`, `/api/export/assets`.
+- **make vault-setup** — creates Vault Home Page in Wagtail (idempotent, run once after first deploy).
+- **make vault-setup / seed-rules / preflight / redeploy** — key make targets.
+- **Postgres is default DB** — SQLite is fallback for tests only. DATABASE_URL required in `.env`.
+- **graphify** — updated to reflect v0.10.0 codebase. Run: `export PATH="$HOME/.local/bin:$PATH" && graphify update .` from Debian repo.
