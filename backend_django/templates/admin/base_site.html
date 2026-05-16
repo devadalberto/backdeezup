@@ -5,8 +5,8 @@
 
 {% block branding %}
 <div id="site-name">
-  <a href="{% url 'admin:index' %}" style="color:#00ff41; text-shadow:0 0 8px #00ff41; font-family:monospace; font-size:18px; letter-spacing:3px; text-decoration:none;">
-    &#9608; BackDeezUp
+  <a href="{% url 'admin:index' %}" style="font-family:monospace; font-size:18px; letter-spacing:3px; text-decoration:none;">
+    <span style="color:#ffb300; text-shadow:0 0 10px #ffb300;">&#9608;</span><span style="color:#00ff41; text-shadow:0 0 6px #00ff41;">BackDeez</span><span style="color:#ffb300; text-shadow:0 0 10px #ffb300;">Up</span>
   </a>
 </div>
 {% endblock %}
@@ -14,7 +14,7 @@
 {% block extrastyle %}
 {{ block.super }}
 <style>
-/* ── Matrix palette ─────────────────────────────────────────── */
+/* ── Matrix + Amber palette ──────────────────────────────────── */
 :root {
   --gx:  #00ff41;  /* bright phosphor green */
   --gm:  #00c832;  /* mid green */
@@ -26,7 +26,9 @@
   --g3:  #1a1a1a;
   --gb:  #0d1f0d;  /* green-tinted bg */
   --gr:  #ff3131;  /* red for danger */
-  --gy:  #c8a800;  /* amber for warn */
+  --gy:  #ffb300;  /* amber — upgraded from muted gold */
+  --gy2: #ff8f00;  /* deep amber */
+  --gy3: #e65100;  /* burnt amber accent */
   --gt:  #00bfff;  /* cyan for info */
   --fw:  #ccffcc;  /* light green text */
   --fs:  13px;
@@ -169,9 +171,13 @@ label { color: var(--gm) !important; }
 .messagelist .error   { background: #3a0000 !important; color: var(--gr) !important; border-left: 3px solid var(--gr); }
 
 /* ── Object tools ────────────────────────────────────────────── */
-.object-tools a { background: var(--ga) !important; color: var(--gx) !important; border: 1px solid var(--gd) !important; }
-.object-tools a:hover { background: var(--gb) !important; box-shadow: 0 0 6px var(--gx); }
-.addlink::before { color: var(--gx) !important; }
+/* Amber accents on action buttons and add links */
+.object-tools a { background: #1a1000 !important; color: var(--gy) !important; border: 1px solid var(--gy2) !important; }
+.object-tools a:hover { background: #2a1800 !important; box-shadow: 0 0 8px var(--gy) !important; color: var(--gy) !important; }
+.addlink::before { color: var(--gy) !important; }
+.addlink { color: var(--gy) !important; }
+.default { background: #1a1000 !important; border-color: var(--gy) !important; color: var(--gy) !important; }
+.default:hover { box-shadow: 0 0 6px var(--gy) !important; }
 
 /* ── Submit row ──────────────────────────────────────────────── */
 .submit-row { background: var(--g1) !important; border-top: 1px solid var(--ga) !important; }
@@ -218,9 +224,9 @@ input[type=checkbox] { accent-color: var(--gx); }
 }
 #matrix-nav .nav-label:hover,
 #matrix-nav .nav-group:hover .nav-label {
-  color: var(--gx);
-  border-bottom-color: var(--gx);
-  text-shadow: 0 0 6px var(--gx);
+  color: var(--gy);
+  border-bottom-color: var(--gy);
+  text-shadow: 0 0 6px var(--gy);
 }
 #matrix-nav .nav-dropdown {
   display: none;
@@ -244,9 +250,10 @@ input[type=checkbox] { accent-color: var(--gx); }
   transition: all .1s;
 }
 #matrix-nav .nav-dropdown a:hover {
-  background: var(--ga);
-  color: var(--gx);
+  background: #1a1000;
+  color: var(--gy);
   padding-left: 22px;
+  border-left: 2px solid var(--gy);
 }
 #matrix-nav .nav-dropdown .nav-section {
   padding: 4px 16px;
