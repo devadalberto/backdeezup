@@ -1,16 +1,16 @@
-# Graph Report - backdeezup  (2026-05-15)
+# Graph Report - backdeezup  (2026-05-16)
 
 ## Corpus Check
-- 60 files · ~23,606 words
+- 68 files · ~27,429 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 619 nodes · 700 edges · 57 communities (45 shown, 12 thin omitted)
-- Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 51 edges (avg confidence: 0.52)
+- 717 nodes · 873 edges · 61 communities (47 shown, 14 thin omitted)
+- Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 98 edges (avg confidence: 0.55)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ae2554c8`
+- Built from commit: `04b9945b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -59,52 +59,54 @@
 - [[_COMMUNITY_Community 54|Community 54]]
 - [[_COMMUNITY_Community 55|Community 55]]
 - [[_COMMUNITY_Community 56|Community 56]]
+- [[_COMMUNITY_Community 57|Community 57]]
+- [[_COMMUNITY_Community 58|Community 58]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `GmailMessage` - 14 edges
-2. `GmailSyncState` - 13 edges
-3. `gmail_service()` - 13 edges
-4. `Changelog` - 13 edges
-5. `GmailAPITest` - 12 edges
-6. `DriveAPITest` - 11 edges
-7. `Acknowledgements` - 11 edges
-8. `gmail_download()` - 10 edges
-9. `GmailAttachment` - 10 edges
-10. `GmailMessageModelTest` - 10 edges
+1. `GmailSyncState` - 17 edges
+2. `GmailMessage` - 17 edges
+3. `gmail_service()` - 15 edges
+4. `Changelog` - 14 edges
+5. `GmailAttachment` - 13 edges
+6. `apply_rule()` - 13 edges
+7. `CleanupRule` - 12 edges
+8. `GmailAPITest` - 12 edges
+9. `CleanupAuditLog` - 11 edges
+10. `DriveAPITest` - 11 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `action_trash_selected()` --calls--> `trash_message()`  [INFERRED]
-  backend_django/google_gmail_backup/admin.py → backend_django/google_gmail_backup/services_gmail.py
-- `gmail_service()` --calls--> `_load_creds()`  [INFERRED]
-  backend_django/google_gmail_backup/services_gmail.py → backend_django/google_media_backup/services_google.py
-- `gmail_service()` --calls--> `_save_creds()`  [INFERRED]
-  backend_django/google_gmail_backup/services_gmail.py → backend_django/google_media_backup/services_google.py
-- `GmailMessageOut` --uses--> `GmailMessage`  [INFERRED]
-  backend_django/google_gmail_backup/api.py → backend_django/google_gmail_backup/models.py
-- `GmailMessageOut` --uses--> `GmailSyncState`  [INFERRED]
-  backend_django/google_gmail_backup/api.py → backend_django/google_gmail_backup/models.py
+- `rule_dry_run()` --calls--> `apply_rule()`  [INFERRED]
+  backend_django/google_gmail_backup/api.py → backend_django/google_gmail_backup/services_rules.py
+- `rule_execute()` --calls--> `apply_rule()`  [INFERRED]
+  backend_django/google_gmail_backup/api.py → backend_django/google_gmail_backup/services_rules.py
+- `rules_run_all()` --calls--> `run_all_enabled_rules()`  [INFERRED]
+  backend_django/google_gmail_backup/api.py → backend_django/google_gmail_backup/services_rules.py
+- `apply_protected_senders()` --calls--> `apply_protected_sender_rules()`  [INFERRED]
+  backend_django/google_gmail_backup/api.py → backend_django/google_gmail_backup/services_rules.py
+- `run_dry_run()` --calls--> `apply_rule()`  [INFERRED]
+  backend_django/google_gmail_backup/admin.py → backend_django/google_gmail_backup/services_rules.py
 
-## Communities (57 total, 12 thin omitted)
+## Communities (61 total, 14 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.08
 Nodes (35): auth_connect(), list_assets(), Discover media items from Google Photos Library.     NOTE: These are NOT Drive f, Discover media items from Google Photos Library.     NOTE: These are NOT Drive f, Discover commonly-used document types in Drive (pdf, office, csv, archives, iWor, Discover commonly-used document types in Drive (pdf, office, csv, archives, iWor, sync_commit_delete(), sync_discover() (+27 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.08
-Nodes (40): gmail_discover(), gmail_download(), gmail_incremental(), gmail_label(), gmail_profile(), gmail_trash(), gmail_verify(), Incremental sync using historyId. Falls back to full discover on 404. (+32 more)
+Cohesion: 0.05
+Nodes (63): action_trash(), action_trash_selected(), run_dry_run(), run_execute(), apply_protected_senders(), gmail_discover(), gmail_download(), gmail_incremental() (+55 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.1
 Nodes (15): DriveAssetAdmin, each_context(), MediaItemAdmin, ops_link(), # IMPORTANT: Do NOT override admin.site.each_context here., RunLogAdmin, ops_console(), Minimal admin 'Operations Console' that calls your /api/* endpoints     with a s (+7 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.4
-Nodes (3): AppConfig, GoogleGmailBackupConfig, GoogleMediaBackupConfig
+Cohesion: 0.14
+Nodes (11): AppConfig, GoogleGmailBackupConfig, get_scheduler(), job_apply_protected_senders(), job_run_cleanup_rules(), APScheduler jobs for periodic Gmail sync and cleanup. All jobs are OFF by defaul, Star + label messages from protected senders., Run all enabled cleanup rules (dry_run=False). (+3 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.08
-Nodes (23): Acknowledgements, AI agent collaboration, API reference, backdeezup, code:mermaid (flowchart LR), code:block18 (backdeezup/), code:mermaid (stateDiagram-v2), code:mermaid (erDiagram) (+15 more)
+Cohesion: 0.05
+Nodes (53): 1. Create `.env`, 2. Place Google OAuth credentials, 3. Build and start, 4. Run migrations, 5. Create superuser, 6. Authenticate with Google, 7. Verify the deployment, Acknowledgements (+45 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.08
@@ -119,8 +121,8 @@ Cohesion: 0.2
 Nodes (9): Architecture, BackDeezUp, code:mermaid (flowchart LR), code:mermaid (stateDiagram-v2), gmail_josevaldes_cleanup, Key features, Pipeline, Quick navigation (+1 more)
 
 ### Community 18 - "Community 18"
-Cohesion: 0.07
-Nodes (20): action_trash_selected(), GmailAttachmentAdmin, GmailMessageAdmin, GmailSyncStateAdmin, GmailFilterIn, GmailMessageOut, SyncResult, GmailAttachment (+12 more)
+Cohesion: 0.06
+Nodes (31): BaseCommand, Command, Management command to seed protected senders and default cleanup rules. Safe to, CleanupAuditLogAdmin, CleanupRuleAdmin, GmailAttachmentAdmin, GmailMessageAdmin, GmailSyncStateAdmin (+23 more)
 
 ### Community 24 - "Community 24"
 Cohesion: 0.05
@@ -131,8 +133,8 @@ Cohesion: 0.06
 Nodes (35): 1. Clone and configure, 2. Place Google credentials, 3. Build and start, 4. Initialise database and create superuser, 5. Authenticate with Google, code:bash (make discover HOST=http://192.168.88.60:8844), code:bash (make redeploy), code:bash (git pull origin main) (+27 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.25
-Nodes (7): [0.5.1] - 2026-05-14, [0.6.0] - 2026-05-15, Added, Added, Changed, Changelog, [Unreleased]
+Cohesion: 0.22
+Nodes (8): [0.5.1] - 2026-05-14, [0.6.0] - 2026-05-15, Added, Added, Added, Changed, Changelog, [Unreleased]
 
 ### Community 27 - "Community 27"
 Cohesion: 0.07
@@ -183,56 +185,56 @@ Cohesion: 0.25
 Nodes (7): code:mermaid (erDiagram), Data Model, DriveAsset, Entity relationship diagram, MediaItem, Notes, RunLog
 
 ### Community 48 - "Community 48"
-Cohesion: 0.2
-Nodes (10): [0.4.1] - 2026-05-13, [0.5.0] - 2026-05-14, Added, Added, Added, Added, Fixed, Fixed (+2 more)
+Cohesion: 0.29
+Nodes (7): [0.4.1] - 2026-05-13, Added, Added, Added, Fixed, Fixed, Fixed
 
 ### Community 49 - "Community 49"
-Cohesion: 0.25
-Nodes (8): [0.2.0] - 2026-05-13, Added, Added, Changed, Changed, Fixed, Fixed, Technical
+Cohesion: 0.18
+Nodes (11): [0.2.0] - 2026-05-13, Added, Added, Added, Changed, Changed, Changed, Fixed (+3 more)
 
 ### Community 50 - "Community 50"
-Cohesion: 0.33
-Nodes (7): [0.6.1] - 2026-05-15, [0.7.0] - 2026-05-15, Added, Added, Fixed, Fixed, Known Issues
+Cohesion: 0.2
+Nodes (12): [0.6.1] - 2026-05-15, [0.7.0] - 2026-05-15, [0.8.0] - 2026-05-15, Added, Added, Added, Default cleanup rules seeded (all disabled — review before enabling), Fixed (+4 more)
 
 ### Community 51 - "Community 51"
-Cohesion: 0.33
-Nodes (6): [0.4.0] - 2026-05-13, Added, Changed, Changed, Fixed, Fixed
+Cohesion: 0.12
+Nodes (16): [0.4.0] - 2026-05-13, [0.4.2] - 2026-05-13, Added, Added, Added, Added, Added, Changed (+8 more)
 
 ### Community 52 - "Community 52"
-Cohesion: 0.4
-Nodes (5): [0.3.0] - 2026-05-13, Added, Added, Changed, Changed
+Cohesion: 0.29
+Nodes (7): [0.3.0] - 2026-05-13, Added, Added, Added, Changed, Changed, Changed
 
 ### Community 53 - "Community 53"
-Cohesion: 0.4
-Nodes (5): [0.4.2] - 2026-05-13, Added, Added, Changed, Changed
+Cohesion: 0.29
+Nodes (7): [0.5.0] - 2026-05-14, Added, Added, Added, Fixed, Fixed, Security
 
 ### Community 54 - "Community 54"
-Cohesion: 0.11
-Nodes (19): 1. Create `.env`, 2. Place Google OAuth credentials, 3. Build and start, 4. Run migrations, 5. Create superuser, 6. Authenticate with Google, 7. Verify the deployment, code:bash (python -c "import secrets; print(secrets.token_urlsafe(50))") (+11 more)
+Cohesion: 0.73
+Nodes (5): get(), main(), post(), run_drive(), run_gmail()
 
 ### Community 56 - "Community 56"
-Cohesion: 0.5
-Nodes (4): [0.1.0] - 2026-05-12, Added, Added, Safety Features
+Cohesion: 0.4
+Nodes (5): [0.1.0] - 2026-05-12, Added, Added, Added, Safety Features
 
 ## Knowledge Gaps
-- **284 isolated node(s):** `PreToolUse`, `BeforeTool`, `Run administrative tasks.`, `Fast discovery — stores only message IDs (no per-message API calls).     Metadat`, `Incremental sync using historyId. Falls back to full discover on 404.` (+279 more)
+- **311 isolated node(s):** `PreToolUse`, `BeforeTool`, `Run administrative tasks.`, `Fast discovery — stores only message IDs (no per-message API calls).     Metadat`, `Incremental sync using historyId. Falls back to full discover on 404.` (+306 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **12 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **14 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `gmail_service()` connect `Community 1` to `Community 0`?**
-  _High betweenness centrality (0.014) - this node is a cross-community bridge._
+  _High betweenness centrality (0.021) - this node is a cross-community bridge._
 - **Why does `GmailMessage` connect `Community 18` to `Community 1`?**
-  _High betweenness centrality (0.012) - this node is a cross-community bridge._
-- **Why does `DriveAPITest` connect `Community 2` to `Community 18`?**
-  _High betweenness centrality (0.008) - this node is a cross-community bridge._
-- **Are the 10 inferred relationships involving `GmailMessage` (e.g. with `GmailMessageOut` and `GmailFilterIn`) actually correct?**
-  _`GmailMessage` has 10 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 10 inferred relationships involving `GmailSyncState` (e.g. with `GmailMessageOut` and `GmailFilterIn`) actually correct?**
-  _`GmailSyncState` has 10 INFERRED edges - model-reasoned connections that need verification._
+  _High betweenness centrality (0.015) - this node is a cross-community bridge._
+- **Why does `_save_creds()` connect `Community 0` to `Community 1`?**
+  _High betweenness centrality (0.010) - this node is a cross-community bridge._
+- **Are the 13 inferred relationships involving `GmailSyncState` (e.g. with `GmailMessageOut` and `GmailFilterIn`) actually correct?**
+  _`GmailSyncState` has 13 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 13 inferred relationships involving `GmailMessage` (e.g. with `GmailMessageOut` and `GmailFilterIn`) actually correct?**
+  _`GmailMessage` has 13 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 2 inferred relationships involving `gmail_service()` (e.g. with `_load_creds()` and `_save_creds()`) actually correct?**
   _`gmail_service()` has 2 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 3 inferred relationships involving `GmailAPITest` (e.g. with `GmailMessage` and `GmailAttachment`) actually correct?**
-  _`GmailAPITest` has 3 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 10 inferred relationships involving `GmailAttachment` (e.g. with `GmailSyncStateAdmin` and `GmailAttachmentAdmin`) actually correct?**
+  _`GmailAttachment` has 10 INFERRED edges - model-reasoned connections that need verification._

@@ -13,6 +13,60 @@
       "norm_label": "dev.ps1"
     },
     {
+      "label": "run_pipeline.py",
+      "file_type": "code",
+      "source_file": "run_pipeline.py",
+      "source_location": "L1",
+      "id": "run_pipeline_py",
+      "community": 54,
+      "norm_label": "run_pipeline.py"
+    },
+    {
+      "label": "post()",
+      "file_type": "code",
+      "source_file": "run_pipeline.py",
+      "source_location": "L19",
+      "id": "backdeezup_run_pipeline_post",
+      "community": 54,
+      "norm_label": "post()"
+    },
+    {
+      "label": "get()",
+      "file_type": "code",
+      "source_file": "run_pipeline.py",
+      "source_location": "L27",
+      "id": "backdeezup_run_pipeline_get",
+      "community": 54,
+      "norm_label": "get()"
+    },
+    {
+      "label": "run_drive()",
+      "file_type": "code",
+      "source_file": "run_pipeline.py",
+      "source_location": "L35",
+      "id": "backdeezup_run_pipeline_run_drive",
+      "community": 54,
+      "norm_label": "run_drive()"
+    },
+    {
+      "label": "run_gmail()",
+      "file_type": "code",
+      "source_file": "run_pipeline.py",
+      "source_location": "L61",
+      "id": "backdeezup_run_pipeline_run_gmail",
+      "community": 54,
+      "norm_label": "run_gmail()"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "run_pipeline.py",
+      "source_location": "L85",
+      "id": "backdeezup_run_pipeline_main",
+      "community": 54,
+      "norm_label": "main()"
+    },
+    {
       "label": "main.py",
       "file_type": "code",
       "source_file": "main.py",
@@ -256,6 +310,60 @@
       "norm_label": "list_messages()"
     },
     {
+      "label": "list_rules()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L387",
+      "id": "google_gmail_backup_api_list_rules",
+      "community": 1,
+      "norm_label": "list_rules()"
+    },
+    {
+      "label": "rule_dry_run()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L403",
+      "id": "google_gmail_backup_api_rule_dry_run",
+      "community": 1,
+      "norm_label": "rule_dry_run()"
+    },
+    {
+      "label": "rule_execute()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L416",
+      "id": "google_gmail_backup_api_rule_execute",
+      "community": 1,
+      "norm_label": "rule_execute()"
+    },
+    {
+      "label": "rules_run_all()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L429",
+      "id": "google_gmail_backup_api_rules_run_all",
+      "community": 1,
+      "norm_label": "rules_run_all()"
+    },
+    {
+      "label": "apply_protected_senders()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L439",
+      "id": "google_gmail_backup_api_apply_protected_senders",
+      "community": 1,
+      "norm_label": "apply_protected_senders()"
+    },
+    {
+      "label": "get_audit_log()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L446",
+      "id": "google_gmail_backup_api_get_audit_log",
+      "community": 1,
+      "norm_label": "get_audit_log()"
+    },
+    {
       "label": "Fast discovery \u2014 stores only message IDs (no per-message API calls).     Metadat",
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
@@ -340,7 +448,7 @@
       "label": "GmailSyncState",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/models.py",
-      "source_location": "L5",
+      "source_location": "L6",
       "id": "google_gmail_backup_models_gmailsyncstate",
       "community": 18,
       "norm_label": "gmailsyncstate"
@@ -349,7 +457,7 @@
       "label": ".__str__()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/models.py",
-      "source_location": "L15",
+      "source_location": "L16",
       "id": "google_gmail_backup_models_gmailsyncstate_str",
       "community": 18,
       "norm_label": ".__str__()"
@@ -358,7 +466,7 @@
       "label": "Meta",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/models.py",
-      "source_location": "L18",
+      "source_location": "L19",
       "id": "google_gmail_backup_models_meta",
       "community": 18,
       "norm_label": "meta"
@@ -376,7 +484,7 @@
       "label": ".__str__()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/models.py",
-      "source_location": "L71",
+      "source_location": "L62",
       "id": "google_gmail_backup_models_gmailmessage_str",
       "community": 18,
       "norm_label": ".__str__()"
@@ -385,46 +493,208 @@
       "label": "GmailAttachment",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/models.py",
-      "source_location": "L84",
+      "source_location": "L74",
       "id": "google_gmail_backup_models_gmailattachment",
       "community": 18,
       "norm_label": "gmailattachment"
     },
     {
+      "label": "ProtectedSender",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L90",
+      "id": "google_gmail_backup_models_protectedsender",
+      "community": 18,
+      "norm_label": "protectedsender"
+    },
+    {
       "label": ".__str__()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/models.py",
-      "source_location": "L95",
-      "id": "google_gmail_backup_models_gmailattachment_str",
+      "source_location": "L98",
+      "id": "google_gmail_backup_models_protectedsender_str",
       "community": 18,
       "norm_label": ".__str__()"
+    },
+    {
+      "label": "CleanupRule",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L106",
+      "id": "google_gmail_backup_models_cleanuprule",
+      "community": 18,
+      "norm_label": "cleanuprule"
+    },
+    {
+      "label": ".__str__()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L147",
+      "id": "google_gmail_backup_models_cleanuprule_str",
+      "community": 18,
+      "norm_label": ".__str__()"
+    },
+    {
+      "label": "CleanupAuditLog",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L155",
+      "id": "google_gmail_backup_models_cleanupauditlog",
+      "community": 18,
+      "norm_label": "cleanupauditlog"
     },
     {
       "label": "One row per synced account \u2014 tracks historyId for incremental sync.",
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/models.py",
-      "source_location": "L6",
-      "id": "google_gmail_backup_models_rationale_6",
+      "source_location": "L7",
+      "id": "google_gmail_backup_models_rationale_7",
       "community": 18,
       "norm_label": "one row per synced account \u2014 tracks historyid for incremental sync."
     },
     {
-      "label": "One row per Gmail message discovered and/or downloaded.",
+      "label": "Emails from these senders are always kept \u2014 never trashed, never deleted.",
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/models.py",
-      "source_location": "L24",
-      "id": "google_gmail_backup_models_rationale_24",
+      "source_location": "L91",
+      "id": "google_gmail_backup_models_rationale_91",
       "community": 18,
-      "norm_label": "one row per gmail message discovered and/or downloaded."
+      "norm_label": "emails from these senders are always kept \u2014 never trashed, never deleted."
     },
     {
-      "label": "Attachment metadata for a GmailMessage.",
+      "label": "Immutable log of every cleanup action (dry-run or real).",
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/models.py",
-      "source_location": "L85",
-      "id": "google_gmail_backup_models_rationale_85",
+      "source_location": "L156",
+      "id": "google_gmail_backup_models_rationale_156",
       "community": 18,
-      "norm_label": "attachment metadata for a gmailmessage."
+      "norm_label": "immutable log of every cleanup action (dry-run or real)."
+    },
+    {
+      "label": "services_rules.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L1",
+      "id": "backend_django_google_gmail_backup_services_rules_py",
+      "community": 1,
+      "norm_label": "services_rules.py"
+    },
+    {
+      "label": "_protected_emails()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L22",
+      "id": "google_gmail_backup_services_rules_protected_emails",
+      "community": 1,
+      "norm_label": "_protected_emails()"
+    },
+    {
+      "label": "_normalize_email()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L26",
+      "id": "google_gmail_backup_services_rules_normalize_email",
+      "community": 1,
+      "norm_label": "_normalize_email()"
+    },
+    {
+      "label": "_is_protected()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L33",
+      "id": "google_gmail_backup_services_rules_is_protected",
+      "community": 1,
+      "norm_label": "_is_protected()"
+    },
+    {
+      "label": "_get_or_create_label()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L38",
+      "id": "google_gmail_backup_services_rules_get_or_create_label",
+      "community": 1,
+      "norm_label": "_get_or_create_label()"
+    },
+    {
+      "label": "apply_rule()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L52",
+      "id": "google_gmail_backup_services_rules_apply_rule",
+      "community": 1,
+      "norm_label": "apply_rule()"
+    },
+    {
+      "label": "apply_protected_sender_rules()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L168",
+      "id": "google_gmail_backup_services_rules_apply_protected_sender_rules",
+      "community": 1,
+      "norm_label": "apply_protected_sender_rules()"
+    },
+    {
+      "label": "run_all_enabled_rules()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L219",
+      "id": "google_gmail_backup_services_rules_run_all_enabled_rules",
+      "community": 1,
+      "norm_label": "run_all_enabled_rules()"
+    },
+    {
+      "label": "Cleanup rules engine. All actions support dry_run=True (default) \u2014 nothing touch",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L1",
+      "id": "google_gmail_backup_services_rules_rationale_1",
+      "community": 1,
+      "norm_label": "cleanup rules engine. all actions support dry_run=true (default) \u2014 nothing touch"
+    },
+    {
+      "label": "Extract bare email from 'Name <email>' format.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L27",
+      "id": "google_gmail_backup_services_rules_rationale_27",
+      "community": 1,
+      "norm_label": "extract bare email from 'name <email>' format."
+    },
+    {
+      "label": "Get Gmail label ID by name, creating it if needed.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L39",
+      "id": "google_gmail_backup_services_rules_rationale_39",
+      "community": 1,
+      "norm_label": "get gmail label id by name, creating it if needed."
+    },
+    {
+      "label": "Apply a CleanupRule. Returns a CleanupAuditLog record.     Protected senders are",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L53",
+      "id": "google_gmail_backup_services_rules_rationale_53",
+      "community": 1,
+      "norm_label": "apply a cleanuprule. returns a cleanupauditlog record.     protected senders are"
+    },
+    {
+      "label": "Special rule: star + label + keep in inbox messages from protected senders.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L169",
+      "id": "google_gmail_backup_services_rules_rationale_169",
+      "community": 1,
+      "norm_label": "special rule: star + label + keep in inbox messages from protected senders."
+    },
+    {
+      "label": "Run all enabled CleanupRules. Returns list of audit log records.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L220",
+      "id": "google_gmail_backup_services_rules_rationale_220",
+      "community": 1,
+      "norm_label": "run all enabled cleanuprules. returns list of audit log records."
     },
     {
       "label": "apps.py",
@@ -439,7 +709,7 @@
       "label": "GoogleGmailBackupConfig",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/apps.py",
-      "source_location": "L4",
+      "source_location": "L6",
       "id": "google_gmail_backup_apps_googlegmailbackupconfig",
       "community": 4,
       "norm_label": "googlegmailbackupconfig"
@@ -454,6 +724,15 @@
       "norm_label": "appconfig"
     },
     {
+      "label": ".ready()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/apps.py",
+      "source_location": "L11",
+      "id": "google_gmail_backup_apps_googlegmailbackupconfig_ready",
+      "community": 4,
+      "norm_label": ".ready()"
+    },
+    {
       "label": "admin.py",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/admin.py",
@@ -466,7 +745,7 @@
       "label": "GmailSyncStateAdmin",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/admin.py",
-      "source_location": "L7",
+      "source_location": "L15",
       "id": "google_gmail_backup_admin_gmailsyncstateadmin",
       "community": 18,
       "norm_label": "gmailsyncstateadmin"
@@ -475,7 +754,7 @@
       "label": "GmailAttachmentAdmin",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/admin.py",
-      "source_location": "L13",
+      "source_location": "L22",
       "id": "google_gmail_backup_admin_gmailattachmentadmin",
       "community": 18,
       "norm_label": "gmailattachmentadmin"
@@ -484,19 +763,91 @@
       "label": "GmailMessageAdmin",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/admin.py",
-      "source_location": "L20",
+      "source_location": "L28",
       "id": "google_gmail_backup_admin_gmailmessageadmin",
       "community": 18,
       "norm_label": "gmailmessageadmin"
     },
     {
-      "label": "action_trash_selected()",
+      "label": "action_trash()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/admin.py",
-      "source_location": "L30",
-      "id": "google_gmail_backup_admin_action_trash_selected",
+      "source_location": "L38",
+      "id": "google_gmail_backup_admin_action_trash",
+      "community": 1,
+      "norm_label": "action_trash()"
+    },
+    {
+      "label": "ProtectedSenderAdmin",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L50",
+      "id": "google_gmail_backup_admin_protectedsenderadmin",
       "community": 18,
-      "norm_label": "action_trash_selected()"
+      "norm_label": "protectedsenderadmin"
+    },
+    {
+      "label": "CleanupRuleAdmin",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L56",
+      "id": "google_gmail_backup_admin_cleanupruleadmin",
+      "community": 18,
+      "norm_label": "cleanupruleadmin"
+    },
+    {
+      "label": ".enabled_badge()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L65",
+      "id": "google_gmail_backup_admin_cleanupruleadmin_enabled_badge",
+      "community": 18,
+      "norm_label": ".enabled_badge()"
+    },
+    {
+      "label": "run_dry_run()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L72",
+      "id": "google_gmail_backup_admin_run_dry_run",
+      "community": 1,
+      "norm_label": "run_dry_run()"
+    },
+    {
+      "label": "run_execute()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L81",
+      "id": "google_gmail_backup_admin_run_execute",
+      "community": 1,
+      "norm_label": "run_execute()"
+    },
+    {
+      "label": "CleanupAuditLogAdmin",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L91",
+      "id": "google_gmail_backup_admin_cleanupauditlogadmin",
+      "community": 18,
+      "norm_label": "cleanupauditlogadmin"
+    },
+    {
+      "label": ".has_add_permission()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L100",
+      "id": "google_gmail_backup_admin_cleanupauditlogadmin_has_add_permission",
+      "community": 18,
+      "norm_label": ".has_add_permission()"
+    },
+    {
+      "label": ".has_change_permission()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L103",
+      "id": "google_gmail_backup_admin_cleanupauditlogadmin_has_change_permission",
+      "community": 18,
+      "norm_label": ".has_change_permission()"
     },
     {
       "label": "services_gmail.py",
@@ -949,6 +1300,105 @@
       "norm_label": "__init__.py"
     },
     {
+      "label": "scheduler.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L1",
+      "id": "backend_django_google_gmail_backup_scheduler_py",
+      "community": 4,
+      "norm_label": "scheduler.py"
+    },
+    {
+      "label": "job_gmail_incremental_sync()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L15",
+      "id": "google_gmail_backup_scheduler_job_gmail_incremental_sync",
+      "community": 1,
+      "norm_label": "job_gmail_incremental_sync()"
+    },
+    {
+      "label": "job_apply_protected_senders()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L62",
+      "id": "google_gmail_backup_scheduler_job_apply_protected_senders",
+      "community": 4,
+      "norm_label": "job_apply_protected_senders()"
+    },
+    {
+      "label": "job_run_cleanup_rules()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L72",
+      "id": "google_gmail_backup_scheduler_job_run_cleanup_rules",
+      "community": 4,
+      "norm_label": "job_run_cleanup_rules()"
+    },
+    {
+      "label": "get_scheduler()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L83",
+      "id": "google_gmail_backup_scheduler_get_scheduler",
+      "community": 4,
+      "norm_label": "get_scheduler()"
+    },
+    {
+      "label": "start_scheduler()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L91",
+      "id": "google_gmail_backup_scheduler_start_scheduler",
+      "community": 4,
+      "norm_label": "start_scheduler()"
+    },
+    {
+      "label": "APScheduler jobs for periodic Gmail sync and cleanup. All jobs are OFF by defaul",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L1",
+      "id": "google_gmail_backup_scheduler_rationale_1",
+      "community": 4,
+      "norm_label": "apscheduler jobs for periodic gmail sync and cleanup. all jobs are off by defaul"
+    },
+    {
+      "label": "Incremental Gmail sync \u2014 picks up new messages since last historyId.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L16",
+      "id": "google_gmail_backup_scheduler_rationale_16",
+      "community": 1,
+      "norm_label": "incremental gmail sync \u2014 picks up new messages since last historyid."
+    },
+    {
+      "label": "Star + label messages from protected senders.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L63",
+      "id": "google_gmail_backup_scheduler_rationale_63",
+      "community": 4,
+      "norm_label": "star + label messages from protected senders."
+    },
+    {
+      "label": "Run all enabled cleanup rules (dry_run=False).",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L73",
+      "id": "google_gmail_backup_scheduler_rationale_73",
+      "community": 4,
+      "norm_label": "run all enabled cleanup rules (dry_run=false)."
+    },
+    {
+      "label": "Start the scheduler with default job schedule. Call from AppConfig.ready().",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L92",
+      "id": "google_gmail_backup_scheduler_rationale_92",
+      "community": 4,
+      "norm_label": "start the scheduler with default job schedule. call from appconfig.ready()."
+    },
+    {
       "label": "0001_initial.py",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/migrations/0001_initial.py",
@@ -967,12 +1417,111 @@
       "norm_label": "migration"
     },
     {
+      "label": "0002_alter_gmailmessage_from_address_and_more.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/migrations/0002_alter_gmailmessage_from_address_and_more.py",
+      "source_location": "L1",
+      "id": "backend_django_google_gmail_backup_migrations_0002_alter_gmailmessage_from_address_and_more_py",
+      "community": 57,
+      "norm_label": "0002_alter_gmailmessage_from_address_and_more.py"
+    },
+    {
+      "label": "Migration",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/migrations/0002_alter_gmailmessage_from_address_and_more.py",
+      "source_location": "L6",
+      "id": "migrations_0002_alter_gmailmessage_from_address_and_more_migration",
+      "community": 57,
+      "norm_label": "migration"
+    },
+    {
+      "label": "0003_protectedsender_alter_gmailattachment_options_and_more.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/migrations/0003_protectedsender_alter_gmailattachment_options_and_more.py",
+      "source_location": "L1",
+      "id": "backend_django_google_gmail_backup_migrations_0003_protectedsender_alter_gmailattachment_options_and_more_py",
+      "community": 58,
+      "norm_label": "0003_protectedsender_alter_gmailattachment_options_and_more.py"
+    },
+    {
+      "label": "Migration",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/migrations/0003_protectedsender_alter_gmailattachment_options_and_more.py",
+      "source_location": "L9",
+      "id": "migrations_0003_protectedsender_alter_gmailattachment_options_and_more_migration",
+      "community": 58,
+      "norm_label": "migration"
+    },
+    {
       "label": "__init__.py",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/migrations/__init__.py",
       "source_location": "L1",
       "id": "backend_django_google_gmail_backup_migrations_init_py",
       "community": 44,
+      "norm_label": "__init__.py"
+    },
+    {
+      "label": "__init__.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/management/__init__.py",
+      "source_location": "L1",
+      "id": "backend_django_google_gmail_backup_management_init_py",
+      "community": 60,
+      "norm_label": "__init__.py"
+    },
+    {
+      "label": "seed_rules.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/management/commands/seed_rules.py",
+      "source_location": "L1",
+      "id": "backend_django_google_gmail_backup_management_commands_seed_rules_py",
+      "community": 18,
+      "norm_label": "seed_rules.py"
+    },
+    {
+      "label": "Command",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/management/commands/seed_rules.py",
+      "source_location": "L102",
+      "id": "commands_seed_rules_command",
+      "community": 18,
+      "norm_label": "command"
+    },
+    {
+      "label": "BaseCommand",
+      "file_type": "code",
+      "source_file": "",
+      "source_location": "",
+      "id": "basecommand",
+      "community": 18,
+      "norm_label": "basecommand"
+    },
+    {
+      "label": ".handle()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/management/commands/seed_rules.py",
+      "source_location": "L105",
+      "id": "commands_seed_rules_command_handle",
+      "community": 18,
+      "norm_label": ".handle()"
+    },
+    {
+      "label": "Management command to seed protected senders and default cleanup rules. Safe to",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/management/commands/seed_rules.py",
+      "source_location": "L1",
+      "id": "commands_seed_rules_rationale_1",
+      "community": 18,
+      "norm_label": "management command to seed protected senders and default cleanup rules. safe to"
+    },
+    {
+      "label": "__init__.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/management/commands/__init__.py",
+      "source_location": "L1",
+      "id": "backend_django_google_gmail_backup_management_commands_init_py",
+      "community": 59,
       "norm_label": "__init__.py"
     },
     {
@@ -988,7 +1537,7 @@
       "label": "oauth_callback()",
       "file_type": "code",
       "source_file": "backend_django/config/urls.py",
-      "source_location": "L51",
+      "source_location": "L50",
       "id": "config_urls_oauth_callback",
       "community": 21,
       "norm_label": "oauth_callback()"
@@ -1885,13 +2434,13 @@
       "norm_label": "[unreleased]"
     },
     {
-      "label": "[0.7.0] - 2026-05-15",
+      "label": "[0.8.0] - 2026-05-15",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L10",
-      "id": "backdeezup_changelog_0_7_0_2026_05_15",
+      "id": "backdeezup_changelog_0_8_0_2026_05_15",
       "community": 50,
-      "norm_label": "[0.7.0] - 2026-05-15"
+      "norm_label": "[0.8.0] - 2026-05-15"
     },
     {
       "label": "Added",
@@ -1903,40 +2452,31 @@
       "norm_label": "added"
     },
     {
-      "label": "Fixed",
+      "label": "Protected senders seeded",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L20",
-      "id": "backdeezup_changelog_fixed",
+      "source_location": "L24",
+      "id": "backdeezup_changelog_protected_senders_seeded",
       "community": 50,
-      "norm_label": "fixed"
+      "norm_label": "protected senders seeded"
     },
     {
-      "label": "Known Issues",
+      "label": "Default cleanup rules seeded (all disabled \u2014 review before enabling)",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L29",
-      "id": "backdeezup_changelog_known_issues",
+      "source_location": "L27",
+      "id": "backdeezup_changelog_default_cleanup_rules_seeded_all_disabled_review_before_enabling",
       "community": 50,
-      "norm_label": "known issues"
+      "norm_label": "default cleanup rules seeded (all disabled \u2014 review before enabling)"
     },
     {
-      "label": "[0.6.1] - 2026-05-15",
+      "label": "[0.7.0] - 2026-05-15",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L32",
-      "id": "backdeezup_changelog_0_6_1_2026_05_15",
+      "source_location": "L37",
+      "id": "backdeezup_changelog_0_7_0_2026_05_15",
       "community": 50,
-      "norm_label": "[0.6.1] - 2026-05-15"
-    },
-    {
-      "label": "Fixed",
-      "file_type": "document",
-      "source_file": "CHANGELOG.md",
-      "source_location": "L34",
-      "id": "backdeezup_changelog_fixed_34",
-      "community": 50,
-      "norm_label": "fixed"
+      "norm_label": "[0.7.0] - 2026-05-15"
     },
     {
       "label": "Added",
@@ -1948,10 +2488,55 @@
       "norm_label": "added"
     },
     {
+      "label": "Fixed",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L47",
+      "id": "backdeezup_changelog_fixed",
+      "community": 50,
+      "norm_label": "fixed"
+    },
+    {
+      "label": "Known Issues",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L56",
+      "id": "backdeezup_changelog_known_issues",
+      "community": 50,
+      "norm_label": "known issues"
+    },
+    {
+      "label": "[0.6.1] - 2026-05-15",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L59",
+      "id": "backdeezup_changelog_0_6_1_2026_05_15",
+      "community": 50,
+      "norm_label": "[0.6.1] - 2026-05-15"
+    },
+    {
+      "label": "Fixed",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L61",
+      "id": "backdeezup_changelog_fixed_61",
+      "community": 50,
+      "norm_label": "fixed"
+    },
+    {
+      "label": "Added",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L66",
+      "id": "backdeezup_changelog_added_66",
+      "community": 50,
+      "norm_label": "added"
+    },
+    {
       "label": "[0.6.0] - 2026-05-15",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L44",
+      "source_location": "L71",
       "id": "backdeezup_changelog_0_6_0_2026_05_15",
       "community": 26,
       "norm_label": "[0.6.0] - 2026-05-15"
@@ -1960,8 +2545,8 @@
       "label": "Added",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L46",
-      "id": "backdeezup_changelog_added_46",
+      "source_location": "L73",
+      "id": "backdeezup_changelog_added_73",
       "community": 26,
       "norm_label": "added"
     },
@@ -1969,7 +2554,7 @@
       "label": "[0.5.1] - 2026-05-14",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L54",
+      "source_location": "L81",
       "id": "backdeezup_changelog_0_5_1_2026_05_14",
       "community": 26,
       "norm_label": "[0.5.1] - 2026-05-14"
@@ -1978,7 +2563,7 @@
       "label": "Changed",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L56",
+      "source_location": "L83",
       "id": "backdeezup_changelog_changed",
       "community": 26,
       "norm_label": "changed"
@@ -1987,70 +2572,70 @@
       "label": "[0.5.0] - 2026-05-14",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L60",
+      "source_location": "L87",
       "id": "backdeezup_changelog_0_5_0_2026_05_14",
-      "community": 48,
+      "community": 53,
       "norm_label": "[0.5.0] - 2026-05-14"
     },
     {
       "label": "Added",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L62",
-      "id": "backdeezup_changelog_added_62",
-      "community": 48,
+      "source_location": "L89",
+      "id": "backdeezup_changelog_added_89",
+      "community": 53,
       "norm_label": "added"
     },
     {
       "label": "Fixed",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L67",
-      "id": "backdeezup_changelog_fixed_67",
-      "community": 48,
+      "source_location": "L94",
+      "id": "backdeezup_changelog_fixed_94",
+      "community": 53,
       "norm_label": "fixed"
     },
     {
       "label": "Security",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L71",
+      "source_location": "L98",
       "id": "backdeezup_changelog_security",
-      "community": 48,
+      "community": 53,
       "norm_label": "security"
     },
     {
       "label": "[0.4.2] - 2026-05-13",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L74",
+      "source_location": "L101",
       "id": "backdeezup_changelog_0_4_2_2026_05_13",
-      "community": 53,
+      "community": 51,
       "norm_label": "[0.4.2] - 2026-05-13"
     },
     {
       "label": "Added",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L76",
-      "id": "backdeezup_changelog_added_76",
-      "community": 53,
+      "source_location": "L103",
+      "id": "backdeezup_changelog_added_103",
+      "community": 51,
       "norm_label": "added"
     },
     {
       "label": "Changed",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L81",
-      "id": "backdeezup_changelog_changed_81",
-      "community": 53,
+      "source_location": "L108",
+      "id": "backdeezup_changelog_changed_108",
+      "community": 51,
       "norm_label": "changed"
     },
     {
       "label": "[0.4.1] - 2026-05-13",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L87",
+      "source_location": "L114",
       "id": "backdeezup_changelog_0_4_1_2026_05_13",
       "community": 48,
       "norm_label": "[0.4.1] - 2026-05-13"
@@ -2059,8 +2644,8 @@
       "label": "Fixed",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L89",
-      "id": "backdeezup_changelog_fixed_89",
+      "source_location": "L116",
+      "id": "backdeezup_changelog_fixed_116",
       "community": 48,
       "norm_label": "fixed"
     },
@@ -2068,8 +2653,8 @@
       "label": "Added",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L93",
-      "id": "backdeezup_changelog_added_93",
+      "source_location": "L120",
+      "id": "backdeezup_changelog_added_120",
       "community": 48,
       "norm_label": "added"
     },
@@ -2077,7 +2662,7 @@
       "label": "[0.4.0] - 2026-05-13",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L96",
+      "source_location": "L123",
       "id": "backdeezup_changelog_0_4_0_2026_05_13",
       "community": 51,
       "norm_label": "[0.4.0] - 2026-05-13"
@@ -2086,8 +2671,8 @@
       "label": "Added",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L98",
-      "id": "backdeezup_changelog_added_98",
+      "source_location": "L125",
+      "id": "backdeezup_changelog_added_125",
       "community": 51,
       "norm_label": "added"
     },
@@ -2095,8 +2680,8 @@
       "label": "Fixed",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L105",
-      "id": "backdeezup_changelog_fixed_105",
+      "source_location": "L132",
+      "id": "backdeezup_changelog_fixed_132",
       "community": 51,
       "norm_label": "fixed"
     },
@@ -2104,8 +2689,8 @@
       "label": "Changed",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L109",
-      "id": "backdeezup_changelog_changed_109",
+      "source_location": "L136",
+      "id": "backdeezup_changelog_changed_136",
       "community": 51,
       "norm_label": "changed"
     },
@@ -2113,7 +2698,7 @@
       "label": "[0.3.0] - 2026-05-13",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L112",
+      "source_location": "L139",
       "id": "backdeezup_changelog_0_3_0_2026_05_13",
       "community": 52,
       "norm_label": "[0.3.0] - 2026-05-13"
@@ -2122,8 +2707,8 @@
       "label": "Added",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L114",
-      "id": "backdeezup_changelog_added_114",
+      "source_location": "L141",
+      "id": "backdeezup_changelog_added_141",
       "community": 52,
       "norm_label": "added"
     },
@@ -2131,8 +2716,8 @@
       "label": "Changed",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L119",
-      "id": "backdeezup_changelog_changed_119",
+      "source_location": "L146",
+      "id": "backdeezup_changelog_changed_146",
       "community": 52,
       "norm_label": "changed"
     },
@@ -2140,7 +2725,7 @@
       "label": "[0.2.0] - 2026-05-13",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L125",
+      "source_location": "L152",
       "id": "backdeezup_changelog_0_2_0_2026_05_13",
       "community": 49,
       "norm_label": "[0.2.0] - 2026-05-13"
@@ -2149,8 +2734,8 @@
       "label": "Added",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L127",
-      "id": "backdeezup_changelog_added_127",
+      "source_location": "L154",
+      "id": "backdeezup_changelog_added_154",
       "community": 49,
       "norm_label": "added"
     },
@@ -2158,8 +2743,8 @@
       "label": "Changed",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L138",
-      "id": "backdeezup_changelog_changed_138",
+      "source_location": "L165",
+      "id": "backdeezup_changelog_changed_165",
       "community": 49,
       "norm_label": "changed"
     },
@@ -2167,8 +2752,8 @@
       "label": "Fixed",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L149",
-      "id": "backdeezup_changelog_fixed_149",
+      "source_location": "L176",
+      "id": "backdeezup_changelog_fixed_176",
       "community": 49,
       "norm_label": "fixed"
     },
@@ -2176,7 +2761,7 @@
       "label": "Technical",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L153",
+      "source_location": "L180",
       "id": "backdeezup_changelog_technical",
       "community": 49,
       "norm_label": "technical"
@@ -2185,7 +2770,7 @@
       "label": "[0.1.0] - 2026-05-12",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L158",
+      "source_location": "L185",
       "id": "backdeezup_changelog_0_1_0_2026_05_12",
       "community": 56,
       "norm_label": "[0.1.0] - 2026-05-12"
@@ -2194,8 +2779,8 @@
       "label": "Added",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L160",
-      "id": "backdeezup_changelog_added_160",
+      "source_location": "L187",
+      "id": "backdeezup_changelog_added_187",
       "community": 56,
       "norm_label": "added"
     },
@@ -2203,7 +2788,7 @@
       "label": "Safety Features",
       "file_type": "document",
       "source_file": "CHANGELOG.md",
-      "source_location": "L175",
+      "source_location": "L202",
       "id": "backdeezup_changelog_safety_features",
       "community": 56,
       "norm_label": "safety features"
@@ -2299,10 +2884,109 @@
       "norm_label": "code:mermaid (sequencediagram)"
     },
     {
-      "label": "Quick start",
+      "label": "Operational runbook (production)",
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L137",
+      "id": "backdeezup_readme_operational_runbook_production",
+      "community": 12,
+      "norm_label": "operational runbook (production)"
+    },
+    {
+      "label": "First-time deployment",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L139",
+      "id": "backdeezup_readme_first_time_deployment",
+      "community": 12,
+      "norm_label": "first-time deployment"
+    },
+    {
+      "label": "code:bash (# 1. Clone)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L141",
+      "id": "backdeezup_readme_codeblock_5",
+      "community": 12,
+      "norm_label": "code:bash (# 1. clone)"
+    },
+    {
+      "label": "Running the backup pipeline",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L177",
+      "id": "backdeezup_readme_running_the_backup_pipeline",
+      "community": 12,
+      "norm_label": "running the backup pipeline"
+    },
+    {
+      "label": "code:bash (# Drive + Photos discovery)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L179",
+      "id": "backdeezup_readme_codeblock_6",
+      "community": 12,
+      "norm_label": "code:bash (# drive + photos discovery)"
+    },
+    {
+      "label": "After first-time deploy \u2014 seed rules and apply protected senders",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L200",
+      "id": "backdeezup_readme_after_first_time_deploy_seed_rules_and_apply_protected_senders",
+      "community": 12,
+      "norm_label": "after first-time deploy \u2014 seed rules and apply protected senders"
+    },
+    {
+      "label": "code:bash (# Seed 4 family protected senders + 8 default cleanup rules)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L202",
+      "id": "backdeezup_readme_codeblock_7",
+      "community": 12,
+      "norm_label": "code:bash (# seed 4 family protected senders + 8 default cleanup rules)"
+    },
+    {
+      "label": "Enable automatic scheduling (3x per day)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L218",
+      "id": "backdeezup_readme_enable_automatic_scheduling_3x_per_day",
+      "community": 12,
+      "norm_label": "enable automatic scheduling (3x per day)"
+    },
+    {
+      "label": "code:block8 (BACKDEEZUP_SCHEDULER=1)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L221",
+      "id": "backdeezup_readme_codeblock_8",
+      "community": 12,
+      "norm_label": "code:block8 (backdeezup_scheduler=1)"
+    },
+    {
+      "label": "Subsequent runs (incremental)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L230",
+      "id": "backdeezup_readme_subsequent_runs_incremental",
+      "community": 12,
+      "norm_label": "subsequent runs (incremental)"
+    },
+    {
+      "label": "code:bash (make redeploy           # pull latest + rebuild + restart)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L232",
+      "id": "backdeezup_readme_codeblock_9",
+      "community": 12,
+      "norm_label": "code:bash (make redeploy           # pull latest + rebuild + restart)"
+    },
+    {
+      "label": "Quick start",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L240",
       "id": "backdeezup_readme_quick_start",
       "community": 12,
       "norm_label": "quick start"
@@ -2311,7 +2995,7 @@
       "label": "Local dev (uv \u2014 recommended)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L139",
+      "source_location": "L242",
       "id": "backdeezup_readme_local_dev_uv_recommended",
       "community": 12,
       "norm_label": "local dev (uv \u2014 recommended)"
@@ -2320,8 +3004,8 @@
       "label": "code:bash (# 1. Install dependencies (uv manages the venv automatically)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L141",
-      "id": "backdeezup_readme_codeblock_5",
+      "source_location": "L244",
+      "id": "backdeezup_readme_codeblock_10",
       "community": 12,
       "norm_label": "code:bash (# 1. install dependencies (uv manages the venv automatically)"
     },
@@ -2329,7 +3013,7 @@
       "label": "Development commands",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L161",
+      "source_location": "L264",
       "id": "backdeezup_readme_development_commands",
       "community": 12,
       "norm_label": "development commands"
@@ -2338,8 +3022,8 @@
       "label": "code:bash (# Bash (Linux / Mac / WSL))",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L163",
-      "id": "backdeezup_readme_codeblock_6",
+      "source_location": "L266",
+      "id": "backdeezup_readme_codeblock_11",
       "community": 12,
       "norm_label": "code:bash (# bash (linux / mac / wsl))"
     },
@@ -2347,7 +3031,7 @@
       "label": "Docker (prod-like)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L174",
+      "source_location": "L277",
       "id": "backdeezup_readme_docker_prod_like",
       "community": 12,
       "norm_label": "docker (prod-like)"
@@ -2356,8 +3040,8 @@
       "label": "code:bash (make build && make up   # postgres + nginx on :8844)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L176",
-      "id": "backdeezup_readme_codeblock_7",
+      "source_location": "L279",
+      "id": "backdeezup_readme_codeblock_12",
       "community": 12,
       "norm_label": "code:bash (make build && make up   # postgres + nginx on :8844)"
     },
@@ -2365,178 +3049,178 @@
       "label": "Production deployment",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L183",
+      "source_location": "L286",
       "id": "backdeezup_readme_production_deployment",
-      "community": 54,
+      "community": 12,
       "norm_label": "production deployment"
     },
     {
       "label": "1. Create `.env`",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L185",
+      "source_location": "L288",
       "id": "backdeezup_readme_1_create_env",
-      "community": 54,
+      "community": 12,
       "norm_label": "1. create `.env`"
     },
     {
       "label": "code:env (# \u2500\u2500 Django \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L189",
-      "id": "backdeezup_readme_codeblock_8",
-      "community": 54,
+      "source_location": "L292",
+      "id": "backdeezup_readme_codeblock_13",
+      "community": 12,
       "norm_label": "code:env (# \u2500\u2500 django \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500)"
     },
     {
       "label": "code:bash (python3 -c \"import base64, os; print(base64.urlsafe_b64encod)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L226",
-      "id": "backdeezup_readme_codeblock_9",
-      "community": 54,
+      "source_location": "L329",
+      "id": "backdeezup_readme_codeblock_14",
+      "community": 12,
       "norm_label": "code:bash (python3 -c \"import base64, os; print(base64.urlsafe_b64encod)"
     },
     {
       "label": "code:bash (python -c \"import secrets; print(secrets.token_urlsafe(50))\")",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L232",
-      "id": "backdeezup_readme_codeblock_10",
-      "community": 54,
+      "source_location": "L335",
+      "id": "backdeezup_readme_codeblock_15",
+      "community": 12,
       "norm_label": "code:bash (python -c \"import secrets; print(secrets.token_urlsafe(50))\")"
     },
     {
       "label": "2. Place Google OAuth credentials",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L240",
+      "source_location": "L343",
       "id": "backdeezup_readme_2_place_google_oauth_credentials",
-      "community": 54,
+      "community": 12,
       "norm_label": "2. place google oauth credentials"
     },
     {
       "label": "code:bash (mkdir -p secrets)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L242",
-      "id": "backdeezup_readme_codeblock_11",
-      "community": 54,
+      "source_location": "L345",
+      "id": "backdeezup_readme_codeblock_16",
+      "community": 12,
       "norm_label": "code:bash (mkdir -p secrets)"
     },
     {
       "label": "3. Build and start",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L249",
+      "source_location": "L352",
       "id": "backdeezup_readme_3_build_and_start",
-      "community": 54,
+      "community": 12,
       "norm_label": "3. build and start"
     },
     {
       "label": "code:bash (# Build image (runs collectstatic automatically))",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L251",
-      "id": "backdeezup_readme_codeblock_12",
-      "community": 54,
+      "source_location": "L354",
+      "id": "backdeezup_readme_codeblock_17",
+      "community": 12,
       "norm_label": "code:bash (# build image (runs collectstatic automatically))"
     },
     {
       "label": "4. Run migrations",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L264",
+      "source_location": "L367",
       "id": "backdeezup_readme_4_run_migrations",
-      "community": 54,
+      "community": 12,
       "norm_label": "4. run migrations"
     },
     {
       "label": "code:bash (docker compose exec web python manage.py migrate)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L266",
-      "id": "backdeezup_readme_codeblock_13",
-      "community": 54,
+      "source_location": "L369",
+      "id": "backdeezup_readme_codeblock_18",
+      "community": 12,
       "norm_label": "code:bash (docker compose exec web python manage.py migrate)"
     },
     {
       "label": "5. Create superuser",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L272",
+      "source_location": "L375",
       "id": "backdeezup_readme_5_create_superuser",
-      "community": 54,
+      "community": 12,
       "norm_label": "5. create superuser"
     },
     {
       "label": "code:bash (docker compose exec web python manage.py createsuperuser)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L274",
-      "id": "backdeezup_readme_codeblock_14",
-      "community": 54,
+      "source_location": "L377",
+      "id": "backdeezup_readme_codeblock_19",
+      "community": 12,
       "norm_label": "code:bash (docker compose exec web python manage.py createsuperuser)"
     },
     {
       "label": "6. Authenticate with Google",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L280",
+      "source_location": "L383",
       "id": "backdeezup_readme_6_authenticate_with_google",
-      "community": 54,
+      "community": 12,
       "norm_label": "6. authenticate with google"
     },
     {
       "label": "code:bash (# Open the Swagger UI in a browser and call POST /auth/conne)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L282",
-      "id": "backdeezup_readme_codeblock_15",
-      "community": 54,
+      "source_location": "L385",
+      "id": "backdeezup_readme_codeblock_20",
+      "community": 12,
       "norm_label": "code:bash (# open the swagger ui in a browser and call post /auth/conne)"
     },
     {
       "label": "7. Verify the deployment",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L293",
+      "source_location": "L396",
       "id": "backdeezup_readme_7_verify_the_deployment",
-      "community": 54,
+      "community": 12,
       "norm_label": "7. verify the deployment"
     },
     {
       "label": "code:bash (# Static files served by nginx (should return 200))",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L295",
-      "id": "backdeezup_readme_codeblock_16",
-      "community": 54,
+      "source_location": "L398",
+      "id": "backdeezup_readme_codeblock_21",
+      "community": 12,
       "norm_label": "code:bash (# static files served by nginx (should return 200))"
     },
     {
       "label": "Ongoing operations",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L308",
+      "source_location": "L411",
       "id": "backdeezup_readme_ongoing_operations",
-      "community": 54,
+      "community": 12,
       "norm_label": "ongoing operations"
     },
     {
       "label": "code:bash (# Tail logs)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L310",
-      "id": "backdeezup_readme_codeblock_17",
-      "community": 54,
+      "source_location": "L413",
+      "id": "backdeezup_readme_codeblock_22",
+      "community": 12,
       "norm_label": "code:bash (# tail logs)"
     },
     {
       "label": "API reference",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L332",
+      "source_location": "L435",
       "id": "backdeezup_readme_api_reference",
       "community": 12,
       "norm_label": "api reference"
@@ -2545,7 +3229,7 @@
       "label": "Configuration",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L351",
+      "source_location": "L454",
       "id": "backdeezup_readme_configuration",
       "community": 12,
       "norm_label": "configuration"
@@ -2554,25 +3238,25 @@
       "label": "Project structure",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L370",
+      "source_location": "L473",
       "id": "backdeezup_readme_project_structure",
       "community": 12,
       "norm_label": "project structure"
     },
     {
-      "label": "code:block18 (backdeezup/)",
+      "label": "code:block23 (backdeezup/)",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L372",
-      "id": "backdeezup_readme_codeblock_18",
+      "source_location": "L475",
+      "id": "backdeezup_readme_codeblock_23",
       "community": 12,
-      "norm_label": "code:block18 (backdeezup/)"
+      "norm_label": "code:block23 (backdeezup/)"
     },
     {
       "label": "Modern tooling",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L397",
+      "source_location": "L500",
       "id": "backdeezup_readme_modern_tooling",
       "community": 12,
       "norm_label": "modern tooling"
@@ -2581,7 +3265,7 @@
       "label": "AI agent collaboration",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L409",
+      "source_location": "L512",
       "id": "backdeezup_readme_ai_agent_collaboration",
       "community": 12,
       "norm_label": "ai agent collaboration"
@@ -2590,7 +3274,7 @@
       "label": "Acknowledgements",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L419",
+      "source_location": "L522",
       "id": "backdeezup_readme_acknowledgements",
       "community": 12,
       "norm_label": "acknowledgements"
@@ -5314,6 +5998,204 @@
       "norm_label": "added"
     },
     {
+      "label": ".__str__()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L95",
+      "community": 18,
+      "norm_label": ".__str__()",
+      "id": "google_gmail_backup_models_gmailattachment_str"
+    },
+    {
+      "label": "One row per synced account \u2014 tracks historyId for incremental sync.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L6",
+      "community": 18,
+      "norm_label": "one row per synced account \u2014 tracks historyid for incremental sync.",
+      "id": "google_gmail_backup_models_rationale_6"
+    },
+    {
+      "label": "One row per Gmail message discovered and/or downloaded.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L24",
+      "community": 18,
+      "norm_label": "one row per gmail message discovered and/or downloaded.",
+      "id": "google_gmail_backup_models_rationale_24"
+    },
+    {
+      "label": "Attachment metadata for a GmailMessage.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L85",
+      "community": 18,
+      "norm_label": "attachment metadata for a gmailmessage.",
+      "id": "google_gmail_backup_models_rationale_85"
+    },
+    {
+      "label": "action_trash_selected()",
+      "file_type": "code",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L30",
+      "community": 1,
+      "norm_label": "action_trash_selected()",
+      "id": "google_gmail_backup_admin_action_trash_selected"
+    },
+    {
+      "label": "Fixed",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L34",
+      "community": 50,
+      "norm_label": "fixed",
+      "id": "backdeezup_changelog_fixed_34"
+    },
+    {
+      "label": "Added",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L46",
+      "community": 26,
+      "norm_label": "added",
+      "id": "backdeezup_changelog_added_46"
+    },
+    {
+      "label": "Added",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L62",
+      "community": 53,
+      "norm_label": "added",
+      "id": "backdeezup_changelog_added_62"
+    },
+    {
+      "label": "Fixed",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L67",
+      "community": 48,
+      "norm_label": "fixed",
+      "id": "backdeezup_changelog_fixed_67"
+    },
+    {
+      "label": "Added",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L76",
+      "community": 51,
+      "norm_label": "added",
+      "id": "backdeezup_changelog_added_76"
+    },
+    {
+      "label": "Changed",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L81",
+      "community": 51,
+      "norm_label": "changed",
+      "id": "backdeezup_changelog_changed_81"
+    },
+    {
+      "label": "Fixed",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L89",
+      "community": 48,
+      "norm_label": "fixed",
+      "id": "backdeezup_changelog_fixed_89"
+    },
+    {
+      "label": "Added",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L93",
+      "community": 48,
+      "norm_label": "added",
+      "id": "backdeezup_changelog_added_93"
+    },
+    {
+      "label": "Added",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L98",
+      "community": 51,
+      "norm_label": "added",
+      "id": "backdeezup_changelog_added_98"
+    },
+    {
+      "label": "Fixed",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L105",
+      "community": 51,
+      "norm_label": "fixed",
+      "id": "backdeezup_changelog_fixed_105"
+    },
+    {
+      "label": "Changed",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L109",
+      "community": 51,
+      "norm_label": "changed",
+      "id": "backdeezup_changelog_changed_109"
+    },
+    {
+      "label": "Added",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L114",
+      "community": 52,
+      "norm_label": "added",
+      "id": "backdeezup_changelog_added_114"
+    },
+    {
+      "label": "Changed",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L119",
+      "community": 52,
+      "norm_label": "changed",
+      "id": "backdeezup_changelog_changed_119"
+    },
+    {
+      "label": "Added",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L127",
+      "community": 49,
+      "norm_label": "added",
+      "id": "backdeezup_changelog_added_127"
+    },
+    {
+      "label": "Changed",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L138",
+      "community": 49,
+      "norm_label": "changed",
+      "id": "backdeezup_changelog_changed_138"
+    },
+    {
+      "label": "Fixed",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L149",
+      "community": 49,
+      "norm_label": "fixed",
+      "id": "backdeezup_changelog_fixed_149"
+    },
+    {
+      "label": "Added",
+      "file_type": "document",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L160",
+      "community": 56,
+      "norm_label": "added",
+      "id": "backdeezup_changelog_added_160"
+    },
+    {
       "label": "Incremental sync using historyId. Falls back to full discover on 404.",
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
@@ -5363,7 +6245,7 @@
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L40",
-      "community": 48,
+      "community": 53,
       "norm_label": "added",
       "id": "backdeezup_changelog_added_40"
     },
@@ -5372,7 +6254,7 @@
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L45",
-      "community": 48,
+      "community": 53,
       "norm_label": "fixed",
       "id": "backdeezup_changelog_fixed_45"
     },
@@ -5381,7 +6263,7 @@
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L54",
-      "community": 53,
+      "community": 51,
       "norm_label": "added",
       "id": "backdeezup_changelog_added_54"
     },
@@ -5390,7 +6272,7 @@
       "file_type": "document",
       "source_file": "CHANGELOG.md",
       "source_location": "L59",
-      "community": 53,
+      "community": 51,
       "norm_label": "changed",
       "id": "backdeezup_changelog_changed_59"
     },
@@ -5576,6 +6458,122 @@
     }
   ],
   "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "run_pipeline.py",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "run_pipeline_py",
+      "target": "backdeezup_run_pipeline_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "run_pipeline.py",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "run_pipeline_py",
+      "target": "backdeezup_run_pipeline_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "run_pipeline.py",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "run_pipeline_py",
+      "target": "backdeezup_run_pipeline_run_drive",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "run_pipeline.py",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "run_pipeline_py",
+      "target": "backdeezup_run_pipeline_run_gmail",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "run_pipeline.py",
+      "source_location": "L85",
+      "weight": 1.0,
+      "source": "run_pipeline_py",
+      "target": "backdeezup_run_pipeline_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "run_pipeline.py",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "backdeezup_run_pipeline_run_drive",
+      "target": "backdeezup_run_pipeline_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "run_pipeline.py",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "backdeezup_run_pipeline_run_gmail",
+      "target": "backdeezup_run_pipeline_post",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "run_pipeline.py",
+      "source_location": "L37",
+      "weight": 1.0,
+      "source": "backdeezup_run_pipeline_run_drive",
+      "target": "backdeezup_run_pipeline_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "run_pipeline.py",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "backdeezup_run_pipeline_run_gmail",
+      "target": "backdeezup_run_pipeline_get",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "run_pipeline.py",
+      "source_location": "L95",
+      "weight": 1.0,
+      "source": "backdeezup_run_pipeline_main",
+      "target": "backdeezup_run_pipeline_run_drive",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "run_pipeline.py",
+      "source_location": "L97",
+      "weight": 1.0,
+      "source": "backdeezup_run_pipeline_main",
+      "target": "backdeezup_run_pipeline_run_gmail",
+      "confidence_score": 1.0
+    },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
@@ -5774,9 +6772,9 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L349",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_api_py",
-      "target": "google_gmail_backup_api_gmail_progress",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_api_gmail_progress"
     },
     {
       "relation": "contains",
@@ -5787,6 +6785,66 @@
       "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_api_py",
       "target": "google_gmail_backup_api_list_messages"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L387",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_api_py",
+      "target": "google_gmail_backup_api_list_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L403",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_api_py",
+      "target": "google_gmail_backup_api_rule_dry_run",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L416",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_api_py",
+      "target": "google_gmail_backup_api_rule_execute",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L429",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_api_py",
+      "target": "google_gmail_backup_api_rules_run_all",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L439",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_api_py",
+      "target": "google_gmail_backup_api_apply_protected_senders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L446",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_api_py",
+      "target": "google_gmail_backup_api_get_audit_log",
+      "confidence_score": 1.0
     },
     {
       "relation": "inherits",
@@ -5817,6 +6875,26 @@
       "confidence_score": 0.5,
       "source": "google_gmail_backup_api_gmailmessageout",
       "target": "google_gmail_backup_models_gmailsyncstate"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L417",
+      "weight": 0.8,
+      "source": "google_gmail_backup_api_gmailmessageout",
+      "target": "google_gmail_backup_models_cleanuprule",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L447",
+      "weight": 0.8,
+      "source": "google_gmail_backup_api_gmailmessageout",
+      "target": "google_gmail_backup_models_cleanupauditlog",
+      "confidence_score": 0.5
     },
     {
       "relation": "inherits",
@@ -5882,6 +6960,26 @@
       "relation": "uses",
       "confidence": "INFERRED",
       "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L417",
+      "weight": 0.8,
+      "source": "google_gmail_backup_api_gmailfilterin",
+      "target": "google_gmail_backup_models_cleanuprule",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L447",
+      "weight": 0.8,
+      "source": "google_gmail_backup_api_gmailfilterin",
+      "target": "google_gmail_backup_models_cleanupauditlog",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L9",
       "weight": 0.8,
       "confidence_score": 0.5,
@@ -5897,6 +6995,26 @@
       "confidence_score": 0.5,
       "source": "google_gmail_backup_api_syncresult",
       "target": "google_gmail_backup_models_gmailsyncstate"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L417",
+      "weight": 0.8,
+      "source": "google_gmail_backup_api_syncresult",
+      "target": "google_gmail_backup_models_cleanuprule",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L447",
+      "weight": 0.8,
+      "source": "google_gmail_backup_api_syncresult",
+      "target": "google_gmail_backup_models_cleanupauditlog",
+      "confidence_score": 0.5
     },
     {
       "relation": "calls",
@@ -6002,9 +7120,9 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L127",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_api_rationale_127",
-      "target": "google_gmail_backup_api_gmail_incremental",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_api_gmail_incremental"
     },
     {
       "relation": "calls",
@@ -6088,9 +7206,9 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L218",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_api_rationale_218",
-      "target": "google_gmail_backup_api_gmail_download",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_api_gmail_download"
     },
     {
       "relation": "calls",
@@ -6185,9 +7303,9 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L282",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_api_rationale_282",
-      "target": "google_gmail_backup_api_gmail_verify",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_api_gmail_verify"
     },
     {
       "relation": "rationale_for",
@@ -6205,9 +7323,9 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L309",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_api_rationale_309",
-      "target": "google_gmail_backup_api_gmail_trash",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_api_gmail_trash"
     },
     {
       "relation": "calls",
@@ -6240,6 +7358,50 @@
       "weight": 1.0,
       "source": "google_gmail_backup_api_gmail_label",
       "target": "google_gmail_backup_services_gmail_modify_labels"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L407",
+      "weight": 1.0,
+      "source": "google_gmail_backup_api_rule_dry_run",
+      "target": "google_gmail_backup_services_rules_apply_rule"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L420",
+      "weight": 1.0,
+      "source": "google_gmail_backup_api_rule_execute",
+      "target": "google_gmail_backup_services_rules_apply_rule"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L431",
+      "weight": 1.0,
+      "source": "google_gmail_backup_api_rules_run_all",
+      "target": "google_gmail_backup_services_rules_run_all_enabled_rules"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L441",
+      "weight": 1.0,
+      "source": "google_gmail_backup_api_apply_protected_senders",
+      "target": "google_gmail_backup_services_rules_apply_protected_sender_rules"
     },
     {
       "relation": "imports_from",
@@ -6313,6 +7475,47 @@
       "target": "google_gmail_backup_models_gmailattachment"
     },
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L90",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_models_py",
+      "target": "google_gmail_backup_models_protectedsender",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L106",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_models_py",
+      "target": "google_gmail_backup_models_cleanuprule",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L155",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_models_py",
+      "target": "google_gmail_backup_models_cleanupauditlog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_services_rules_py",
+      "target": "backend_django_google_gmail_backup_models_py",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -6348,11 +7551,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_gmail_backup/models.py",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "google_gmail_backup_models_rationale_6",
-      "target": "google_gmail_backup_models_gmailsyncstate"
+      "source": "google_gmail_backup_models_rationale_7",
+      "target": "google_gmail_backup_models_gmailsyncstate",
+      "confidence_score": 1.0
     },
     {
       "relation": "uses",
@@ -6383,6 +7586,36 @@
       "confidence_score": 0.5,
       "source": "google_gmail_backup_admin_gmailmessageadmin",
       "target": "google_gmail_backup_models_gmailsyncstate"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_protectedsenderadmin",
+      "target": "google_gmail_backup_models_gmailsyncstate",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_cleanupruleadmin",
+      "target": "google_gmail_backup_models_gmailsyncstate",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_cleanupauditlogadmin",
+      "target": "google_gmail_backup_models_gmailsyncstate",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
@@ -6425,6 +7658,16 @@
       "target": "google_gmail_backup_models_gmailsyncstate"
     },
     {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "google_gmail_backup_models_rationale_6",
+      "target": "google_gmail_backup_models_gmailsyncstate"
+    },
+    {
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_gmail_backup/models.py",
@@ -6433,6 +7676,106 @@
       "confidence_score": 1.0,
       "source": "google_gmail_backup_models_gmailmessage",
       "target": "google_gmail_backup_models_gmailmessage_str"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L3",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "google_gmail_backup_admin_gmailsyncstateadmin",
+      "target": "google_gmail_backup_models_gmailmessage"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L3",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "google_gmail_backup_admin_gmailattachmentadmin",
+      "target": "google_gmail_backup_models_gmailmessage"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L3",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "google_gmail_backup_admin_gmailmessageadmin",
+      "target": "google_gmail_backup_models_gmailmessage"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_protectedsenderadmin",
+      "target": "google_gmail_backup_models_gmailmessage",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_cleanupruleadmin",
+      "target": "google_gmail_backup_models_gmailmessage",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_cleanupauditlogadmin",
+      "target": "google_gmail_backup_models_gmailmessage",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/tests.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "google_gmail_backup_tests_gmailsyncstatetest",
+      "target": "google_gmail_backup_models_gmailmessage"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/tests.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "google_gmail_backup_tests_gmailmessagemodeltest",
+      "target": "google_gmail_backup_models_gmailmessage"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/tests.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "google_gmail_backup_tests_gmailattachmenttest",
+      "target": "google_gmail_backup_models_gmailmessage"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/tests.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "confidence_score": 0.5,
+      "source": "google_gmail_backup_tests_gmailapitest",
+      "target": "google_gmail_backup_models_gmailmessage"
     },
     {
       "relation": "rationale_for",
@@ -6452,7 +7795,7 @@
       "weight": 0.8,
       "confidence_score": 0.5,
       "source": "google_gmail_backup_admin_gmailsyncstateadmin",
-      "target": "google_gmail_backup_models_gmailmessage"
+      "target": "google_gmail_backup_models_gmailattachment"
     },
     {
       "relation": "uses",
@@ -6462,7 +7805,7 @@
       "weight": 0.8,
       "confidence_score": 0.5,
       "source": "google_gmail_backup_admin_gmailattachmentadmin",
-      "target": "google_gmail_backup_models_gmailmessage"
+      "target": "google_gmail_backup_models_gmailattachment"
     },
     {
       "relation": "uses",
@@ -6472,7 +7815,37 @@
       "weight": 0.8,
       "confidence_score": 0.5,
       "source": "google_gmail_backup_admin_gmailmessageadmin",
-      "target": "google_gmail_backup_models_gmailmessage"
+      "target": "google_gmail_backup_models_gmailattachment"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_protectedsenderadmin",
+      "target": "google_gmail_backup_models_gmailattachment",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_cleanupruleadmin",
+      "target": "google_gmail_backup_models_gmailattachment",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_cleanupauditlogadmin",
+      "target": "google_gmail_backup_models_gmailattachment",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
@@ -6482,7 +7855,7 @@
       "weight": 0.8,
       "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_gmailsyncstatetest",
-      "target": "google_gmail_backup_models_gmailmessage"
+      "target": "google_gmail_backup_models_gmailattachment"
     },
     {
       "relation": "uses",
@@ -6492,7 +7865,7 @@
       "weight": 0.8,
       "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_gmailmessagemodeltest",
-      "target": "google_gmail_backup_models_gmailmessage"
+      "target": "google_gmail_backup_models_gmailattachment"
     },
     {
       "relation": "uses",
@@ -6502,7 +7875,7 @@
       "weight": 0.8,
       "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_gmailattachmenttest",
-      "target": "google_gmail_backup_models_gmailmessage"
+      "target": "google_gmail_backup_models_gmailattachment"
     },
     {
       "relation": "uses",
@@ -6512,7 +7885,7 @@
       "weight": 0.8,
       "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_gmailapitest",
-      "target": "google_gmail_backup_models_gmailmessage"
+      "target": "google_gmail_backup_models_gmailattachment"
     },
     {
       "relation": "method",
@@ -6535,74 +7908,550 @@
       "target": "google_gmail_backup_models_gmailattachment"
     },
     {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L98",
+      "weight": 1.0,
+      "source": "google_gmail_backup_models_protectedsender",
+      "target": "google_gmail_backup_models_protectedsender_str",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "google_gmail_backup_models_rationale_91",
+      "target": "google_gmail_backup_models_protectedsender",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "uses",
       "confidence": "INFERRED",
       "source_file": "backend_django/google_gmail_backup/admin.py",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 0.8,
-      "confidence_score": 0.5,
       "source": "google_gmail_backup_admin_gmailsyncstateadmin",
-      "target": "google_gmail_backup_models_gmailattachment"
+      "target": "google_gmail_backup_models_protectedsender",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
       "confidence": "INFERRED",
       "source_file": "backend_django/google_gmail_backup/admin.py",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 0.8,
-      "confidence_score": 0.5,
       "source": "google_gmail_backup_admin_gmailattachmentadmin",
-      "target": "google_gmail_backup_models_gmailattachment"
+      "target": "google_gmail_backup_models_protectedsender",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
       "confidence": "INFERRED",
       "source_file": "backend_django/google_gmail_backup/admin.py",
-      "source_location": "L3",
+      "source_location": "L4",
       "weight": 0.8,
-      "confidence_score": 0.5,
       "source": "google_gmail_backup_admin_gmailmessageadmin",
-      "target": "google_gmail_backup_models_gmailattachment"
+      "target": "google_gmail_backup_models_protectedsender",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend_django/google_gmail_backup/tests.py",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
       "source_location": "L4",
       "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "google_gmail_backup_tests_gmailsyncstatetest",
-      "target": "google_gmail_backup_models_gmailattachment"
+      "source": "google_gmail_backup_admin_protectedsenderadmin",
+      "target": "google_gmail_backup_models_protectedsender",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend_django/google_gmail_backup/tests.py",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
       "source_location": "L4",
       "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "google_gmail_backup_tests_gmailmessagemodeltest",
-      "target": "google_gmail_backup_models_gmailattachment"
+      "source": "google_gmail_backup_admin_cleanupruleadmin",
+      "target": "google_gmail_backup_models_protectedsender",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend_django/google_gmail_backup/tests.py",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
       "source_location": "L4",
       "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "google_gmail_backup_tests_gmailattachmenttest",
-      "target": "google_gmail_backup_models_gmailattachment"
+      "source": "google_gmail_backup_admin_cleanupauditlogadmin",
+      "target": "google_gmail_backup_models_protectedsender",
+      "confidence_score": 0.5
     },
     {
       "relation": "uses",
       "confidence": "INFERRED",
-      "source_file": "backend_django/google_gmail_backup/tests.py",
+      "source_file": "backend_django/google_gmail_backup/management/commands/seed_rules.py",
+      "source_location": "L12",
+      "weight": 0.8,
+      "source": "commands_seed_rules_command",
+      "target": "google_gmail_backup_models_protectedsender",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L147",
+      "weight": 1.0,
+      "source": "google_gmail_backup_models_cleanuprule",
+      "target": "google_gmail_backup_models_cleanuprule_str",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
       "source_location": "L4",
       "weight": 0.8,
-      "confidence_score": 0.5,
-      "source": "google_gmail_backup_tests_gmailapitest",
-      "target": "google_gmail_backup_models_gmailattachment"
+      "source": "google_gmail_backup_admin_gmailsyncstateadmin",
+      "target": "google_gmail_backup_models_cleanuprule",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_gmailattachmentadmin",
+      "target": "google_gmail_backup_models_cleanuprule",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_gmailmessageadmin",
+      "target": "google_gmail_backup_models_cleanuprule",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_protectedsenderadmin",
+      "target": "google_gmail_backup_models_cleanuprule",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_cleanupruleadmin",
+      "target": "google_gmail_backup_models_cleanuprule",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_cleanupauditlogadmin",
+      "target": "google_gmail_backup_models_cleanuprule",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/management/commands/seed_rules.py",
+      "source_location": "L12",
+      "weight": 0.8,
+      "source": "commands_seed_rules_command",
+      "target": "google_gmail_backup_models_cleanuprule",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/models.py",
+      "source_location": "L156",
+      "weight": 1.0,
+      "source": "google_gmail_backup_models_rationale_156",
+      "target": "google_gmail_backup_models_cleanupauditlog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_gmailsyncstateadmin",
+      "target": "google_gmail_backup_models_cleanupauditlog",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_gmailattachmentadmin",
+      "target": "google_gmail_backup_models_cleanupauditlog",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_gmailmessageadmin",
+      "target": "google_gmail_backup_models_cleanupauditlog",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_protectedsenderadmin",
+      "target": "google_gmail_backup_models_cleanupauditlog",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_cleanupruleadmin",
+      "target": "google_gmail_backup_models_cleanupauditlog",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L4",
+      "weight": 0.8,
+      "source": "google_gmail_backup_admin_cleanupauditlogadmin",
+      "target": "google_gmail_backup_models_cleanupauditlog",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_services_rules_py",
+      "target": "backend_django_google_gmail_backup_services_gmail_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_services_rules_py",
+      "target": "google_gmail_backup_services_rules_protected_emails",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_services_rules_py",
+      "target": "google_gmail_backup_services_rules_normalize_email",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_services_rules_py",
+      "target": "google_gmail_backup_services_rules_is_protected",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_services_rules_py",
+      "target": "google_gmail_backup_services_rules_get_or_create_label",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L52",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_services_rules_py",
+      "target": "google_gmail_backup_services_rules_apply_rule",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L168",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_services_rules_py",
+      "target": "google_gmail_backup_services_rules_apply_protected_sender_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L219",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_services_rules_py",
+      "target": "google_gmail_backup_services_rules_run_all_enabled_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_rationale_1",
+      "target": "backend_django_google_gmail_backup_services_rules_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L67",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_apply_rule",
+      "target": "google_gmail_backup_services_rules_protected_emails",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_is_protected",
+      "target": "google_gmail_backup_services_rules_normalize_email",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_rationale_27",
+      "target": "google_gmail_backup_services_rules_normalize_email",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L96",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_apply_rule",
+      "target": "google_gmail_backup_services_rules_is_protected",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L136",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_apply_rule",
+      "target": "google_gmail_backup_services_rules_get_or_create_label",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L199",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_apply_protected_sender_rules",
+      "target": "google_gmail_backup_services_rules_get_or_create_label",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_rationale_39",
+      "target": "google_gmail_backup_services_rules_get_or_create_label",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L224",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_run_all_enabled_rules",
+      "target": "google_gmail_backup_services_rules_apply_rule",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L53",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_rationale_53",
+      "target": "google_gmail_backup_services_rules_apply_rule",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L78",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_apply_rule",
+      "target": "google_gmail_backup_services_gmail_gmail_service"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L122",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_apply_rule",
+      "target": "google_gmail_backup_services_gmail_trash_message"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L129",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_apply_rule",
+      "target": "google_gmail_backup_services_gmail_modify_labels"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L76",
+      "weight": 1.0,
+      "source": "google_gmail_backup_admin_run_dry_run",
+      "target": "google_gmail_backup_services_rules_apply_rule"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L85",
+      "weight": 1.0,
+      "source": "google_gmail_backup_admin_run_execute",
+      "target": "google_gmail_backup_services_rules_apply_rule"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L169",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_rationale_169",
+      "target": "google_gmail_backup_services_rules_apply_protected_sender_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L173",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_apply_protected_sender_rules",
+      "target": "google_gmail_backup_services_gmail_gmail_service"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L205",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_apply_protected_sender_rules",
+      "target": "google_gmail_backup_services_gmail_modify_labels"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L66",
+      "weight": 1.0,
+      "source": "google_gmail_backup_scheduler_job_apply_protected_senders",
+      "target": "google_gmail_backup_services_rules_apply_protected_sender_rules"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/services_rules.py",
+      "source_location": "L220",
+      "weight": 1.0,
+      "source": "google_gmail_backup_services_rules_rationale_220",
+      "target": "google_gmail_backup_services_rules_run_all_enabled_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L76",
+      "weight": 1.0,
+      "source": "google_gmail_backup_scheduler_job_run_cleanup_rules",
+      "target": "google_gmail_backup_services_rules_run_all_enabled_rules"
     },
     {
       "relation": "contains",
@@ -6625,6 +8474,16 @@
       "target": "appconfig"
     },
     {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/apps.py",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "google_gmail_backup_apps_googlegmailbackupconfig",
+      "target": "google_gmail_backup_apps_googlegmailbackupconfig_ready",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "inherits",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_media_backup/apps.py",
@@ -6633,6 +8492,17 @@
       "confidence_score": 1.0,
       "source": "google_media_backup_apps_googlemediabackupconfig",
       "target": "appconfig"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_gmail_backup/apps.py",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "google_gmail_backup_apps_googlegmailbackupconfig_ready",
+      "target": "google_gmail_backup_scheduler_start_scheduler"
     },
     {
       "relation": "contains",
@@ -6668,6 +8538,66 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_admin_py",
+      "target": "google_gmail_backup_admin_action_trash",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L50",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_admin_py",
+      "target": "google_gmail_backup_admin_protectedsenderadmin",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_admin_py",
+      "target": "google_gmail_backup_admin_cleanupruleadmin",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_admin_py",
+      "target": "google_gmail_backup_admin_run_dry_run",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L81",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_admin_py",
+      "target": "google_gmail_backup_admin_run_execute",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_admin_py",
+      "target": "google_gmail_backup_admin_cleanupauditlogadmin",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
       "source_location": "L30",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -6680,10 +8610,40 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "backend_django/google_gmail_backup/admin.py",
-      "source_location": "L34",
+      "source_location": "L42",
       "weight": 1.0,
-      "source": "google_gmail_backup_admin_action_trash_selected",
+      "source": "google_gmail_backup_admin_action_trash",
       "target": "google_gmail_backup_services_gmail_trash_message"
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L65",
+      "weight": 1.0,
+      "source": "google_gmail_backup_admin_cleanupruleadmin",
+      "target": "google_gmail_backup_admin_cleanupruleadmin_enabled_badge",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L100",
+      "weight": 1.0,
+      "source": "google_gmail_backup_admin_cleanupauditlogadmin",
+      "target": "google_gmail_backup_admin_cleanupauditlogadmin_has_add_permission",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L103",
+      "weight": 1.0,
+      "source": "google_gmail_backup_admin_cleanupauditlogadmin",
+      "target": "google_gmail_backup_admin_cleanupauditlogadmin_has_change_permission",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -6988,6 +8948,17 @@
       "target": "google_media_backup_services_google_save_creds"
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "google_gmail_backup_scheduler_job_gmail_incremental_sync",
+      "target": "google_gmail_backup_services_gmail_get_authenticated_email"
+    },
+    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
@@ -7036,6 +9007,28 @@
       "confidence_score": 1.0,
       "source": "google_gmail_backup_services_gmail_rationale_102",
       "target": "google_gmail_backup_services_gmail_list_history"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "google_gmail_backup_scheduler_job_gmail_incremental_sync",
+      "target": "google_gmail_backup_services_gmail_list_history"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_gmail_backup/admin.py",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "google_gmail_backup_admin_action_trash_selected",
+      "target": "google_gmail_backup_services_gmail_trash_message"
     },
     {
       "relation": "rationale_for",
@@ -7340,6 +9333,117 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_scheduler_py",
+      "target": "google_gmail_backup_scheduler_job_gmail_incremental_sync",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_scheduler_py",
+      "target": "google_gmail_backup_scheduler_job_apply_protected_senders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_scheduler_py",
+      "target": "google_gmail_backup_scheduler_job_run_cleanup_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L83",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_scheduler_py",
+      "target": "google_gmail_backup_scheduler_get_scheduler",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_scheduler_py",
+      "target": "google_gmail_backup_scheduler_start_scheduler",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "google_gmail_backup_scheduler_rationale_1",
+      "target": "backend_django_google_gmail_backup_scheduler_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "google_gmail_backup_scheduler_rationale_16",
+      "target": "google_gmail_backup_scheduler_job_gmail_incremental_sync",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "google_gmail_backup_scheduler_rationale_63",
+      "target": "google_gmail_backup_scheduler_job_apply_protected_senders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "google_gmail_backup_scheduler_rationale_73",
+      "target": "google_gmail_backup_scheduler_job_run_cleanup_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L93",
+      "weight": 1.0,
+      "source": "google_gmail_backup_scheduler_start_scheduler",
+      "target": "google_gmail_backup_scheduler_get_scheduler",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/scheduler.py",
+      "source_location": "L92",
+      "weight": 1.0,
+      "source": "google_gmail_backup_scheduler_rationale_92",
+      "target": "google_gmail_backup_scheduler_start_scheduler",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "backend_django/google_gmail_backup/migrations/0001_initial.py",
       "source_location": "L8",
       "weight": 1.0,
@@ -7356,6 +9460,66 @@
       "confidence_score": 1.0,
       "source": "backend_django_google_media_backup_migrations_0001_initial_py",
       "target": "migrations_0001_initial_migration"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/migrations/0002_alter_gmailmessage_from_address_and_more.py",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_migrations_0002_alter_gmailmessage_from_address_and_more_py",
+      "target": "migrations_0002_alter_gmailmessage_from_address_and_more_migration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/migrations/0003_protectedsender_alter_gmailattachment_options_and_more.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_migrations_0003_protectedsender_alter_gmailattachment_options_and_more_py",
+      "target": "migrations_0003_protectedsender_alter_gmailattachment_options_and_more_migration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/management/commands/seed_rules.py",
+      "source_location": "L102",
+      "weight": 1.0,
+      "source": "backend_django_google_gmail_backup_management_commands_seed_rules_py",
+      "target": "commands_seed_rules_command",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/management/commands/seed_rules.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "commands_seed_rules_rationale_1",
+      "target": "backend_django_google_gmail_backup_management_commands_seed_rules_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/management/commands/seed_rules.py",
+      "source_location": "L102",
+      "weight": 1.0,
+      "source": "commands_seed_rules_command",
+      "target": "basecommand",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/management/commands/seed_rules.py",
+      "source_location": "L105",
+      "weight": 1.0,
+      "source": "commands_seed_rules_command",
+      "target": "commands_seed_rules_command_handle",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -8752,6 +10916,16 @@
       "source_file": "CHANGELOG.md",
       "source_location": "L10",
       "weight": 1.0,
+      "source": "backdeezup_changelog_changelog",
+      "target": "backdeezup_changelog_0_8_0_2026_05_15",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L10",
+      "weight": 1.0,
       "confidence_score": 1.0,
       "source": "backdeezup_changelog_changelog",
       "target": "backdeezup_changelog_0_7_0_2026_05_15"
@@ -8862,9 +11036,59 @@
       "source_file": "CHANGELOG.md",
       "source_location": "L12",
       "weight": 1.0,
+      "source": "backdeezup_changelog_0_8_0_2026_05_15",
+      "target": "backdeezup_changelog_added",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_8_0_2026_05_15",
+      "target": "backdeezup_changelog_protected_senders_seeded",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_8_0_2026_05_15",
+      "target": "backdeezup_changelog_default_cleanup_rules_seeded_all_disabled_review_before_enabling",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L12",
+      "weight": 1.0,
       "confidence_score": 1.0,
       "source": "backdeezup_changelog_0_7_0_2026_05_15",
       "target": "backdeezup_changelog_added"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L17",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backdeezup_changelog_0_6_1_2026_05_15",
+      "target": "backdeezup_changelog_added"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_7_0_2026_05_15",
+      "target": "backdeezup_changelog_added_39",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -8890,11 +11114,11 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "CHANGELOG.md",
-      "source_location": "L17",
+      "source_location": "L39",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "backdeezup_changelog_0_6_1_2026_05_15",
-      "target": "backdeezup_changelog_added"
+      "target": "backdeezup_changelog_added_39"
     },
     {
       "relation": "contains",
@@ -8910,6 +11134,26 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "CHANGELOG.md",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_6_1_2026_05_15",
+      "target": "backdeezup_changelog_fixed_61",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L66",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_6_1_2026_05_15",
+      "target": "backdeezup_changelog_added_66",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
       "source_location": "L34",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -8920,11 +11164,11 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "CHANGELOG.md",
-      "source_location": "L39",
+      "source_location": "L73",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "backdeezup_changelog_0_6_1_2026_05_15",
-      "target": "backdeezup_changelog_added_39"
+      "source": "backdeezup_changelog_0_6_0_2026_05_15",
+      "target": "backdeezup_changelog_added_73",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -8960,6 +11204,36 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "CHANGELOG.md",
+      "source_location": "L89",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_5_0_2026_05_14",
+      "target": "backdeezup_changelog_added_89",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L94",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_5_0_2026_05_14",
+      "target": "backdeezup_changelog_fixed_94",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L49",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backdeezup_changelog_0_5_0_2026_05_14",
+      "target": "backdeezup_changelog_security"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
       "source_location": "L62",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -8975,16 +11249,6 @@
       "confidence_score": 1.0,
       "source": "backdeezup_changelog_0_5_0_2026_05_14",
       "target": "backdeezup_changelog_fixed_67"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "CHANGELOG.md",
-      "source_location": "L49",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "backdeezup_changelog_0_5_0_2026_05_14",
-      "target": "backdeezup_changelog_security"
     },
     {
       "relation": "contains",
@@ -9010,11 +11274,21 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "CHANGELOG.md",
-      "source_location": "L67",
+      "source_location": "L103",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "backdeezup_changelog_0_4_1_2026_05_13",
-      "target": "backdeezup_changelog_fixed_67"
+      "source": "backdeezup_changelog_0_4_2_2026_05_13",
+      "target": "backdeezup_changelog_added_103",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L108",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_4_2_2026_05_13",
+      "target": "backdeezup_changelog_changed_108",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -9060,11 +11334,31 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "CHANGELOG.md",
-      "source_location": "L76",
+      "source_location": "L116",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_4_1_2026_05_13",
+      "target": "backdeezup_changelog_fixed_116",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L120",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_4_1_2026_05_13",
+      "target": "backdeezup_changelog_added_120",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L67",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "backdeezup_changelog_0_4_0_2026_05_13",
-      "target": "backdeezup_changelog_added_76"
+      "source": "backdeezup_changelog_0_4_1_2026_05_13",
+      "target": "backdeezup_changelog_fixed_67"
     },
     {
       "relation": "contains",
@@ -9095,6 +11389,46 @@
       "confidence_score": 1.0,
       "source": "backdeezup_changelog_0_4_1_2026_05_13",
       "target": "backdeezup_changelog_added_71"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L125",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_4_0_2026_05_13",
+      "target": "backdeezup_changelog_added_125",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L132",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_4_0_2026_05_13",
+      "target": "backdeezup_changelog_fixed_132",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L136",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_4_0_2026_05_13",
+      "target": "backdeezup_changelog_changed_136",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L76",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backdeezup_changelog_0_4_0_2026_05_13",
+      "target": "backdeezup_changelog_added_76"
     },
     {
       "relation": "contains",
@@ -9150,6 +11484,26 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "CHANGELOG.md",
+      "source_location": "L141",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_3_0_2026_05_13",
+      "target": "backdeezup_changelog_added_141",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L146",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_3_0_2026_05_13",
+      "target": "backdeezup_changelog_changed_146",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
       "source_location": "L114",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -9190,6 +11544,46 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "CHANGELOG.md",
+      "source_location": "L154",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_2_0_2026_05_13",
+      "target": "backdeezup_changelog_added_154",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L165",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_2_0_2026_05_13",
+      "target": "backdeezup_changelog_changed_165",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L176",
+      "weight": 1.0,
+      "source": "backdeezup_changelog_0_2_0_2026_05_13",
+      "target": "backdeezup_changelog_fixed_176",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L131",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backdeezup_changelog_0_2_0_2026_05_13",
+      "target": "backdeezup_changelog_technical"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
       "source_location": "L127",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -9215,16 +11609,6 @@
       "confidence_score": 1.0,
       "source": "backdeezup_changelog_0_2_0_2026_05_13",
       "target": "backdeezup_changelog_fixed_149"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "CHANGELOG.md",
-      "source_location": "L131",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "backdeezup_changelog_0_2_0_2026_05_13",
-      "target": "backdeezup_changelog_technical"
     },
     {
       "relation": "contains",
@@ -9260,11 +11644,11 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "CHANGELOG.md",
-      "source_location": "L160",
+      "source_location": "L187",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "backdeezup_changelog_0_1_0_2026_05_12",
-      "target": "backdeezup_changelog_added_160"
+      "target": "backdeezup_changelog_added_187",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -9275,6 +11659,16 @@
       "confidence_score": 1.0,
       "source": "backdeezup_changelog_0_1_0_2026_05_12",
       "target": "backdeezup_changelog_safety_features"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "CHANGELOG.md",
+      "source_location": "L160",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backdeezup_changelog_0_1_0_2026_05_12",
+      "target": "backdeezup_changelog_added_160"
     },
     {
       "relation": "contains",
@@ -9305,6 +11699,16 @@
       "confidence_score": 1.0,
       "source": "backdeezup_readme_backdeezup",
       "target": "backdeezup_readme_how_it_works"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L137",
+      "weight": 1.0,
+      "source": "backdeezup_readme_backdeezup",
+      "target": "backdeezup_readme_operational_runbook_production",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -9462,6 +11866,156 @@
       "source_file": "README.md",
       "source_location": "L139",
       "weight": 1.0,
+      "source": "backdeezup_readme_operational_runbook_production",
+      "target": "backdeezup_readme_first_time_deployment",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L177",
+      "weight": 1.0,
+      "source": "backdeezup_readme_operational_runbook_production",
+      "target": "backdeezup_readme_running_the_backup_pipeline",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L200",
+      "weight": 1.0,
+      "source": "backdeezup_readme_operational_runbook_production",
+      "target": "backdeezup_readme_after_first_time_deploy_seed_rules_and_apply_protected_senders",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L218",
+      "weight": 1.0,
+      "source": "backdeezup_readme_operational_runbook_production",
+      "target": "backdeezup_readme_enable_automatic_scheduling_3x_per_day",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L230",
+      "weight": 1.0,
+      "source": "backdeezup_readme_operational_runbook_production",
+      "target": "backdeezup_readme_subsequent_runs_incremental",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L141",
+      "weight": 1.0,
+      "source": "backdeezup_readme_first_time_deployment",
+      "target": "backdeezup_readme_codeblock_5",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L141",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backdeezup_readme_local_dev_uv_recommended",
+      "target": "backdeezup_readme_codeblock_5"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L179",
+      "weight": 1.0,
+      "source": "backdeezup_readme_running_the_backup_pipeline",
+      "target": "backdeezup_readme_codeblock_6",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L163",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backdeezup_readme_development_commands",
+      "target": "backdeezup_readme_codeblock_6"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L202",
+      "weight": 1.0,
+      "source": "backdeezup_readme_after_first_time_deploy_seed_rules_and_apply_protected_senders",
+      "target": "backdeezup_readme_codeblock_7",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L176",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backdeezup_readme_docker_prod_like",
+      "target": "backdeezup_readme_codeblock_7"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L221",
+      "weight": 1.0,
+      "source": "backdeezup_readme_enable_automatic_scheduling_3x_per_day",
+      "target": "backdeezup_readme_codeblock_8",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L189",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backdeezup_readme_1_create_env",
+      "target": "backdeezup_readme_codeblock_8"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L232",
+      "weight": 1.0,
+      "source": "backdeezup_readme_subsequent_runs_incremental",
+      "target": "backdeezup_readme_codeblock_9",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L226",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backdeezup_readme_1_create_env",
+      "target": "backdeezup_readme_codeblock_9"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L139",
+      "weight": 1.0,
       "confidence_score": 1.0,
       "source": "backdeezup_readme_quick_start",
       "target": "backdeezup_readme_local_dev_uv_recommended"
@@ -9490,31 +12044,61 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L141",
+      "source_location": "L244",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "backdeezup_readme_local_dev_uv_recommended",
-      "target": "backdeezup_readme_codeblock_5"
+      "target": "backdeezup_readme_codeblock_10",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L163",
+      "source_location": "L232",
       "weight": 1.0,
       "confidence_score": 1.0,
+      "source": "backdeezup_readme_1_create_env",
+      "target": "backdeezup_readme_codeblock_10"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L266",
+      "weight": 1.0,
       "source": "backdeezup_readme_development_commands",
-      "target": "backdeezup_readme_codeblock_6"
+      "target": "backdeezup_readme_codeblock_11",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L176",
+      "source_location": "L242",
       "weight": 1.0,
       "confidence_score": 1.0,
+      "source": "backdeezup_readme_2_place_google_oauth_credentials",
+      "target": "backdeezup_readme_codeblock_11"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L279",
+      "weight": 1.0,
       "source": "backdeezup_readme_docker_prod_like",
-      "target": "backdeezup_readme_codeblock_7"
+      "target": "backdeezup_readme_codeblock_12",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L251",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backdeezup_readme_3_build_and_start",
+      "target": "backdeezup_readme_codeblock_12"
     },
     {
       "relation": "contains",
@@ -9600,51 +12184,31 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L189",
+      "source_location": "L292",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "backdeezup_readme_1_create_env",
-      "target": "backdeezup_readme_codeblock_8"
+      "target": "backdeezup_readme_codeblock_13",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L226",
+      "source_location": "L329",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "backdeezup_readme_1_create_env",
-      "target": "backdeezup_readme_codeblock_9"
+      "target": "backdeezup_readme_codeblock_14",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L232",
+      "source_location": "L335",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "backdeezup_readme_1_create_env",
-      "target": "backdeezup_readme_codeblock_10"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "README.md",
-      "source_location": "L242",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "backdeezup_readme_2_place_google_oauth_credentials",
-      "target": "backdeezup_readme_codeblock_11"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "README.md",
-      "source_location": "L251",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "backdeezup_readme_3_build_and_start",
-      "target": "backdeezup_readme_codeblock_12"
+      "target": "backdeezup_readme_codeblock_15",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -9680,11 +12244,31 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
+      "source_location": "L345",
+      "weight": 1.0,
+      "source": "backdeezup_readme_2_place_google_oauth_credentials",
+      "target": "backdeezup_readme_codeblock_16",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
       "source_location": "L295",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "backdeezup_readme_7_verify_the_deployment",
       "target": "backdeezup_readme_codeblock_16"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L354",
+      "weight": 1.0,
+      "source": "backdeezup_readme_3_build_and_start",
+      "target": "backdeezup_readme_codeblock_17",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -9700,11 +12284,71 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
+      "source_location": "L369",
+      "weight": 1.0,
+      "source": "backdeezup_readme_4_run_migrations",
+      "target": "backdeezup_readme_codeblock_18",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
       "source_location": "L372",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "backdeezup_readme_project_structure",
       "target": "backdeezup_readme_codeblock_18"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L377",
+      "weight": 1.0,
+      "source": "backdeezup_readme_5_create_superuser",
+      "target": "backdeezup_readme_codeblock_19",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L385",
+      "weight": 1.0,
+      "source": "backdeezup_readme_6_authenticate_with_google",
+      "target": "backdeezup_readme_codeblock_20",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L398",
+      "weight": 1.0,
+      "source": "backdeezup_readme_7_verify_the_deployment",
+      "target": "backdeezup_readme_codeblock_21",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L413",
+      "weight": 1.0,
+      "source": "backdeezup_readme_ongoing_operations",
+      "target": "backdeezup_readme_codeblock_22",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L475",
+      "weight": 1.0,
+      "source": "backdeezup_readme_project_structure",
+      "target": "backdeezup_readme_codeblock_23",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -12649,5 +15293,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "ae2554c853e95c6673b857bc5e09a19465fbd647"
+  "built_at_commit": "04b9945bbf07807256322aca945c1f8f1f35aa44"
 }
