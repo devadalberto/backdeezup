@@ -8,6 +8,7 @@ from .models import (
     GmailMessage,
     GmailSyncState,
     ProtectedSender,
+    RuleCondition,
 )
 
 
@@ -52,6 +53,13 @@ class ProtectedSenderAdmin(admin.ModelAdmin):
     search_fields = ["email", "note"]
 
 
+class RuleConditionInline(admin.TabularInline):
+    model = RuleCondition
+    extra = 0
+    fields = ["order", "field", "operator", "value", "logic"]
+    ordering = ["order"]
+
+
 @admin.register(CleanupRule)
 class CleanupRuleAdmin(admin.ModelAdmin):
     list_display = ["name", "action", "enabled_badge", "min_age_days",
@@ -60,6 +68,7 @@ class CleanupRuleAdmin(admin.ModelAdmin):
     search_fields = ["name", "gmail_query"]
     readonly_fields = ["last_run_at", "last_run_dry", "last_affected_count",
                        "last_dry_run_count", "created_at", "updated_at"]
+    inlines = [RuleConditionInline]
     actions = ["enable_rules", "disable_rules", "run_dry_run", "run_execute"]
 
     def enabled_badge(self, obj):

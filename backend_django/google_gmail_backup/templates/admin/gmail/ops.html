@@ -2,6 +2,38 @@
 {% block content %}
 <h1>Gmail Operations Console</h1>
 
+<!-- KPI Dashboard -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px" id="kpiGrid">
+  <div class="card" style="text-align:center">
+    <div style="font-size:11px;color:var(--gd);letter-spacing:2px">TOTAL MESSAGES</div>
+    <div style="font-size:28px;font-weight:bold;color:var(--gx);text-shadow:0 0 8px var(--gx)" id="kpiTotal">—</div>
+  </div>
+  <div class="card" style="text-align:center">
+    <div style="font-size:11px;color:var(--gd);letter-spacing:2px">VERIFIED</div>
+    <div style="font-size:28px;font-weight:bold;color:var(--gx)" id="kpiVerified">—</div>
+    <div style="background:var(--ga);border-radius:4px;height:6px;margin-top:6px">
+      <div id="kpiVerifiedBar" style="background:var(--gx);height:6px;border-radius:4px;width:0%;transition:width .5s;box-shadow:0 0 6px var(--gx)"></div>
+    </div>
+  </div>
+  <div class="card" style="text-align:center">
+    <div style="font-size:11px;color:var(--gd);letter-spacing:2px">TRASHED</div>
+    <div style="font-size:28px;font-weight:bold;color:var(--gy)" id="kpiTrashed">—</div>
+  </div>
+  <div class="card" style="text-align:center">
+    <div style="font-size:11px;color:var(--gd);letter-spacing:2px">WITH ATTACHMENTS</div>
+    <div style="font-size:28px;font-weight:bold;color:var(--gt)" id="kpiAttach">—</div>
+  </div>
+  <div class="card" style="text-align:center">
+    <div style="font-size:11px;color:var(--gd);letter-spacing:2px">RULES ACTIVE</div>
+    <div style="font-size:28px;font-weight:bold;color:var(--gm)" id="kpiRules">—</div>
+  </div>
+  <div class="card" style="text-align:center">
+    <div style="font-size:11px;color:var(--gd);letter-spacing:2px">CLEANUP ACTIONS</div>
+    <div style="font-size:28px;font-weight:bold;color:var(--gm)" id="kpiAudit">—</div>
+    <div style="font-size:10px;color:var(--gd)" id="kpiLastRun">last run: —</div>
+  </div>
+</div>
+
 <style>
 /* Matrix theme — phosphor green on black */
 :root {
@@ -358,5 +390,36 @@ async function refreshAudit() {
       <td>—</td>
     </tr>`).join('');
 }
+
+// ── KPI loader ─────────────────────────────────────────────────────────────
+async function loadKPIs() {
+  try {
+    const prog = await fetch('/api/gmail/progress').then(r=>r.json());
+    const total    = prog.total || 0;
+    const verified = prog.verified || 0;
+    const pct      = total ? Math.round(verified/total*100) : 0;
+    document.getElementById('kpiTotal').textContent    = total.toLocaleString();
+    document.getElementById('kpiVerified').textContent = verified.toLocaleString() + ' (' + pct + '%)';
+    document.getElementById('kpiVerifiedBar').style.width = pct + '%';
+    document.getElementById('kpiTrashed').textContent  = (prog.discovered||0).toLocaleString();
+  } catch(e) {}
+  try {
+    const rules = await fetch('/api/gmail/rules').then(r=>r.json());
+    document.getElementById('kpiRules').textContent = rules.filter(r=>r.enabled).length + ' / ' + rules.length;
+  } catch(e) {}
+  try {
+    const audit = await fetch('/api/gmail/audit-log?limit=50').then(r=>r.json());
+    const real = audit.filter(a=>!a.dry_run);
+    document.getElementById('kpiAudit').textContent = real.length + ' real runs';
+    if (real.length) document.getElementById('kpiLastRun').textContent =
+      'last: ' + new Date(real[0].started_at).toLocaleString();
+  } catch(e) {}
+  try {
+    const msgs = await fetch('/api/gmail/messages?state=VERIFIED').then(r=>r.json());
+    document.getElementById('kpiAttach').textContent = msgs.filter(m=>m.has_attachments).length + '+';
+  } catch(e) {}
+}
+loadKPIs();
+setInterval(loadKPIs, 60000);
 </script>
 {% endblock %}

@@ -2,7 +2,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Count, Sum
 from django.shortcuts import render
 
-from .models import GmailMessage, GmailSyncState
+from .models import CleanupRule, GmailMessage, GmailSyncState
 
 
 @staff_member_required
@@ -36,8 +36,13 @@ def gmail_dashboard(request):
 
 
 @staff_member_required
+def gmail_rule_builder(request):
+    return render(request, "admin/gmail/rule_builder.html", {"title": "Rule Builder"})
+
+
+@staff_member_required
 def gmail_ops(request):
-    from .models import CleanupAuditLog, CleanupRule
+    from .models import CleanupAuditLog
     accounts = GmailSyncState.objects.all()
     rules = CleanupRule.objects.all().order_by("name")
     audit_log = CleanupAuditLog.objects.order_by("-started_at")[:20]

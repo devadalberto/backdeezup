@@ -152,6 +152,78 @@ class CleanupRule(models.Model):
         ordering = ["name"]
 
 
+class RuleCondition(models.Model):
+    """
+    A single condition in a compound rule query.
+    Multiple conditions are AND/OR-combined to produce a Gmail q= string.
+
+    Example (LinkedIn jobs):
+      field=sender,  operator=contains,     value=linkedin.com,  logic=AND, order=1
+      field=subject, operator=contains,     value=job,           logic=OR,  order=2
+      field=subject, operator=contains,     value=recruiter,     logic=OR,  order=3
+      field=subject, operator=contains,     value=applied,       logic=OR,  order=4
+    → from:linkedin.com (subject:job OR subject:recruiter OR subject:applied)
+    """
+    FIELD_SENDER     = "sender"
+    FIELD_SUBJECT    = "subject"
+    FIELD_BODY       = "body"
+    FIELD_LABEL      = "label"
+    FIELD_CATEGORY   = "category"
+    FIELD_HAS_ATTACH = "has_attachment"
+    FIELD_AGE        = "age_days"
+    FIELD_TO         = "to"
+
+    FIELD_CHOICES = [
+        (FIELD_SENDER,     "Sender (from)"),
+        (FIELD_TO,         "Recipient (to)"),
+        (FIELD_SUBJECT,    "Subject"),
+        (FIELD_BODY,       "Body"),
+        (FIELD_LABEL,      "Label"),
+        (FIELD_CATEGORY,   "Category"),
+        (FIELD_HAS_ATTACH, "Has Attachment"),
+        (FIELD_AGE,        "Age (days)"),
+    ]
+
+    OP_CONTAINS     = "contains"
+    OP_NOT_CONTAINS = "not_contains"
+    OP_EQUALS       = "equals"
+    OP_NOT_EQUALS   = "not_equals"
+    OP_STARTS_WITH  = "starts_with"
+    OP_OLDER_THAN   = "older_than"
+    OP_NEWER_THAN   = "newer_than"
+    OP_IS_TRUE      = "is_true"
+
+    OP_CHOICES = [
+        (OP_CONTAINS,     "contains"),
+        (OP_NOT_CONTAINS, "does not contain"),
+        (OP_EQUALS,       "equals"),
+        (OP_NOT_EQUALS,   "does not equal"),
+        (OP_STARTS_WITH,  "starts with"),
+        (OP_OLDER_THAN,   "older than"),
+        (OP_NEWER_THAN,   "newer than"),
+        (OP_IS_TRUE,      "is true"),
+    ]
+
+    LOGIC_AND = "AND"
+    LOGIC_OR  = "OR"
+    LOGIC_CHOICES = [(LOGIC_AND, "AND"), (LOGIC_OR, "OR")]
+
+    rule     = models.ForeignKey(CleanupRule, on_delete=models.CASCADE, related_name="conditions")
+    order    = models.PositiveSmallIntegerField(default=0)
+    field    = models.CharField(max_length=20, choices=FIELD_CHOICES)
+    operator = models.CharField(max_length=20, choices=OP_CHOICES)
+    value    = models.CharField(max_length=500, blank=True, default="")
+    logic    = models.CharField(max_length=3, choices=LOGIC_CHOICES, default=LOGIC_AND,
+                                help_text="How this condition joins with the NEXT condition")
+
+    class Meta:
+        ordering = ["order"]
+        verbose_name = "Rule Condition"
+
+    def __str__(self):
+        return f"{self.field} {self.operator} '{self.value}' ({self.logic})"
+
+
 class CleanupAuditLog(models.Model):
     """Immutable log of every cleanup action (dry-run or real)."""
     rule = models.ForeignKey(CleanupRule, null=True, blank=True,
