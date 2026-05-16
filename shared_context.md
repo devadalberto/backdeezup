@@ -339,9 +339,13 @@ Graph output: `graphify-out/` (graph.json, graph.html, GRAPH_REPORT.md)
 - **Google Auth Platform** (new UI 2025+) — replaces "APIs & Services → OAuth consent screen". Scopes at: Google Auth Platform → Data Access → Add or remove scopes.
 - **Desktop app OAuth client** — client_id: `486053539237-c454bqj13or711a74tfc8t493qlna64d`, named `backdeezup-desktop`. MUST be `installed` type, not `web`.
 - **Drive pipeline** — COMPLETE. 2176/2176 verified (100%).
-- **Gmail pipeline** — 9500 messages discovered, running `while make gmail-run; do sleep 1; done` to complete.
+- **Gmail pipeline** — COMPLETE. 10010/10010 verified (100%).
 - **Google Photos** — BLOCKED. Delete old web client (`1ql0o9aj`) from Google Auth Platform → Clients, then re-auth.
 - **make gmail-run** — single pass download→verify, exits 1 when done. Loop: `while make gmail-run; do sleep 1; done`
-- **make gmail-progress** — shows Gmail pipeline progress bar via `/api/gmail/progress`
-- **make progress** — shows Drive pipeline progress via `/api/progress`
-- **Current version: 0.7.0**
+- **make gmail-progress** / **make progress** — pipeline progress bars
+- **make pipeline-gmail LIMIT=250** — tqdm progress bar with ETA
+- **Cleanup rules engine** — ProtectedSender, CleanupRule, CleanupAuditLog models. 4 family senders seeded, 8 rules seeded (all disabled). Run `make seed-rules` after deploy.
+- **Gmail ops console** — `/admin/gmail/ops/` — click buttons for pipeline steps, dry-run/execute rules, protected senders, audit log
+- **Scheduler** — APScheduler, off by default. Enable: `BACKDEEZUP_SCHEDULER=1` in `.env` then `make redeploy`
+- **Post-deploy checklist** — `make redeploy && make seed-rules && curl -X POST http://localhost:8844/api/gmail/protected-senders/apply`
+- **Current version: 0.8.0**

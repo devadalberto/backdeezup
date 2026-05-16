@@ -197,12 +197,42 @@ while make gmail-run; do sleep 1; done
 make gmail-progress
 ```
 
+### After first-time deploy — seed rules and apply protected senders
+
+```bash
+# Seed 4 family protected senders + 8 default cleanup rules
+make seed-rules
+
+# Star + label all emails from family senders immediately
+curl -s -X POST http://localhost:8844/api/gmail/protected-senders/apply
+
+# Dry-run all enabled cleanup rules (see what would be affected)
+curl -s -X POST "http://localhost:8844/api/gmail/rules/run-all?dry_run=true" | python3 -m json.tool
+
+# Review rules in admin, enable the ones you want, then execute
+curl -s -X POST "http://localhost:8844/api/gmail/rules/run-all?dry_run=false" | python3 -m json.tool
+```
+
+Or use the **Gmail Ops Console** at http://localhost:8844/admin/gmail/ops/ — click buttons to run pipeline steps, dry-run/execute rules, and review the audit log.
+
+### Enable automatic scheduling (3x per day)
+
+Add to `.env`:
+```
+BACKDEEZUP_SCHEDULER=1
+```
+
+Then `make redeploy`. The scheduler runs:
+- Incremental Gmail sync every 6 hours
+- Protected sender rules every 6 hours
+- All enabled cleanup rules at 06:00, 12:00, 18:00
+
 ### Subsequent runs (incremental)
 
 ```bash
 make redeploy           # pull latest + rebuild + restart
 make gmail-discover     # pick up new messages since last run
-while make gmail-run; do sleep 1; done
+make pipeline-gmail LIMIT=250   # download + verify with tqdm progress bar
 ```
 
 ---
