@@ -4,7 +4,7 @@ DJ    := backend_django/manage.py
 .PHONY: help \
         preflight \
         build up down restart logs ps \
-        migrate superuser shell check \
+        migrate superuser shell check fix-user-migration \
         auth \
         deploy redeploy \
         run docs \
@@ -54,7 +54,8 @@ help:
 	@echo "    make migrate            Run database migrations"
 	@echo "    make superuser          Create Django superuser"
 	@echo "    make shell              Django shell inside container"
-	@echo "    make check              Django system check"
+	@echo "    make check              Django system check
+    make fix-user-migration Apply accounts 0002 migration (create table from auth_user)"
 	@echo ""
 	@echo "  Drive / Photos pipeline"
 	@echo "    make discover           Discover Drive media (images/videos)"
@@ -145,6 +146,9 @@ shell:
 
 check:
 	docker compose exec web python manage.py check
+
+fix-user-migration:
+	docker compose exec web python manage.py migrate accounts
 
 # ── Drive / Photos pipeline ───────────────────────────────────────────────────
 HOST  ?= http://localhost:8844
