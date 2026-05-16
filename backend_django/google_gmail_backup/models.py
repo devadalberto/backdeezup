@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
@@ -139,7 +139,7 @@ class CleanupRule(models.Model):
     last_affected_count = models.IntegerField(default=0)
     last_dry_run_count = models.IntegerField(default=0)
 
-    created_by = models.ForeignKey(User, null=True, blank=True,
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
                                    on_delete=models.SET_NULL, related_name="rules_created")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -231,7 +231,7 @@ class CleanupAuditLog(models.Model):
     rule_name = models.CharField(max_length=200)
     action = models.CharField(max_length=20)
     dry_run = models.BooleanField(default=True)
-    actor = models.ForeignKey(User, null=True, blank=True,
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
                               on_delete=models.SET_NULL, related_name="audit_logs")
     actor_label = models.CharField(max_length=100, default="system")
 

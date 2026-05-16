@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'django_ratelimit',
     'google_media_backup',
     'google_gmail_backup',
+    'accounts',
     'media_vault',
 ]
 
@@ -188,6 +189,9 @@ WAGTAILIMAGES_MAX_UPLOAD_SIZE = 1024 * 1024 * 1024
 WAGTAILMEDIA_MAX_UPLOAD_SIZE  = 256 * 1024 * 1024 * 1024
 WAGTAIL_ENABLE_UPDATE_CHECK = False
 WAGTAILSEARCH_BACKENDS = {"default": {"BACKEND": "wagtail.search.backends.database"}}
+
+# ── Custom User Model ────────────────────────────────────────────────────────
+AUTH_USER_MODEL = 'accounts.BackupUser'
 
 # ── Pydantic v2 project-wide ──────────────────────────────────────────────────
 # Schemas in backend_django/schemas.py — use model_validate() in all views.

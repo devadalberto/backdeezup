@@ -1,8 +1,10 @@
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 from django.utils import timezone
 
 from .models import GmailMessage, GmailAttachment, GmailSyncState
+
+User = get_user_model()
 
 
 class GmailSyncStateTest(TestCase):
