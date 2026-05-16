@@ -379,3 +379,79 @@ def list_messages(request, filters: GmailFilterIn = Query(...)):
     if filters.account_email:
         qs = qs.filter(account_email=filters.account_email)
     return list(qs[:500])
+
+
+# ── Cleanup rules API ─────────────────────────────────────────────────────────
+
+@gmail_api.get("/rules")
+def list_rules(request):
+    from .models import CleanupRule
+    rules = CleanupRule.objects.all().order_by("name")
+    return [
+        {
+            "id": r.id, "name": r.name, "action": r.action,
+            "gmail_query": r.gmail_query, "min_age_days": r.min_age_days,
+            "enabled": r.enabled, "last_run_at": r.last_run_at,
+            "last_dry_run_count": r.last_dry_run_count,
+            "last_affected_count": r.last_affected_count,
+        }
+        for r in rules
+    ]
+
+
+@gmail_api.post("/rules/{rule_id}/dry-run")
+def rule_dry_run(request, rule_id: int):
+    from .models import CleanupRule
+    from .services_rules import apply_rule
+    rule = CleanupRule.objects.get(id=rule_id)
+    audit = apply_rule(rule, dry_run=True, actor_label="api")
+    return {
+        "rule": rule.name, "dry_run": True,
+        "would_affect": audit.affected_count,
+        "sample_subjects": audit.sample_subjects,
+    }
+
+
+@gmail_api.post("/rules/{rule_id}/execute")
+def rule_execute(request, rule_id: int):
+    from .models import CleanupRule
+    from .services_rules import apply_rule
+    rule = CleanupRule.objects.get(id=rule_id)
+    audit = apply_rule(rule, dry_run=False, actor_label="api")
+    return {
+        "rule": rule.name, "dry_run": False,
+        "affected": audit.affected_count,
+        "status": audit.status,
+    }
+
+
+@gmail_api.post("/rules/run-all")
+def rules_run_all(request, dry_run: bool = True):
+    from .services_rules import run_all_enabled_rules
+    results = run_all_enabled_rules(dry_run=dry_run, actor_label="api")
+    return [
+        {"rule": a.rule_name, "affected": a.affected_count, "status": a.status}
+        for a in results
+    ]
+
+
+@gmail_api.post("/protected-senders/apply")
+def apply_protected_senders(request):
+    from .services_rules import apply_protected_sender_rules
+    audit = apply_protected_sender_rules()
+    return {"affected": audit.affected_count, "status": audit.status}
+
+
+@gmail_api.get("/audit-log")
+def get_audit_log(request, limit: int = 50):
+    from .models import CleanupAuditLog
+    logs = CleanupAuditLog.objects.order_by("-started_at")[:limit]
+    return [
+        {
+            "id": a.id, "rule": a.rule_name, "action": a.action,
+            "dry_run": a.dry_run, "affected": a.affected_count,
+            "status": a.status, "actor": a.actor_label,
+            "started_at": a.started_at, "finished_at": a.finished_at,
+        }
+        for a in logs
+    ]

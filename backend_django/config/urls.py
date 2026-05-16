@@ -1,5 +1,6 @@
 # backend_django/config/urls.py
 from django.contrib import admin
+from django.http import HttpResponse
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
@@ -46,8 +47,6 @@ if HAS_QUERY_PAGE:
     urlpatterns += [path("", query_page, name="query")]
 
 # OAuth callback — web client type redirects here; returns 200 so browser shows success
-from django.http import HttpResponse
-
 def oauth_callback(request):
     return HttpResponse(
         "<h2>OAuth completed.</h2><p>You can close this tab and return to the terminal.</p>",

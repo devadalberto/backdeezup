@@ -229,7 +229,7 @@ def sync_commit_delete(request, force: bool = False, limit: int = 50):
 
 @api.get("/progress")
 def pipeline_progress(request):
-    from django.db.models import Count, Sum
+    from django.db.models import Count
     counts = dict(
         DriveAsset.objects.values_list("state").annotate(n=Count("id"))
     )

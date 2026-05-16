@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-05-15
+
+### Added
+- `ProtectedSender` model — emails from these addresses are always starred, labeled, and kept in inbox
+- `CleanupRule` model — DB-backed cleanup rules with Gmail query, min_age_days, action, enabled flag
+- `CleanupAuditLog` model — immutable append-only log of every cleanup action (dry-run or real)
+- `services_rules.py` — rules engine: `apply_rule()`, `apply_protected_sender_rules()`, `run_all_enabled_rules()`
+- `seed_rules` management command — seeds 4 protected family senders + 8 default cleanup rules (all disabled by default)
+- APScheduler integration — incremental sync every 6h, protected senders every 6h, cleanup rules 3x/day at 06/12/18
+- Scheduler toggle: `BACKDEEZUP_SCHEDULER=1` in `.env` (default off)
+- API endpoints: `/api/gmail/rules`, `/api/gmail/rules/{id}/dry-run`, `/api/gmail/rules/{id}/execute`, `/api/gmail/rules/run-all`, `/api/gmail/protected-senders/apply`, `/api/gmail/audit-log`
+- Admin: CleanupRule, ProtectedSender, CleanupAuditLog with dry-run and execute actions
+- `make seed-rules` — run seed command inside container
+
+### Protected senders seeded
+- mony.bello@gmail.com, mony_littleowls@outlook.com, virlochov@gmail.com, julietvlhr@gmail.com — all starred + labeled "family"
+
+### Default cleanup rules seeded (all disabled — review before enabling)
+- Trash Promotions older than 30 days
+- Trash Social notifications older than 30 days
+- Trash Forums older than 60 days
+- Trash Updates older than 30 days
+- Trash newsletters (unsubscribe) older than 30 days
+- Trash no-reply senders older than 60 days
+- Trash mailing lists older than 60 days
+- Trash spam folder older than 7 days
+
 ## [0.7.0] - 2026-05-15
 
 ### Added

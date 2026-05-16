@@ -116,6 +116,9 @@ auth:
 migrate:
 	docker compose exec web python manage.py migrate
 
+seed-rules:
+	docker compose exec web python manage.py seed_rules
+
 superuser:
 	docker compose exec web python manage.py createsuperuser
 
