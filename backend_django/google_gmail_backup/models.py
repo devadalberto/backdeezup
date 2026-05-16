@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 
@@ -17,12 +18,9 @@ class GmailSyncState(models.Model):
 
     class Meta:
         verbose_name = "Gmail Sync State"
-        verbose_name_plural = "Gmail Sync States"
 
 
 class GmailMessage(models.Model):
-    """One row per Gmail message discovered and/or downloaded."""
-
     STATE_DISCOVERED = "DISCOVERED"
     STATE_DOWNLOADED = "DOWNLOADED"
     STATE_VERIFIED = "VERIFIED"
@@ -37,12 +35,10 @@ class GmailMessage(models.Model):
         (STATE_DELETED, "Permanently Deleted"),
     ]
 
-    # Gmail identifiers
     gmail_id = models.CharField(max_length=64, unique=True)
     thread_id = models.CharField(max_length=64, db_index=True)
     history_id = models.CharField(max_length=64, blank=True, null=True)
 
-    # Metadata (populated on DISCOVERED)
     subject = models.TextField(blank=True, default="")
     from_address = models.CharField(max_length=1000, blank=True, default="")
     to_address = models.TextField(blank=True, default="")
@@ -52,20 +48,15 @@ class GmailMessage(models.Model):
     size_estimate = models.IntegerField(default=0)
     has_attachments = models.BooleanField(default=False)
 
-    # Local storage (populated on DOWNLOADED)
     raw_path = models.TextField(blank=True, null=True)
     sha256 = models.CharField(max_length=64, blank=True, null=True)
 
-    # Pipeline state
     state = models.CharField(max_length=20, choices=STATE_CHOICES, default=STATE_DISCOVERED, db_index=True)
     error = models.TextField(blank=True, null=True)
 
-    # Timestamps
     discovered_at = models.DateTimeField(default=timezone.now)
     downloaded_at = models.DateTimeField(blank=True, null=True)
     last_attempt_at = models.DateTimeField(blank=True, null=True)
-
-    # Account
     account_email = models.EmailField(db_index=True)
 
     def __str__(self):
@@ -73,7 +64,6 @@ class GmailMessage(models.Model):
 
     class Meta:
         verbose_name = "Gmail Message"
-        verbose_name_plural = "Gmail Messages"
         indexes = [
             models.Index(fields=["account_email", "state"]),
             models.Index(fields=["account_email", "date"]),
@@ -82,7 +72,6 @@ class GmailMessage(models.Model):
 
 
 class GmailAttachment(models.Model):
-    """Attachment metadata for a GmailMessage."""
     message = models.ForeignKey(GmailMessage, on_delete=models.CASCADE, related_name="attachments")
     attachment_id = models.CharField(max_length=256)
     filename = models.CharField(max_length=512, blank=True, default="")
@@ -92,9 +81,98 @@ class GmailAttachment(models.Model):
     local_path = models.TextField(blank=True, null=True)
     downloaded_at = models.DateTimeField(blank=True, null=True)
 
+    class Meta:
+        unique_together = [("message", "attachment_id")]
+
+
+# ── Cleanup rules engine ──────────────────────────────────────────────────────
+
+class ProtectedSender(models.Model):
+    """Emails from these senders are always kept — never trashed, never deleted."""
+    email = models.EmailField(unique=True)
+    label_to_apply = models.CharField(max_length=100, blank=True, default="")
+    star = models.BooleanField(default=False)
+    note = models.CharField(max_length=200, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
-        return f"{self.filename} ({self.mime_type})"
+        return self.email
 
     class Meta:
-        verbose_name = "Gmail Attachment"
-        unique_together = [("message", "attachment_id")]
+        verbose_name = "Protected Sender"
+        ordering = ["email"]
+
+
+class CleanupRule(models.Model):
+    ACTION_TRASH = "trash"
+    ACTION_STAR = "star"
+    ACTION_LABEL = "label"
+    ACTION_ARCHIVE = "archive"
+
+    ACTION_CHOICES = [
+        (ACTION_TRASH, "Move to Trash"),
+        (ACTION_STAR, "Star"),
+        (ACTION_LABEL, "Apply Label"),
+        (ACTION_ARCHIVE, "Archive (remove INBOX)"),
+    ]
+
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default="")
+
+    # Gmail query syntax — same as the Gmail search box
+    gmail_query = models.TextField(help_text="Gmail search query, e.g. 'category:promotions older_than:30d'")
+
+    # Local DB filter applied in addition to gmail_query results (optional)
+    min_age_days = models.IntegerField(default=30, help_text="Minimum age in days before rule applies")
+
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    label_name = models.CharField(max_length=100, blank=True, default="",
+                                  help_text="Label to apply (for action=label)")
+
+    enabled = models.BooleanField(default=False)
+    dry_run_default = models.BooleanField(default=True)
+    respect_protected_senders = models.BooleanField(default=True)
+
+    # Stats from last run
+    last_run_at = models.DateTimeField(blank=True, null=True)
+    last_run_dry = models.BooleanField(default=True)
+    last_affected_count = models.IntegerField(default=0)
+    last_dry_run_count = models.IntegerField(default=0)
+
+    created_by = models.ForeignKey(User, null=True, blank=True,
+                                   on_delete=models.SET_NULL, related_name="rules_created")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({'enabled' if self.enabled else 'disabled'})"
+
+    class Meta:
+        verbose_name = "Cleanup Rule"
+        ordering = ["name"]
+
+
+class CleanupAuditLog(models.Model):
+    """Immutable log of every cleanup action (dry-run or real)."""
+    rule = models.ForeignKey(CleanupRule, null=True, blank=True,
+                             on_delete=models.SET_NULL, related_name="audit_logs")
+    rule_name = models.CharField(max_length=200)
+    action = models.CharField(max_length=20)
+    dry_run = models.BooleanField(default=True)
+    actor = models.ForeignKey(User, null=True, blank=True,
+                              on_delete=models.SET_NULL, related_name="audit_logs")
+    actor_label = models.CharField(max_length=100, default="system")
+
+    affected_count = models.IntegerField(default=0)
+    affected_gmail_ids = models.JSONField(default=list)
+    sample_subjects = models.JSONField(default=list)
+
+    started_at = models.DateTimeField(default=timezone.now)
+    finished_at = models.DateTimeField(blank=True, null=True)
+    status = models.CharField(max_length=20, default="OK")
+    error_text = models.TextField(blank=True, default="")
+
+    class Meta:
+        verbose_name = "Cleanup Audit Log"
+        ordering = ["-started_at"]
+        # Append-only: no update permission in admin

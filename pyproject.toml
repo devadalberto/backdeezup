@@ -1,6 +1,6 @@
 [project]
 name = "backdeezup"
-version = "0.7.0"
+version = "0.8.0"
 description = "Google Photos/Drive backup service with Django REST API"
 requires-python = ">=3.12"
 dependencies = [
@@ -21,6 +21,7 @@ dependencies = [
     "psycopg2-binary>=2.9",
     "playwright>=1.59.0",
     "tqdm>=4.67.3",
+    "django-apscheduler>=0.7.0",
 ]
 
 [project.optional-dependencies]
