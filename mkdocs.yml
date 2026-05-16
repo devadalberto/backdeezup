@@ -56,6 +56,8 @@ nav:
   - Development:
       - Contributing: contributing.md
       - Changelog: changelog.md
+  - Media Vault:
+      - CMS Guide: cms.md
   - About:
       - Acknowledgements: acknowledgements.md
 

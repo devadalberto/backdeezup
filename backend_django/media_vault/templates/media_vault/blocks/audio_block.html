@@ -1,0 +1,11 @@
+<div class="vault-audio keep-{{ value.keep }}"
+     style="margin:12px 0;border:1px solid #003a10;border-radius:4px;padding:8px;background:#080808;">
+  <audio controls style="width:100%;filter:invert(0.8) hue-rotate(90deg);">
+    {% for source in value.audio.sources %}
+    <source src="{{ source.src }}" type="{{ source.type }}">
+    {% endfor %}
+  </audio>
+  {% if value.caption %}
+  <p style="color:#00c832;font-family:monospace;font-size:12px;">{{ value.caption }}</p>
+  {% endif %}
+</div>

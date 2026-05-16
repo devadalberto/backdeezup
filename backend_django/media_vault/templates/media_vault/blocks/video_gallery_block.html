@@ -1,0 +1,12 @@
+<div class="vault-video-gallery" style="margin:16px 0;">
+  {% if value.heading %}
+  <h3 style="color:#00ff41;font-family:monospace;letter-spacing:2px;border-bottom:1px solid #003a10;padding-bottom:6px;">
+    {{ value.heading }}
+  </h3>
+  {% endif %}
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
+    {% for item in value.items %}
+    {% include "media_vault/blocks/video_block.html" with value=item %}
+    {% endfor %}
+  </div>
+</div>

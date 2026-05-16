@@ -1,12 +1,17 @@
 # backend_django/config/urls.py
 from django.contrib import admin
 from django.http import HttpResponse
-from django.urls import path
+from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
 
 # API (Ninja)
 from google_media_backup.api import api
+
+# Wagtail
+from wagtail.admin import urls as wagtailadmin_urls
+from wagtail import urls as wagtail_urls
+from wagtail.documents import urls as wagtaildocs_urls
 
 # Optional landing view (keep if you have it)
 try:
@@ -55,6 +60,12 @@ def oauth_callback(request):
     )
 
 urlpatterns += [path("api/oauth/callback", oauth_callback, name="oauth_callback")]
+
+urlpatterns += [
+    path("cms/", include(wagtailadmin_urls)),
+    path("documents/", include(wagtaildocs_urls)),
+    path("vault/", include(wagtail_urls)),
+]
 
 # Static/media (dev)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,31 @@
+{% load wagtailimages_tags %}
+<div class="vault-gallery" style="margin:16px 0;">
+  {% if value.heading %}
+  <h3 style="color:#00ff41;font-family:monospace;letter-spacing:2px;border-bottom:1px solid #003a10;padding-bottom:6px;">
+    {{ value.heading }}
+  </h3>
+  {% endif %}
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
+    {% for item in value.items %}
+    <figure class="vault-image keep-{{ item.keep }}" data-keep="{{ item.keep }}"
+            style="margin:0;border:1px solid #003a10;border-radius:4px;overflow:hidden;background:#080808;">
+      {% image item.image.image fill-400x300 as img %}
+      <a href="{{ img.url }}" target="_blank">
+        <img src="{{ img.url }}" alt="{{ item.image.alt }}" loading="lazy"
+             style="width:100%;display:block;transition:opacity .2s;">
+      </a>
+      {% if item.caption %}
+      <figcaption style="padding:4px 6px;color:#00c832;font-family:monospace;font-size:11px;">
+        {{ item.caption }}
+      </figcaption>
+      {% endif %}
+      <div style="padding:2px 6px;font-family:monospace;font-size:10px;
+           color:{% if item.keep == 'keep' %}#00ff41{% elif item.keep == 'delete' %}#ff3131{% else %}#c8a800{% endif %}">
+        {% if item.keep == "keep" %}&#10003; KEEP
+        {% elif item.keep == "delete" %}&#10007; DELETE
+        {% else %}? UNDECIDED{% endif %}
+      </div>
+    </figure>
+    {% endfor %}
+  </div>
+</div>

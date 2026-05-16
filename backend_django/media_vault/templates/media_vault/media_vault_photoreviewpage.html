@@ -1,0 +1,15 @@
+{% extends "media_vault/base.html" %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+<h1>{{ page.title }}</h1>
+<div class="filter-bar">
+  <a href="?" class="{% if not filter_keep %}active{% endif %}">All</a>
+  <a href="?keep=keep" class="{% if filter_keep == 'keep' %}active{% endif %}">&#10003; Keep</a>
+  <a href="?keep=delete" class="{% if filter_keep == 'delete' %}active{% endif %}">&#10007; Delete</a>
+  <a href="?keep=undecided" class="{% if filter_keep == 'undecided' %}active{% endif %}">? Undecided</a>
+</div>
+{% for block in page.body %}
+  {% include_block block %}
+{% endfor %}
+{% endblock %}
