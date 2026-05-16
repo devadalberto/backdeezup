@@ -29,6 +29,9 @@ from google_gmail_backup.admin_views import gmail_dashboard, gmail_ops, gmail_ru
 # Gmail API
 from google_gmail_backup.api import gmail_api
 
+# Media Vault API
+from media_vault.api import vault_api
+
 urlpatterns = [
     # Drive/Photos admin dashboards
     path("admin/reports/", reports_view, name="admin_reports"),
@@ -47,6 +50,9 @@ urlpatterns = [
 
     # Gmail Ninja API
     path("api/gmail/", gmail_api.urls),
+
+    # Media Vault API
+    path("api/vault/", vault_api.urls),
 ]
 
 if HAS_QUERY_PAGE:
