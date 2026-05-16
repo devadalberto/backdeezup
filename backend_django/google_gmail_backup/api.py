@@ -584,6 +584,85 @@ def rule_builder_fields(request):
     }
 
 
+# ── Empty Gmail Trash ─────────────────────────────────────────────────────────
+
+@gmail_api.post("/ops/empty-trash")
+def gmail_empty_trash(request, skip_backup_check: bool = False, dry_run: bool = True):
+    """
+    Permanently delete all messages in Gmail trash.
+    dry_run=true (default): count only, no deletion.
+    skip_backup_check=true: skip the ≥90% backup completeness guard.
+    """
+    from django.db.models import Sum
+    from .models import CleanupAuditLog, GmailSyncState
+    from .services_gmail import gmail_service
+
+    svc = gmail_service()
+    if not svc:
+        return {"error": "Not authenticated. Run: make auth"}
+
+    if not skip_backup_check:
+        sync_total = GmailSyncState.objects.aggregate(t=Sum("total_messages"))["t"] or 0
+        verified = GmailMessage.objects.filter(state=GmailMessage.STATE_VERIFIED).count()
+        pct = round(verified / max(sync_total, 1) * 100, 1)
+        if pct < 90:
+            return {
+                "blocked": True,
+                "reason": f"Backup only {pct}% complete ({verified}/{sync_total}). Need ≥90%.",
+                "pct": pct,
+                "verified": verified,
+                "sync_total": sync_total,
+            }
+
+    # Count trash
+    trash_ids = []
+    page_token = None
+    while True:
+        params = dict(userId="me", q="in:trash", maxResults=500)
+        if page_token:
+            params["pageToken"] = page_token
+        res = svc.users().messages().list(**params).execute()
+        trash_ids.extend([m["id"] for m in res.get("messages", [])])
+        page_token = res.get("nextPageToken")
+        if not page_token:
+            break
+
+    count = len(trash_ids)
+    if dry_run:
+        return {"dry_run": True, "trash_count": count,
+                "message": f"Would permanently delete {count} messages. POST with dry_run=false to execute."}
+
+    if count == 0:
+        return {"deleted": 0, "message": "Gmail trash already empty."}
+
+    audit = CleanupAuditLog.objects.create(
+        rule=None, rule_name="Empty Gmail Trash",
+        action="permanent_delete", dry_run=False,
+        actor_label=f"web:{request.user.username}", status="RUNNING",
+    )
+
+    BATCH_SIZE = 1000
+    deleted = errors = 0
+    chunks = [trash_ids[i:i + BATCH_SIZE] for i in range(0, len(trash_ids), BATCH_SIZE)]
+    for chunk in chunks:
+        try:
+            svc.users().messages().batchDelete(userId="me", body={"ids": chunk}).execute()
+            deleted += len(chunk)
+        except Exception as exc:
+            errors += len(chunk)
+
+    from django.utils import timezone
+    audit.affected_count = deleted
+    audit.affected_gmail_ids = trash_ids[:100]
+    audit.affected_ids_truncated = len(trash_ids) > 100
+    audit.status = "OK" if errors == 0 else "ERROR"
+    audit.error_text = f"{errors} messages failed" if errors else ""
+    audit.finished_at = timezone.now()
+    audit.save()
+
+    return {"deleted": deleted, "errors": errors, "dry_run": False}
+
+
 # ── Export endpoints ──────────────────────────────────────────────────────────
 
 AUDIT_FIELDS = [

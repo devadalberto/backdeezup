@@ -36,7 +36,7 @@ from google_gmail_backup.api import gmail_api
 
 # Media Vault API + views
 from media_vault.api import vault_api
-from media_vault.views import review_view
+from media_vault.views import review_view, vault_ops
 
 urlpatterns = [
     # Landing page
@@ -64,9 +64,10 @@ urlpatterns = [
     # Gmail Ninja API
     path("api/gmail/", gmail_api.urls),
 
-    # Media Vault API + review UI
+    # Media Vault API + review UI + ops
     path("api/vault/", vault_api.urls),
     path("vault/review/", review_view, name="vault_review"),
+    path("admin/vault/ops/", vault_ops, name="vault_ops"),
 ]
 
 if HAS_QUERY_PAGE:

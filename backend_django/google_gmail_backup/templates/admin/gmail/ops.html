@@ -268,6 +268,22 @@ li { margin: 3px 0; }
   <pre id="out">(results appear here)</pre>
 </div>
 
+<!-- Empty Gmail Trash -->
+<div class="card">
+  <b>Empty Gmail Trash</b>&nbsp;
+  <span style="font-size:12px;color:var(--gd)">— permanently delete all trashed messages (requires ≥90% backup)</span>
+  <div class="row" style="margin-top:10px">
+    <button class="btn btn-warn" onclick="call('gmail/ops/empty-trash?dry_run=true', 'POST', this)">
+      &#9654; Dry-run (count trash only)
+    </button>
+    <button class="btn btn-danger"
+      onclick="confirmAction('Empty Gmail Trash?','This PERMANENTLY DELETES all trashed messages. Your .eml backups are the only copy after this.',()=>call('gmail/ops/empty-trash?dry_run=false&skip_backup_check=false','POST',null))">
+      &#9888; Execute — Empty Trash
+    </button>
+  </div>
+  <p style="font-size:11px;color:var(--gd);margin-top:8px">Safety check: POST is blocked if backup &lt; 90% complete. Use the dry-run first to confirm trash count.</p>
+</div>
+
 <!-- Export -->
 <div class="card">
   <b>Export</b>
