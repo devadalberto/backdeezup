@@ -49,7 +49,11 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'config.urls'
 TEMPLATES = [{
     'BACKEND': 'django.template.backends.django.DjangoTemplates',
-    'DIRS': [BASE_DIR / 'google_media_backup' / 'templates'],
+    'DIRS': [
+        BASE_DIR / 'templates',
+        BASE_DIR / 'google_media_backup' / 'templates',
+        BASE_DIR / 'google_gmail_backup' / 'templates',
+    ],
     'APP_DIRS': True,
     'OPTIONS': {'context_processors': [
         'django.template.context_processors.debug',

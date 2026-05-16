@@ -227,6 +227,34 @@ def sync_commit_delete(request, force: bool = False, limit: int = 50):
     return {"deleted": done, "mode": mode}
 
 
+DRIVE_ASSET_FIELDS = [
+    ("Drive ID", "drive_id"), ("Name", "name"), ("MIME Type", "mime_type"),
+    ("Size (bytes)", "size_bytes"), ("MD5", "md5_checksum"),
+    ("State", "state"), ("Download Path", "download_path"),
+    ("Discovered", "discovered_at"), ("Downloaded", "downloaded_at"),
+    ("Imported", "imported_at"), ("Error", "error"),
+]
+
+
+@api.get("/export/assets")
+def export_assets(request, fmt: str = "csv", state: str = "", limit: int = 5000):
+    from google_gmail_backup.exports import export_queryset
+    qs = DriveAsset.objects.all().order_by("-discovered_at")
+    if state:
+        qs = qs.filter(state=state)
+    qs = qs[:limit]
+    rows = [
+        {"drive_id": a.drive_id, "name": a.name, "mime_type": a.mime_type,
+         "size_bytes": a.size_bytes, "md5_checksum": a.md5_checksum or "",
+         "state": a.state, "download_path": a.download_path or "",
+         "discovered_at": str(a.discovered_at), "downloaded_at": str(a.downloaded_at),
+         "imported_at": str(a.imported_at), "error": a.error or ""}
+        for a in qs
+    ]
+    name = f"drive_assets{'_' + state if state else ''}"
+    return export_queryset(request, rows, DRIVE_ASSET_FIELDS, name, fmt)
+
+
 @api.get("/progress")
 def pipeline_progress(request):
     from django.db.models import Count

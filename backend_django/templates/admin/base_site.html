@@ -1,0 +1,329 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} | BackDeezUp{% endblock %}
+
+{% block branding %}
+<div id="site-name">
+  <a href="{% url 'admin:index' %}" style="color:#00ff41; text-shadow:0 0 8px #00ff41; font-family:monospace; font-size:18px; letter-spacing:3px; text-decoration:none;">
+    &#9608; BackDeezUp
+  </a>
+</div>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+/* ── Matrix palette ─────────────────────────────────────────── */
+:root {
+  --gx:  #00ff41;  /* bright phosphor green */
+  --gm:  #00c832;  /* mid green */
+  --gd:  #008f1f;  /* dark green */
+  --ga:  #003a10;  /* deep green bg */
+  --g0:  #000000;  /* black */
+  --g1:  #080808;
+  --g2:  #111111;
+  --g3:  #1a1a1a;
+  --gb:  #0d1f0d;  /* green-tinted bg */
+  --gr:  #ff3131;  /* red for danger */
+  --gy:  #c8a800;  /* amber for warn */
+  --gt:  #00bfff;  /* cyan for info */
+  --fw:  #ccffcc;  /* light green text */
+  --fs:  13px;
+}
+
+/* ── Global reset ───────────────────────────────────────────── */
+body, html {
+  background: var(--g0) !important;
+  color: var(--fw) !important;
+  font-family: 'Courier New', monospace !important;
+}
+
+/* ── Django admin header ────────────────────────────────────── */
+#header {
+  background: var(--g0) !important;
+  border-bottom: 1px solid var(--gd) !important;
+  padding: 8px 20px !important;
+}
+#header a, #header a:visited { color: var(--gm) !important; }
+#header a:hover { color: var(--gx) !important; }
+#user-tools a { color: var(--gm) !important; }
+#user-tools a:hover { color: var(--gx) !important; }
+
+/* ── Breadcrumbs ────────────────────────────────────────────── */
+div.breadcrumbs {
+  background: var(--g1) !important;
+  border-bottom: 1px solid var(--ga) !important;
+  color: var(--gd) !important;
+}
+div.breadcrumbs a { color: var(--gm) !important; }
+
+/* ── Main content ───────────────────────────────────────────── */
+#content, #content-main, .colM, .colMS {
+  background: var(--g0) !important;
+  color: var(--fw) !important;
+}
+#content h1, #content h2, #content h3 {
+  color: var(--gx) !important;
+  font-family: monospace !important;
+  letter-spacing: 1px;
+}
+
+/* ── Sidebar nav ────────────────────────────────────────────── */
+#nav-sidebar, .sidebar {
+  background: var(--g1) !important;
+  border-right: 1px solid var(--ga) !important;
+}
+.sidebar a { color: var(--gm) !important; }
+.sidebar a:hover { color: var(--gx) !important; }
+
+/* ── Module headers ─────────────────────────────────────────── */
+.module h2, .module caption, .inline-group h2 {
+  background: var(--gb) !important;
+  color: var(--gx) !important;
+  border: none !important;
+  letter-spacing: 1px;
+}
+.module { background: var(--g1) !important; border: 1px solid var(--ga) !important; }
+
+/* ── Tables ─────────────────────────────────────────────────── */
+#result_list { border-collapse: collapse !important; }
+#result_list thead th {
+  background: var(--gb) !important;
+  color: var(--gx) !important;
+  border-bottom: 1px solid var(--gd) !important;
+}
+#result_list tbody tr { background: var(--g1) !important; color: var(--fw) !important; }
+#result_list tbody tr:nth-child(odd) { background: var(--g2) !important; }
+#result_list tbody tr:hover { background: var(--ga) !important; }
+#result_list td, #result_list th { border-color: var(--ga) !important; }
+#result_list td a { color: var(--gm) !important; }
+#result_list td a:hover { color: var(--gx) !important; }
+
+/* ── Action toolbar ─────────────────────────────────────────── */
+.actions, #changelist-form .actions {
+  background: var(--g2) !important;
+  border: 1px solid var(--ga) !important;
+}
+.actions select, .actions input {
+  background: var(--g1) !important;
+  color: var(--gm) !important;
+  border: 1px solid var(--gd) !important;
+}
+.button, input[type=submit], input[type=button], .submit-row input {
+  background: var(--ga) !important;
+  color: var(--gx) !important;
+  border: 1px solid var(--gd) !important;
+  font-family: monospace !important;
+  cursor: pointer;
+  transition: all .15s;
+}
+.button:hover, input[type=submit]:hover {
+  background: var(--gb) !important;
+  color: var(--gx) !important;
+  box-shadow: 0 0 6px var(--gx);
+}
+.default { background: var(--ga) !important; border-color: var(--gm) !important; }
+
+/* ── Forms ───────────────────────────────────────────────────── */
+.form-row { border-bottom: 1px solid var(--ga) !important; }
+input[type=text], input[type=password], input[type=email],
+input[type=number], textarea, select {
+  background: var(--g2) !important;
+  color: var(--gm) !important;
+  border: 1px solid var(--gd) !important;
+  font-family: monospace !important;
+}
+input:focus, textarea:focus, select:focus {
+  outline: 1px solid var(--gx) !important;
+  box-shadow: 0 0 4px var(--gx);
+}
+label { color: var(--gm) !important; }
+.help { color: var(--gd) !important; }
+.errorlist li { color: var(--gr) !important; }
+
+/* ── Filters ─────────────────────────────────────────────────── */
+#changelist-filter {
+  background: var(--g1) !important;
+  border-left: 1px solid var(--ga) !important;
+}
+#changelist-filter h2 {
+  background: var(--gb) !important;
+  color: var(--gx) !important;
+  border-bottom: 1px solid var(--gd) !important;
+}
+#changelist-filter h3 { color: var(--gm) !important; }
+#changelist-filter a { color: var(--gm) !important; }
+#changelist-filter a:hover { color: var(--gx) !important; }
+#changelist-filter li.selected a { color: var(--gx) !important; font-weight: bold; }
+
+/* ── Pagination ──────────────────────────────────────────────── */
+.paginator a { color: var(--gm) !important; }
+.paginator a:hover { color: var(--gx) !important; }
+.paginator .this-page { color: var(--gx) !important; font-weight: bold; }
+
+/* ── Messages/alerts ─────────────────────────────────────────── */
+.messagelist li { font-family: monospace !important; }
+.messagelist .success { background: var(--ga) !important; color: var(--gx) !important; border-left: 3px solid var(--gx); }
+.messagelist .warning { background: #2a2000 !important; color: var(--gy) !important; border-left: 3px solid var(--gy); }
+.messagelist .error   { background: #3a0000 !important; color: var(--gr) !important; border-left: 3px solid var(--gr); }
+
+/* ── Object tools ────────────────────────────────────────────── */
+.object-tools a { background: var(--ga) !important; color: var(--gx) !important; border: 1px solid var(--gd) !important; }
+.object-tools a:hover { background: var(--gb) !important; box-shadow: 0 0 6px var(--gx); }
+.addlink::before { color: var(--gx) !important; }
+
+/* ── Submit row ──────────────────────────────────────────────── */
+.submit-row { background: var(--g1) !important; border-top: 1px solid var(--ga) !important; }
+.deletelink { color: var(--gr) !important; }
+
+/* ── Inline groups ───────────────────────────────────────────── */
+.inline-group { background: var(--g1) !important; border: 1px solid var(--ga) !important; }
+.inline-related { background: var(--g2) !important; border: 1px solid var(--ga) !important; }
+
+/* ── Checkboxes ──────────────────────────────────────────────── */
+input[type=checkbox] { accent-color: var(--gx); }
+
+/* ── Top navigation bar ──────────────────────────────────────── */
+#matrix-nav {
+  background: var(--g1);
+  border-bottom: 1px solid var(--gd);
+  padding: 0;
+  font-family: monospace;
+  font-size: 13px;
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  box-shadow: 0 2px 8px rgba(0,255,65,.1);
+}
+#matrix-nav .nav-inner {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 12px;
+}
+#matrix-nav .nav-group {
+  position: relative;
+}
+#matrix-nav .nav-label {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  color: var(--gm);
+  cursor: pointer;
+  gap: 4px;
+  white-space: nowrap;
+  transition: all .15s;
+  border-bottom: 2px solid transparent;
+}
+#matrix-nav .nav-label:hover,
+#matrix-nav .nav-group:hover .nav-label {
+  color: var(--gx);
+  border-bottom-color: var(--gx);
+  text-shadow: 0 0 6px var(--gx);
+}
+#matrix-nav .nav-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 220px;
+  background: var(--g2);
+  border: 1px solid var(--gd);
+  border-top: none;
+  box-shadow: 0 4px 12px rgba(0,255,65,.15);
+  z-index: 1000;
+}
+#matrix-nav .nav-group:hover .nav-dropdown { display: block; }
+#matrix-nav .nav-dropdown a {
+  display: block;
+  padding: 8px 16px;
+  color: var(--gm);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ga);
+  transition: all .1s;
+}
+#matrix-nav .nav-dropdown a:hover {
+  background: var(--ga);
+  color: var(--gx);
+  padding-left: 22px;
+}
+#matrix-nav .nav-dropdown .nav-section {
+  padding: 4px 16px;
+  color: var(--gd);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--ga);
+  background: var(--g1);
+}
+#matrix-nav .nav-divider { width:1px; background: var(--ga); margin: 6px 0; }
+
+/* Push content down when nav is sticky */
+#content-main { margin-top: 0 !important; }
+</style>
+{% endblock %}
+
+{% block nav-global %}
+<nav id="matrix-nav">
+  <div class="nav-inner">
+
+    <div class="nav-group">
+      <div class="nav-label">&#9632; Gmail &#9660;</div>
+      <div class="nav-dropdown">
+        <div class="nav-section">operations</div>
+        <a href="/admin/gmail/ops/">&#9654; Ops Console</a>
+        <a href="/admin/gmail/dashboard/">&#9654; Dashboard</a>
+        <div class="nav-section">data</div>
+        <a href="/admin/google_gmail_backup/gmailmessage/">&#9654; Messages</a>
+        <a href="/admin/google_gmail_backup/gmailsyncstate/">&#9654; Sync State</a>
+        <div class="nav-section">rules</div>
+        <a href="/admin/google_gmail_backup/cleanuprule/">&#9654; Cleanup Rules</a>
+        <a href="/admin/google_gmail_backup/protectedsender/">&#9654; Protected Senders</a>
+        <a href="/admin/google_gmail_backup/cleanupauditlog/">&#9654; Audit Log</a>
+      </div>
+    </div>
+
+    <div class="nav-divider"></div>
+
+    <div class="nav-group">
+      <div class="nav-label">&#9632; Drive &#9660;</div>
+      <div class="nav-dropdown">
+        <div class="nav-section">operations</div>
+        <a href="/admin/ops/">&#9654; Ops Console</a>
+        <a href="/admin/reports/">&#9654; Reports</a>
+        <div class="nav-section">data</div>
+        <a href="/admin/google_media_backup/driveasset/">&#9654; Drive Assets</a>
+        <a href="/admin/google_media_backup/mediaitem/">&#9654; Media Items</a>
+        <a href="/admin/google_media_backup/runlog/">&#9654; Run Logs</a>
+      </div>
+    </div>
+
+    <div class="nav-divider"></div>
+
+    <div class="nav-group">
+      <div class="nav-label">&#9632; Pipeline &#9660;</div>
+      <div class="nav-dropdown">
+        <div class="nav-section">progress</div>
+        <a href="/api/progress" target="_blank">&#9654; Drive Progress (JSON)</a>
+        <a href="/api/gmail/progress" target="_blank">&#9654; Gmail Progress (JSON)</a>
+        <div class="nav-section">api</div>
+        <a href="/api/docs" target="_blank">&#9654; Drive API Docs</a>
+        <a href="/api/gmail/docs" target="_blank">&#9654; Gmail API Docs</a>
+      </div>
+    </div>
+
+    <div class="nav-divider"></div>
+
+    <div class="nav-group">
+      <div class="nav-label">&#9632; Admin &#9660;</div>
+      <div class="nav-dropdown">
+        <a href="/admin/">&#9654; Dashboard</a>
+        <a href="/admin/auth/user/">&#9654; Users</a>
+        <a href="/admin/django_apscheduler/djangojob/" title="Scheduled jobs">&#9654; Scheduler Jobs</a>
+      </div>
+    </div>
+
+  </div>
+</nav>
+{% endblock %}

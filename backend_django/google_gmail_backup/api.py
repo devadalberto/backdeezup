@@ -451,7 +451,54 @@ def get_audit_log(request, limit: int = 50):
             "id": a.id, "rule": a.rule_name, "action": a.action,
             "dry_run": a.dry_run, "affected": a.affected_count,
             "status": a.status, "actor": a.actor_label,
-            "started_at": a.started_at, "finished_at": a.finished_at,
+            "started_at": str(a.started_at), "finished_at": str(a.finished_at),
         }
         for a in logs
     ]
+
+
+# ── Export endpoints ──────────────────────────────────────────────────────────
+
+AUDIT_FIELDS = [
+    ("ID", "id"), ("Rule", "rule"), ("Action", "action"),
+    ("Dry Run", "dry_run"), ("Affected", "affected"), ("Status", "status"),
+    ("Actor", "actor"), ("Started", "started_at"), ("Finished", "finished_at"),
+]
+
+MSG_FIELDS = [
+    ("Gmail ID", "gmail_id"), ("Subject", "subject"), ("From", "from_address"),
+    ("Date", "date"), ("State", "state"), ("Labels", "labels"),
+    ("Size", "size_estimate"), ("Has Attachments", "has_attachments"),
+]
+
+
+@gmail_api.get("/export/audit-log")
+def export_audit_log(request, fmt: str = "csv", limit: int = 1000):
+    from .models import CleanupAuditLog
+    from .exports import export_queryset
+    logs = CleanupAuditLog.objects.order_by("-started_at")[:limit]
+    rows = [
+        {"id": a.id, "rule": a.rule_name, "action": a.action,
+         "dry_run": str(a.dry_run), "affected": a.affected_count,
+         "status": a.status, "actor": a.actor_label,
+         "started_at": str(a.started_at), "finished_at": str(a.finished_at)}
+        for a in logs
+    ]
+    return export_queryset(request, rows, AUDIT_FIELDS, "audit_log", fmt)
+
+
+@gmail_api.get("/export/messages")
+def export_messages(request, fmt: str = "csv", state: str = "", limit: int = 1000):
+    from .exports import export_queryset
+    qs = GmailMessage.objects.all().order_by("-date")
+    if state:
+        qs = qs.filter(state=state)
+    qs = qs[:limit]
+    rows = [
+        {"gmail_id": m.gmail_id, "subject": m.subject, "from_address": m.from_address,
+         "date": str(m.date), "state": m.state, "labels": str(m.labels),
+         "size_estimate": m.size_estimate, "has_attachments": str(m.has_attachments)}
+        for m in qs
+    ]
+    name = f"gmail_messages{'_' + state if state else ''}"
+    return export_queryset(request, rows, MSG_FIELDS, name, fmt)

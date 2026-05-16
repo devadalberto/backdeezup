@@ -235,9 +235,30 @@ li { margin: 3px 0; }
   <pre id="out">(results appear here)</pre>
 </div>
 
+<!-- Export -->
+<div class="card">
+  <b>Export</b>
+  <div class="row" style="margin-top:10px">
+    <span style="color:var(--gd);font-size:12px">Gmail Messages:</span>
+    <a class="btn btn-sm" href="/api/gmail/export/messages?fmt=csv&limit=5000" target="_blank">CSV</a>
+    <a class="btn btn-sm" href="/api/gmail/export/messages?fmt=xlsx&limit=5000" target="_blank">XLSX</a>
+    <a class="btn btn-sm" href="/api/gmail/export/messages?fmt=json&limit=5000" target="_blank">JSON</a>
+    <a class="btn btn-sm" href="/api/gmail/export/messages?fmt=xml&limit=5000" target="_blank">XML</a>
+    <a class="btn btn-sm" href="/api/gmail/export/messages?fmt=pdf&limit=5000" target="_blank">PDF</a>
+  </div>
+  <div class="row">
+    <span style="color:var(--gd);font-size:12px">Audit Log:</span>
+    <a class="btn btn-sm" href="/api/gmail/export/audit-log?fmt=csv&limit=1000" target="_blank">CSV</a>
+    <a class="btn btn-sm" href="/api/gmail/export/audit-log?fmt=xlsx&limit=1000" target="_blank">XLSX</a>
+    <a class="btn btn-sm" href="/api/gmail/export/audit-log?fmt=json&limit=1000" target="_blank">JSON</a>
+    <a class="btn btn-sm" href="/api/gmail/export/audit-log?fmt=xml&limit=1000" target="_blank">XML</a>
+    <a class="btn btn-sm" href="/api/gmail/export/audit-log?fmt=pdf&limit=1000" target="_blank">PDF</a>
+  </div>
+</div>
+
 <!-- Audit log -->
 <div class="card">
-  <b>Audit Log</b>&nbsp;<span style="font-size:12px;color:#666">last 20 entries — append-only</span>
+  <b>Audit Log</b>&nbsp;<span style="font-size:12px;color:var(--gd)">last 20 entries — append-only</span>
   <table class="audit-table" style="margin-top:8px">
     <thead>
       <tr>
