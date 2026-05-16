@@ -58,31 +58,33 @@ class Command(BaseCommand):
                 ))
                 return
 
+        from tqdm import tqdm
+
         mode = "DRY RUN" if dry_run else "EXECUTE"
-        self.stdout.write(self.style.WARNING(f"\n{'='*50}"))
-        self.stdout.write(self.style.WARNING(f"Cleanup Rules — {mode}"))
-        self.stdout.write(self.style.WARNING(f"{'='*50}"))
+        rules_list = list(qs)
+        self.stdout.write(f"\nCleanup Rules — {mode} ({len(rules_list)} rules)\n")
 
         total_affected = 0
-        for rule in qs:
-            try:
-                audit = apply_rule(rule, dry_run=dry_run, actor_label="management_command")
-                status = "DRY_RUN" if dry_run else "EXECUTED"
-                color = self.style.SUCCESS if audit.affected_count > 0 else self.style.HTTP_INFO
-                self.stdout.write(color(
-                    f"  [{status}] {rule.name} — {audit.affected_count} messages"
-                ))
-                if audit.sample_subjects and dry_run:
-                    for s in audit.sample_subjects[:3]:
-                        self.stdout.write(f"    • {s[:60]}")
-                total_affected += audit.affected_count
-            except Exception as exc:
-                self.stdout.write(self.style.ERROR(f"  ERROR {rule.name}: {exc}"))
+        with tqdm(rules_list, desc="rules", unit="rule",
+                  bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
+                  file=self.stderr, dynamic_ncols=True) as pbar:
+            for rule in pbar:
+                pbar.set_description(rule.name[:40])
+                try:
+                    audit = apply_rule(rule, dry_run=dry_run, actor_label="management_command")
+                    status = "DRY" if dry_run else "DONE"
+                    self.stdout.write(
+                        f"  [{status}] {rule.name} — {audit.affected_count} messages"
+                    )
+                    if audit.sample_subjects and dry_run:
+                        for s in audit.sample_subjects[:3]:
+                            self.stdout.write(f"    • {s[:60]}")
+                    total_affected += audit.affected_count
+                    pbar.set_postfix(total=total_affected)
+                except Exception as exc:
+                    self.stdout.write(f"  ERROR {rule.name}: {exc}")
 
-        self.stdout.write(self.style.WARNING(f"{'='*50}"))
         action_word = "would affect" if dry_run else "affected"
-        self.stdout.write(self.style.SUCCESS(f"Total {action_word}: {total_affected} messages"))
+        self.stdout.write(f"\nTotal {action_word}: {total_affected} messages")
         if dry_run:
-            self.stdout.write(
-                "To execute: make cleanup-run (adds --execute --confirm)"
-            )
+            self.stdout.write("To execute: make cleanup-run")
