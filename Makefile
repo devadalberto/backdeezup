@@ -128,6 +128,12 @@ import-media:
 import-media-dry:
 	docker compose exec web python manage.py import_media --dry-run
 
+cleanup-dry:
+	docker compose exec web python manage.py run_cleanup --dry-run $(ARGS)
+
+cleanup-run:
+	docker compose exec web python manage.py run_cleanup --execute --confirm $(ARGS)
+
 superuser:
 	docker compose exec web python manage.py createsuperuser
 
