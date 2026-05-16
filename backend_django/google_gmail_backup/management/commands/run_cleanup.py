@@ -65,9 +65,18 @@ class Command(BaseCommand):
         self.stdout.write(f"\nCleanup Rules — {mode} ({len(rules_list)} rules)\n")
 
         total_affected = 0
-        with tqdm(rules_list, desc="rules", unit="rule",
-                  bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]",
-                  file=self.stderr, dynamic_ncols=True) as pbar:
+        with tqdm(
+            rules_list,
+            desc="rules",
+            unit="rule",
+            bar_format=(
+                "{desc}: {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} "
+                "[{elapsed}<{remaining}, {rate_fmt}] msgs={postfix[msgs]}"
+            ),
+            postfix={"msgs": 0},
+            file=self.stderr,
+            dynamic_ncols=True,
+        ) as pbar:
             for rule in pbar:
                 pbar.set_description(rule.name[:40])
                 try:
@@ -80,7 +89,8 @@ class Command(BaseCommand):
                         for s in audit.sample_subjects[:3]:
                             self.stdout.write(f"    • {s[:60]}")
                     total_affected += audit.affected_count
-                    pbar.set_postfix(total=total_affected)
+                    pbar.postfix["msgs"] = total_affected
+                    pbar.set_postfix(pbar.postfix)
                 except Exception as exc:
                     self.stdout.write(f"  ERROR {rule.name}: {exc}")
 
