@@ -4,7 +4,7 @@ DJ    := backend_django/manage.py
 .PHONY: help \
         preflight \
         build up down restart logs ps \
-        migrate superuser shell check fix-user-migration \
+        migrate superuser shell check fix-user-migration gmail-empty-trash gmail-empty-trash-dry \
         auth \
         deploy redeploy \
         run docs \
@@ -134,6 +134,12 @@ cleanup-dry:
 
 cleanup-run:
 	docker compose exec web python manage.py run_cleanup --execute --confirm $(ARGS)
+
+gmail-empty-trash-dry:
+	docker compose exec web python manage.py empty_gmail_trash
+
+gmail-empty-trash:
+	docker compose exec web python manage.py empty_gmail_trash --confirm
 
 seed-smart-rules:
 	docker compose exec web python manage.py seed_smart_rules
