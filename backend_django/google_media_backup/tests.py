@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.test import TestCase, Client
 
 from .models import DriveAsset, MediaItem, RunLog
@@ -42,6 +43,8 @@ class DriveAssetModelTest(TestCase):
 class DriveAPITest(TestCase):
     def setUp(self):
         self.client = Client()
+        user = User.objects.create_user("testuser", password="testpass")
+        self.client.force_login(user)
         DriveAsset.objects.create(
             drive_id="drive1",
             name="video.mp4",

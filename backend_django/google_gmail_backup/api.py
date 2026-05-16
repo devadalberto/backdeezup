@@ -4,6 +4,7 @@ import datetime as dt
 
 from django.utils import timezone
 from ninja import NinjaAPI, Schema, Query
+from ninja.security import django_auth
 from googleapiclient.errors import HttpError
 
 from .models import CleanupRule, GmailMessage, GmailSyncState
@@ -22,7 +23,7 @@ from .services_gmail import (
     list_history,
 )
 
-gmail_api = NinjaAPI(urls_namespace="gmail", docs_url="/docs")
+gmail_api = NinjaAPI(urls_namespace="gmail", docs_url="/docs", auth=django_auth)
 
 
 # ── Schemas ───────────────────────────────────────────────────────────────────
@@ -95,10 +96,12 @@ def gmail_discover(request, q: str = "", max_pages: int = 20, page_size: int = 5
         ids, page_token = list_message_ids(
             page_token=page_token, q_filter=q, max_results=min(page_size, 500)
         )
-        new_ids = [
-            m["id"] for m in ids
-            if not GmailMessage.objects.filter(gmail_id=m["id"]).exists()
-        ]
+        # Single query for entire page — avoids N+1 exists() per message ID
+        page_ids = [m["id"] for m in ids]
+        existing = set(
+            GmailMessage.objects.filter(gmail_id__in=page_ids).values_list("gmail_id", flat=True)
+        )
+        new_ids = [mid for mid in page_ids if mid not in existing]
         if new_ids:
             GmailMessage.objects.bulk_create([
                 GmailMessage(
