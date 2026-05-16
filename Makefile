@@ -134,6 +134,9 @@ cleanup-dry:
 cleanup-run:
 	docker compose exec web python manage.py run_cleanup --execute --confirm $(ARGS)
 
+seed-smart-rules:
+	docker compose exec web python manage.py seed_smart_rules
+
 superuser:
 	docker compose exec web python manage.py createsuperuser
 
