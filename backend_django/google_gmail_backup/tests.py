@@ -215,7 +215,6 @@ class CleanupRulesEngineTest(TestCase):
 
     def test_audit_log_truncation_flag(self):
         from .services_rules import apply_rule
-        from .models import CleanupAuditLog
         audit = apply_rule(self.rule, dry_run=True)
         # With only 1 candidate, should not be truncated
         self.assertFalse(audit.affected_ids_truncated)
