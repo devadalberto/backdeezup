@@ -210,6 +210,7 @@ CACHES = {
     }
 }
 RATELIMIT_USE_CACHE = "default"
+SILENCED_SYSTEM_CHECKS = ["django_ratelimit.W001"]
 
 # ── APScheduler ───────────────────────────────────────────────────────────────
 BACKDEEZUP_SCHEDULER = config('BACKDEEZUP_SCHEDULER', cast=bool, default=False)

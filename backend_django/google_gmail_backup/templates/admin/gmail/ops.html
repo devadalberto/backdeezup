@@ -241,18 +241,20 @@ li { margin: 3px 0; }
       </td>
       <td style="padding:6px 8px; text-align:center"><code>{{ rule.action }}</code></td>
       <td style="padding:6px 8px; text-align:center">{{ rule.min_age_days }}d</td>
-      <td style="padding:6px 8px; text-align:center">{{ rule.last_dry_run_count }} msgs</td>
-      <td style="padding:6px 8px; text-align:center">
-        {% if rule.last_run_at %}{{ rule.last_run_at|date:"M d H:i" }} ({{ rule.last_affected_count }}){% else %}never{% endif %}
+      <td style="padding:6px 8px; text-align:center;white-space:nowrap;">
+        {% if rule.last_dry_run_count %}{{ rule.last_dry_run_count }}{% else %}0{% endif %} msgs
       </td>
-      <td style="padding:6px 8px">
-        <button class="btn btn-sm btn-warn" onclick="call('gmail/rules/{{ rule.id }}/dry-run', 'POST', this)">
-          Dry-run
-        </button>
-        <button class="btn btn-sm btn-danger" style="margin-left:4px"
-          onclick="confirmAction('Execute rule: {{ rule.name }}?', 'This will {{ rule.action }} matching emails for real.', () => call(\'gmail/rules/{{ rule.id }}/execute\', \'POST\', null))">
-          Execute
-        </button>
+      <td style="padding:6px 8px; text-align:center;white-space:nowrap;font-size:11px;">
+        {% if rule.last_run_at %}
+          {{ rule.last_run_at|date:"d/m H:i" }}<br><span style="color:var(--gx)">{{ rule.last_affected_count }}</span>
+        {% else %}never{% endif %}
+      </td>
+      <td style="padding:6px 8px;white-space:nowrap;">
+        <div style="display:flex;gap:4px;align-items:center;">
+          <button class="btn btn-sm btn-warn" style="min-width:64px;text-align:center;" onclick="call('gmail/rules/{{ rule.id }}/dry-run', 'POST', this)">Dry-run</button>
+          <button class="btn btn-sm btn-danger" style="min-width:64px;text-align:center;"
+            onclick="confirmAction('Execute rule: {{ rule.name }}?', 'This will {{ rule.action }} matching emails for real.', () => call(\'gmail/rules/{{ rule.id }}/execute\', \'POST\', null))">Execute</button>
+        </div>
       </td>
     </tr>
     {% empty %}
