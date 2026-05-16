@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'wagtailmedia',
 
     # Django
+    'django.contrib.postgres',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -89,11 +90,20 @@ TEMPLATES = [{
 }]
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# PostgreSQL is the primary database.
+# SQLite fallback only for local testing without DATABASE_URL set.
 DATABASE_URL = config('DATABASE_URL', default='')
 if DATABASE_URL:
     DATABASES = {'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)}
 else:
-    DATABASES = {'default': {'ENGINE':'django.db.backends.sqlite3','NAME':BASE_DIR/'db.sqlite3'}}
+    # Fallback for local dev/tests only — set DATABASE_URL in .env for all real usage
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+            'TEST': {'NAME': ':memory:'},
+        }
+    }
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'America/Los_Angeles'
@@ -122,6 +132,12 @@ WAGTAILADMIN_BASE_URL = config('WAGTAILADMIN_BASE_URL', default='http://localhos
 WAGTAILIMAGES_IMAGE_MODEL = 'media_vault.VaultImage'
 WAGTAILDOCS_DOCUMENT_MODEL = 'media_vault.VaultDocument'
 WAGTAILMEDIA_MEDIA_MODEL = 'media_vault.VaultMedia'
-WAGTAILIMAGES_MAX_UPLOAD_SIZE = 100 * 1024 * 1024   # 100 MB
-WAGTAILMEDIA_MAX_UPLOAD_SIZE  = 2048 * 1024 * 1024  # 2 GB for video
-WAGTAIL_ENABLE_UPDATE_CHECK = False  # disable version nag in admin
+WAGTAILIMAGES_MAX_UPLOAD_SIZE = 1024 * 1024 * 1024        # 1 GB for images
+WAGTAILMEDIA_MAX_UPLOAD_SIZE  = 256 * 1024 * 1024 * 1024  # 256 GB for video
+WAGTAIL_ENABLE_UPDATE_CHECK = False
+WAGTAILSEARCH_BACKENDS = {"default": {"BACKEND": "wagtail.search.backends.database"}}
+
+# ── Pydantic v2 project-wide settings ────────────────────────────────────────
+# Pydantic v2 is already installed via django-ninja.
+# Project-wide validation helpers live in backdeezup.schemas
+# Use model_validate() / model_validate_json() in all views for input validation.

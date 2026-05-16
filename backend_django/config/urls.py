@@ -8,6 +8,11 @@ from django.conf.urls.static import static
 # API (Ninja)
 from google_media_backup.api import api
 
+# Wagtail
+from wagtail.admin import urls as wagtailadmin_urls
+from wagtail import urls as wagtail_urls
+from wagtail.documents import urls as wagtaildocs_urls
+
 # Optional landing view (keep if you have it)
 try:
     from google_media_backup.views import query_page
@@ -56,10 +61,6 @@ def oauth_callback(request):
 
 urlpatterns += [path("api/oauth/callback", oauth_callback, name="oauth_callback")]
 
-# Wagtail
-from wagtail.admin import urls as wagtailadmin_urls
-from wagtail import urls as wagtail_urls
-from wagtail.documents import urls as wagtaildocs_urls
 urlpatterns += [
     path("cms/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),

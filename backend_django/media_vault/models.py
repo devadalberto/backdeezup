@@ -1,4 +1,6 @@
 from django.db import models
+# Page models imported here so Django/Wagtail discover them
+from .pages import MediaGalleryPage, PhotoReviewPage, VaultHomePage, VideoReviewPage  # noqa: F401
 from django.utils import timezone
 from wagtail.images.models import AbstractImage, AbstractRendition
 from wagtail.documents.models import AbstractDocument

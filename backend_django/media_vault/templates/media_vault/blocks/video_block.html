@@ -1,0 +1,18 @@
+<div class="vault-video keep-{{ value.keep }}" data-keep="{{ value.keep }}"
+     style="margin:12px 0;border:1px solid #003a10;border-radius:4px;padding:8px;background:#080808;">
+  <video controls{% if value.autoplay %} autoplay muted{% endif %}{% if value.loop %} loop{% endif %}
+         style="max-width:100%;background:#000;display:block;">
+    {% for source in value.video.sources %}
+    <source src="{{ source.src }}" type="{{ source.type }}">
+    {% endfor %}
+    <p style="color:#ff3131">Your browser does not support HTML5 video.</p>
+  </video>
+  {% if value.caption %}
+  <p style="color:#00c832;font-family:monospace;font-size:12px;margin-top:4px;">{{ value.caption }}</p>
+  {% endif %}
+  <div class="keep-badge keep-badge-{{ value.keep }}" style="font-family:monospace;font-size:11px;">
+    {% if value.keep == "keep" %}&#10003; KEEP
+    {% elif value.keep == "delete" %}&#10007; DELETE
+    {% else %}? UNDECIDED{% endif %}
+  </div>
+</div>
