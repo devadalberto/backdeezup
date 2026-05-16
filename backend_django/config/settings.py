@@ -26,12 +26,36 @@ else:
     CSRF_TRUSTED_ORIGINS = []
 
 INSTALLED_APPS = [
-    'django.contrib.admin','django.contrib.auth','django.contrib.contenttypes',
-    'django.contrib.sessions','django.contrib.messages','django.contrib.staticfiles',
+    # Wagtail — must come before django.contrib.admin
+    'wagtail.contrib.forms',
+    'wagtail.contrib.redirects',
+    'wagtail.embeds',
+    'wagtail.sites',
+    'wagtail.users',
+    'wagtail.snippets',
+    'wagtail.documents',
+    'wagtail.images',
+    'wagtail.search',
+    'wagtail.admin',
+    'wagtail',
+    'modelcluster',
+    'taggit',
+    'wagtailmedia',
+
+    # Django
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+
+    # Project apps
     'corsheaders',
     'django_apscheduler',
     'google_media_backup',
     'google_gmail_backup',
+    'media_vault',
 ]
 
 MIDDLEWARE = [
@@ -44,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'wagtail.contrib.redirects.middleware.RedirectMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -90,3 +115,13 @@ ADMIN_INDEX_TITLE = config('ADMIN_INDEX_TITLE', default='Dashboard')
 SWAGGER_TITLE = config('SWAGGER_TITLE', default='API')
 SWAGGER_DESCRIPTION = config('SWAGGER_DESCRIPTION', default='')
 SWAGGER_VERSION = config('SWAGGER_VERSION', default='0.1.0')
+
+# ── Wagtail ───────────────────────────────────────────────────────────────────
+WAGTAIL_SITE_NAME = config('WAGTAIL_SITE_NAME', default='BackDeezUp Media Vault')
+WAGTAILADMIN_BASE_URL = config('WAGTAILADMIN_BASE_URL', default='http://localhost:8844')
+WAGTAILIMAGES_IMAGE_MODEL = 'media_vault.VaultImage'
+WAGTAILDOCS_DOCUMENT_MODEL = 'media_vault.VaultDocument'
+WAGTAILMEDIA_MEDIA_MODEL = 'media_vault.VaultMedia'
+WAGTAILIMAGES_MAX_UPLOAD_SIZE = 100 * 1024 * 1024   # 100 MB
+WAGTAILMEDIA_MAX_UPLOAD_SIZE  = 2048 * 1024 * 1024  # 2 GB for video
+WAGTAIL_ENABLE_UPDATE_CHECK = False  # disable version nag in admin

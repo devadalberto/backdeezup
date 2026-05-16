@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-05-16
+
+### Added
+- **media_vault** Django app — Wagtail 7.4 LTS + wagtailmedia 0.17.2
+  - Custom models: VaultImage, VaultDocument, VaultMedia (video/audio), VaultRendition, MediaDecision
+  - All models link back to source (Drive asset or Gmail attachment)
+  - `keep` field (True/False/None) on all media models for keep/delete decisions
+  - Wagtail CMS admin at `/cms/`, document serve at `/documents/`, pages at `/vault/`
+  - Media Vault section in top nav bar (Images, Documents, Videos & Audio)
+- **Assumptions:** Django 5.2 (stable LTS) over 6.0; self-hosted video via wagtailmedia; Discord streaming deferred
+
 ## [0.9.0] - 2026-05-16
 
 ### Added
