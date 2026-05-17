@@ -19,19 +19,20 @@ class Command(BaseCommand):
         parser.add_argument("--limit", type=int, default=250)
         parser.add_argument("--max-pages", type=int, default=20)
         parser.add_argument("--page-size", type=int, default=500)
+        parser.add_argument("--q", type=str, default="", help="Gmail search query e.g. 'in:trash'")
 
     def handle(self, *args, **options):
         step = options["step"]
         limit = options["limit"]
 
         if step in ("discover", "all"):
-            self._discover(options["max_pages"], options["page_size"])
+            self._discover(options["max_pages"], options["page_size"], options["q"])
         if step in ("download", "all"):
             self._download(limit)
         if step in ("verify", "all"):
             self._verify(limit)
 
-    def _discover(self, max_pages, page_size):
+    def _discover(self, max_pages, page_size, q=""):
         from google_gmail_backup.models import GmailMessage, GmailSyncState
         from google_gmail_backup.services_gmail import get_authenticated_email, list_message_ids
         from django.utils import timezone
@@ -45,9 +46,9 @@ class Command(BaseCommand):
         page_token = None
         pages = 0
 
-        self.stdout.write(f"Discovering Gmail messages for {account_email}...")
+        self.stdout.write(f"Discovering Gmail messages for {account_email}{' [q: ' + q + ']' if q else ''}...")
         while pages < max_pages:
-            ids, page_token = list_message_ids(page_token=page_token, max_results=min(page_size, 500))
+            ids, page_token = list_message_ids(page_token=page_token, q_filter=q, max_results=min(page_size, 500))
             page_ids = [m["id"] for m in ids]
             existing = set(GmailMessage.objects.filter(gmail_id__in=page_ids).values_list("gmail_id", flat=True))
             new_ids = [mid for mid in page_ids if mid not in existing]
