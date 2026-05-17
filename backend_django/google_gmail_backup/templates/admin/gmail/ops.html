@@ -368,7 +368,6 @@ function emptyTrash(skipGuard, btn) {
   const url = 'gmail/ops/empty-trash?dry_run=false&skip_backup_check=' + skipGuard;
   call(url, 'POST', btn);
 }
-}
 
 async function call(path, method, btn) {
   const out = document.getElementById('out');
