@@ -243,8 +243,8 @@ gmail-loop:
 	@while true; do \
 		docker compose exec web python manage.py gmail_pipeline download --limit $(LIMIT); \
 		docker compose exec web python manage.py gmail_pipeline verify --limit $(LIMIT); \
-		remaining=$$(docker compose exec -T web python manage.py shell -c \
-			"from google_gmail_backup.models import GmailMessage; print(GmailMessage.objects.filter(state='DISCOVERED').count())" 2>/dev/null | tr -d '\r'); \
+		remaining=$$(docker compose exec -T web python manage.py shell --verbosity 0 -c \
+			"from google_gmail_backup.models import GmailMessage; print(GmailMessage.objects.filter(state='DISCOVERED').count())" 2>/dev/null | tail -1 | tr -d '\r'); \
 		echo "=== DISCOVERED remaining: $$remaining ==="; \
 		[ "$$remaining" = "0" ] && { echo "Queue empty — done."; break; }; \
 	done
