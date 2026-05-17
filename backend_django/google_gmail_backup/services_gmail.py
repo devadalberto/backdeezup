@@ -20,10 +20,14 @@ TOKEN_FILE_ENC = config("GOOGLE_TOKEN_FILE", default="secrets/google_token.json"
 def gmail_service():
     creds = _load_creds()
     if not creds:
+        log.warning("gmail_service: no credentials found — run make auth")
         return None
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())
         _save_creds(creds)
+    scopes = getattr(creds, "scopes", None) or []
+    if scopes and "https://www.googleapis.com/auth/gmail.modify" not in scopes:
+        log.error("gmail_service: token missing gmail.modify scope — delete token and re-run make auth. Current scopes: %s", scopes)
     return build("gmail", "v1", credentials=creds)
 
 
