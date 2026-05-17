@@ -28,6 +28,7 @@ dependencies = [
     "wagtailmedia>=0.17,<0.18",
     "django-ratelimit>=4.1.0",
     "django-htmx>=1.27.0",
+    "redis>=7.4.0",
 ]
 
 [project.optional-dependencies]
