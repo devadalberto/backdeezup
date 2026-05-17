@@ -16,15 +16,20 @@ def htmx_stats(request):
     from google_gmail_backup.models import GmailMessage, CleanupAuditLog, GmailSyncState
 
     try:
+        from django.db.models import Sum
         drive_total = DriveAsset.objects.count()
         drive_verified = DriveAsset.objects.filter(state="VERIFIED").count()
         drive_pct = round(drive_verified / max(drive_total, 1) * 100)
 
-        gmail_total = GmailSyncState.objects.aggregate(t=__import__('django.db.models', fromlist=['Sum']).Sum('total_messages'))['t'] or 0
+        gmail_total = GmailSyncState.objects.aggregate(t=Sum('total_messages'))['t'] or 0
         gmail_verified = GmailMessage.objects.filter(state=GmailMessage.STATE_VERIFIED).count()
         gmail_pct = round(gmail_verified / max(gmail_total, 1) * 100)
 
         media_items = MediaItem.objects.count()
+
+        from media_vault.models import VaultImage, VaultMedia
+        vault_images = VaultImage.objects.count()
+        vault_media = VaultMedia.objects.count()
 
         running_job = CleanupAuditLog.objects.filter(status="RUNNING").order_by("-started_at").first()
         last_cleanup = CleanupAuditLog.objects.filter(status="OK", dry_run=False).order_by("-started_at").first()
@@ -37,6 +42,8 @@ def htmx_stats(request):
             "gmail_verified": gmail_verified,
             "gmail_pct": gmail_pct,
             "media_items": media_items,
+            "vault_images": vault_images,
+            "vault_media": vault_media,
             "running_job": running_job,
             "last_cleanup": last_cleanup,
         }
