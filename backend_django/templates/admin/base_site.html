@@ -5,8 +5,8 @@
 
 {% block branding %}
 <div id="site-name">
-  <a href="{% url 'admin:index' %}" style="font-family:monospace; font-size:18px; letter-spacing:3px; text-decoration:none;">
-    <span style="color:#ffb300; text-shadow:0 0 10px #ffb300;">&#9608;</span><span style="color:#00ff41; text-shadow:0 0 6px #00ff41;">BackDeez</span><span style="color:#ffb300; text-shadow:0 0 10px #ffb300;">Up</span>
+  <a href="{% url 'admin:index' %}" style="font-family:monospace;font-size:20px;letter-spacing:4px;text-decoration:none;line-height:1;">
+    <span style="color:#ffb300;text-shadow:0 0 12px #ffb300,0 0 24px #ff8f00;">&#9608;</span><span style="color:#00ff41;text-shadow:0 0 8px #00ff41,0 0 16px #00c832;">BackDeez</span><span style="color:#ffb300;text-shadow:0 0 12px #ffb300,0 0 24px #ff8f00;">Up</span>
   </a>
 </div>
 {% endblock %}
@@ -14,41 +14,48 @@
 {% block extrastyle %}
 {{ block.super }}
 <style>
-/* ── Matrix + Amber palette ──────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   PALETTE  — 3 colors: black · phosphor green · amber
+   Hierarchy:  green = primary content  |  amber = accents/CTA
+   ══════════════════════════════════════════════════════════════ */
 :root {
-  --gx:  #00ff41;  /* bright phosphor green */
-  --gm:  #00c832;  /* mid green */
-  --gd:  #008f1f;  /* dark green */
-  --ga:  #003a10;  /* deep green bg */
-  --g0:  #000000;  /* black */
-  --g1:  #080808;
-  --g2:  #111111;
-  --g3:  #1a1a1a;
-  --gb:  #0d1f0d;  /* green-tinted bg */
-  --gr:  #ff3131;  /* red for danger */
-  --gy:  #ffb300;  /* amber — upgraded from muted gold */
-  --gy2: #ff8f00;  /* deep amber */
-  --gy3: #e65100;  /* burnt amber accent */
-  --gt:  #00bfff;  /* cyan for info */
-  --fw:  #ccffcc;  /* light green text */
+  --gx:  #00ff41;   /* bright phosphor green — dominant */
+  --gm:  #00c832;   /* mid green */
+  --gd:  #008f1f;   /* dark green */
+  --ga:  #002e0b;   /* deep green bg */
+  --gb:  #0a1a0a;   /* green-tinted surface */
+  --g0:  #000000;   /* black */
+  --g1:  #070707;   /* near-black surface */
+  --g2:  #0e0e0e;   /* card surface */
+  --g3:  #161616;   /* elevated surface */
+  --fw:  #b8ffb8;   /* body text — soft green */
+  --gy:  #ffb300;   /* amber — logo accent */
+  --gy2: #ff8f00;   /* deep amber */
+  --gy3: #1a0e00;   /* amber-tinted bg */
+  --gr:  #ff3131;   /* red danger */
+  --gt:  #00d4ff;   /* cyan info */
   --fs:  13px;
 }
 
-/* ── Global reset ───────────────────────────────────────────── */
+/* ── Global ─────────────────────────────────────────────────── */
 body, html {
   background: var(--g0) !important;
   color: var(--fw) !important;
   font-family: 'Courier New', monospace !important;
 }
+a { color: var(--gm); }
+a:hover { color: var(--gx); }
+code { color: var(--gt); font-family: monospace; }
 
 /* ── Django admin header ────────────────────────────────────── */
 #header {
   background: var(--g0) !important;
-  border-bottom: 1px solid var(--gd) !important;
-  padding: 8px 20px !important;
+  border-bottom: 2px solid var(--gy2) !important;
+  padding: 6px 20px !important;
 }
 #header a, #header a:visited { color: var(--gm) !important; }
-#header a:hover { color: var(--gx) !important; }
+#header a:hover { color: var(--gx) !important; text-shadow: 0 0 6px var(--gx); }
+#user-tools { color: var(--gd) !important; font-size: 12px; }
 #user-tools a { color: var(--gm) !important; }
 #user-tools a:hover { color: var(--gx) !important; }
 
@@ -57,16 +64,28 @@ div.breadcrumbs {
   background: var(--g1) !important;
   border-bottom: 1px solid var(--ga) !important;
   color: var(--gd) !important;
+  font-family: monospace !important;
+  font-size: 12px !important;
 }
 div.breadcrumbs a { color: var(--gm) !important; }
+div.breadcrumbs a:hover { color: var(--gx) !important; }
 
 /* ── Main content ───────────────────────────────────────────── */
 #content, #content-main, .colM, .colMS {
   background: var(--g0) !important;
   color: var(--fw) !important;
 }
-#content h1, #content h2, #content h3 {
+#content h1 {
   color: var(--gx) !important;
+  font-family: monospace !important;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px var(--gx);
+  border-bottom: 1px solid var(--ga);
+  padding-bottom: 6px;
+  margin-bottom: 16px;
+}
+#content h2, #content h3 {
+  color: var(--gm) !important;
   font-family: monospace !important;
   letter-spacing: 1px;
 }
@@ -78,22 +97,32 @@ div.breadcrumbs a { color: var(--gm) !important; }
 }
 .sidebar a { color: var(--gm) !important; }
 .sidebar a:hover { color: var(--gx) !important; }
+#nav-sidebar .current-model { color: var(--gy) !important; font-weight: bold; }
 
 /* ── Module headers ─────────────────────────────────────────── */
 .module h2, .module caption, .inline-group h2 {
   background: var(--gb) !important;
   color: var(--gx) !important;
   border: none !important;
+  border-left: 3px solid var(--gy) !important;
   letter-spacing: 1px;
+  padding-left: 10px !important;
 }
-.module { background: var(--g1) !important; border: 1px solid var(--ga) !important; }
+.module {
+  background: var(--g1) !important;
+  border: 1px solid var(--ga) !important;
+  box-shadow: 0 0 8px rgba(0,255,65,.05);
+}
 
 /* ── Tables ─────────────────────────────────────────────────── */
 #result_list { border-collapse: collapse !important; }
 #result_list thead th {
   background: var(--gb) !important;
   color: var(--gx) !important;
-  border-bottom: 1px solid var(--gd) !important;
+  border-bottom: 2px solid var(--gy2) !important;
+  letter-spacing: 1px;
+  font-size: 11px;
+  text-transform: uppercase;
 }
 #result_list tbody tr { background: var(--g1) !important; color: var(--fw) !important; }
 #result_list tbody tr:nth-child(odd) { background: var(--g2) !important; }
@@ -101,11 +130,13 @@ div.breadcrumbs a { color: var(--gm) !important; }
 #result_list td, #result_list th { border-color: var(--ga) !important; }
 #result_list td a { color: var(--gm) !important; }
 #result_list td a:hover { color: var(--gx) !important; }
+.column-header a { color: var(--gx) !important; }
 
 /* ── Action toolbar ─────────────────────────────────────────── */
 .actions, #changelist-form .actions {
   background: var(--g2) !important;
   border: 1px solid var(--ga) !important;
+  border-left: 3px solid var(--gd) !important;
 }
 .actions select, .actions input {
   background: var(--g1) !important;
@@ -115,17 +146,17 @@ div.breadcrumbs a { color: var(--gm) !important; }
 .button, input[type=submit], input[type=button], .submit-row input {
   background: var(--ga) !important;
   color: var(--gx) !important;
-  border: 1px solid var(--gd) !important;
+  border: 1px solid var(--gm) !important;
   font-family: monospace !important;
   cursor: pointer;
   transition: all .15s;
+  letter-spacing: 1px;
 }
 .button:hover, input[type=submit]:hover {
   background: var(--gb) !important;
   color: var(--gx) !important;
-  box-shadow: 0 0 6px var(--gx);
+  box-shadow: 0 0 8px var(--gx);
 }
-.default { background: var(--ga) !important; border-color: var(--gm) !important; }
 
 /* ── Forms ───────────────────────────────────────────────────── */
 .form-row { border-bottom: 1px solid var(--ga) !important; }
@@ -138,135 +169,213 @@ input[type=number], textarea, select {
 }
 input:focus, textarea:focus, select:focus {
   outline: 1px solid var(--gx) !important;
-  box-shadow: 0 0 4px var(--gx);
+  box-shadow: 0 0 5px var(--gx);
 }
 label { color: var(--gm) !important; }
-.help { color: var(--gd) !important; }
+.help { color: var(--gd) !important; font-size: 11px; }
 .errorlist li { color: var(--gr) !important; }
 
 /* ── Filters ─────────────────────────────────────────────────── */
 #changelist-filter {
   background: var(--g1) !important;
-  border-left: 1px solid var(--ga) !important;
+  border-left: 2px solid var(--gy2) !important;
 }
 #changelist-filter h2 {
-  background: var(--gb) !important;
-  color: var(--gx) !important;
-  border-bottom: 1px solid var(--gd) !important;
+  background: var(--gy3) !important;
+  color: var(--gy) !important;
+  border-bottom: 1px solid var(--gy2) !important;
+  letter-spacing: 1px;
+  font-size: 11px;
+  text-transform: uppercase;
 }
-#changelist-filter h3 { color: var(--gm) !important; }
+#changelist-filter h3 { color: var(--gy) !important; font-size: 11px; letter-spacing: 1px; }
 #changelist-filter a { color: var(--gm) !important; }
 #changelist-filter a:hover { color: var(--gx) !important; }
-#changelist-filter li.selected a { color: var(--gx) !important; font-weight: bold; }
+#changelist-filter li.selected a { color: var(--gy) !important; font-weight: bold; }
 
 /* ── Pagination ──────────────────────────────────────────────── */
+.paginator { color: var(--gd) !important; font-size: 12px; }
 .paginator a { color: var(--gm) !important; }
 .paginator a:hover { color: var(--gx) !important; }
-.paginator .this-page { color: var(--gx) !important; font-weight: bold; }
+.paginator .this-page { color: var(--gy) !important; font-weight: bold; }
 
 /* ── Messages/alerts ─────────────────────────────────────────── */
-.messagelist li { font-family: monospace !important; }
-.messagelist .success { background: var(--ga) !important; color: var(--gx) !important; border-left: 3px solid var(--gx); }
-.messagelist .warning { background: #2a2000 !important; color: var(--gy) !important; border-left: 3px solid var(--gy); }
-.messagelist .error   { background: #3a0000 !important; color: var(--gr) !important; border-left: 3px solid var(--gr); }
+.messagelist li { font-family: monospace !important; border-radius: 3px; }
+.messagelist .success { background: var(--ga) !important; color: var(--gx) !important; border-left: 4px solid var(--gx); }
+.messagelist .warning { background: var(--gy3) !important; color: var(--gy) !important; border-left: 4px solid var(--gy); }
+.messagelist .error   { background: #2a0000 !important; color: var(--gr) !important; border-left: 4px solid var(--gr); }
 
-/* ── Object tools ────────────────────────────────────────────── */
-/* Amber accents on action buttons and add links */
-.object-tools a { background: #1a1000 !important; color: var(--gy) !important; border: 1px solid var(--gy2) !important; }
-.object-tools a:hover { background: #2a1800 !important; box-shadow: 0 0 8px var(--gy) !important; color: var(--gy) !important; }
-.addlink::before { color: var(--gy) !important; }
+/* ── Object tools — amber CTA ────────────────────────────────── */
+.object-tools a {
+  background: var(--gy3) !important;
+  color: var(--gy) !important;
+  border: 1px solid var(--gy2) !important;
+  font-family: monospace !important;
+  letter-spacing: 1px;
+}
+.object-tools a:hover {
+  background: #2a1500 !important;
+  box-shadow: 0 0 10px var(--gy) !important;
+  color: var(--gy) !important;
+}
 .addlink { color: var(--gy) !important; }
-.default { background: #1a1000 !important; border-color: var(--gy) !important; color: var(--gy) !important; }
-.default:hover { box-shadow: 0 0 6px var(--gy) !important; }
+.addlink::before { color: var(--gy) !important; }
+.default {
+  background: var(--gy3) !important;
+  border-color: var(--gy2) !important;
+  color: var(--gy) !important;
+  font-family: monospace !important;
+}
+.default:hover { box-shadow: 0 0 8px var(--gy) !important; }
 
 /* ── Submit row ──────────────────────────────────────────────── */
-.submit-row { background: var(--g1) !important; border-top: 1px solid var(--ga) !important; }
+.submit-row {
+  background: var(--g1) !important;
+  border-top: 2px solid var(--gy2) !important;
+  padding: 10px 16px !important;
+}
 .deletelink { color: var(--gr) !important; }
+.deletelink:hover { text-shadow: 0 0 6px var(--gr); }
 
 /* ── Inline groups ───────────────────────────────────────────── */
 .inline-group { background: var(--g1) !important; border: 1px solid var(--ga) !important; }
 .inline-related { background: var(--g2) !important; border: 1px solid var(--ga) !important; }
 
 /* ── Checkboxes ──────────────────────────────────────────────── */
-input[type=checkbox] { accent-color: var(--gx); }
+input[type=checkbox] { accent-color: var(--gy); }
 
-/* ── Top navigation bar ──────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════
+   TOP NAVIGATION BAR
+   Logo language: amber ▓ marker · bright green text · black bg
+   ════════════════════════════════════════════════════════════════ */
 #matrix-nav {
-  background: var(--g1);
-  border-bottom: 1px solid var(--gd);
+  background: var(--g0);
+  border-bottom: 2px solid var(--gy2);
   padding: 0;
-  font-family: monospace;
+  font-family: 'Courier New', monospace;
   font-size: 13px;
   position: sticky;
   top: 0;
-  z-index: 999;
-  box-shadow: 0 2px 8px rgba(0,255,65,.1);
+  z-index: 1100;
+  box-shadow: 0 2px 16px rgba(255,179,0,.12), 0 1px 0 rgba(0,255,65,.08);
 }
 #matrix-nav .nav-inner {
   display: flex;
   align-items: stretch;
   gap: 0;
-  padding: 0 12px;
+  padding: 0 8px;
+  max-width: 100%;
 }
-#matrix-nav .nav-group {
-  position: relative;
-}
+
+/* Each top-level group */
+#matrix-nav .nav-group { position: relative; }
+
+/* Top-level label: ▓ (amber) + text (bright green) */
 #matrix-nav .nav-label {
   display: flex;
   align-items: center;
-  padding: 10px 14px;
-  color: var(--gm);
+  padding: 10px 16px;
+  color: var(--gx);
   cursor: pointer;
-  gap: 4px;
+  gap: 5px;
   white-space: nowrap;
-  transition: all .15s;
+  transition: color .12s, border-color .12s, text-shadow .12s;
   border-bottom: 2px solid transparent;
+  letter-spacing: 0.5px;
+  user-select: none;
 }
-#matrix-nav .nav-label:hover,
-#matrix-nav .nav-group:hover .nav-label {
+#matrix-nav .nav-label .nav-icon {
   color: var(--gy);
-  border-bottom-color: var(--gy);
-  text-shadow: 0 0 6px var(--gy);
+  text-shadow: 0 0 8px var(--gy);
+  font-size: 10px;
 }
+#matrix-nav .nav-label .nav-caret {
+  color: var(--gd);
+  font-size: 9px;
+  margin-left: 1px;
+  transition: color .12s;
+}
+
+/* Hover: whole label goes amber */
+#matrix-nav .nav-label:hover,
+#matrix-nav .nav-group:hover > .nav-label {
+  color: var(--gy);
+  text-shadow: 0 0 8px var(--gy);
+  border-bottom-color: var(--gy);
+}
+#matrix-nav .nav-group:hover > .nav-label .nav-caret { color: var(--gy); }
+
+/* Dropdown panel */
 #matrix-nav .nav-dropdown {
   display: none;
   position: absolute;
-  top: 100%;
+  top: calc(100% + 2px);
   left: 0;
-  min-width: 220px;
-  background: var(--g2);
-  border: 1px solid var(--gd);
-  border-top: none;
-  box-shadow: 0 4px 12px rgba(0,255,65,.15);
-  z-index: 1000;
+  min-width: 230px;
+  background: var(--g1);
+  border: 1px solid var(--gy2);
+  border-top: 2px solid var(--gy);
+  box-shadow: 0 8px 24px rgba(255,179,0,.15), 0 2px 8px rgba(0,0,0,.8);
+  z-index: 1200;
 }
 #matrix-nav .nav-group:hover .nav-dropdown { display: block; }
-#matrix-nav .nav-dropdown a {
-  display: block;
-  padding: 8px 16px;
-  color: var(--gm);
-  text-decoration: none;
-  border-bottom: 1px solid var(--ga);
-  transition: all .1s;
-}
-#matrix-nav .nav-dropdown a:hover {
-  background: #1a1000;
-  color: var(--gy);
-  padding-left: 22px;
-  border-left: 2px solid var(--gy);
-}
+
+/* Section label inside dropdown — amber with amber-tinted bg */
 #matrix-nav .nav-dropdown .nav-section {
-  padding: 4px 16px;
-  color: var(--gd);
+  padding: 5px 14px 4px;
+  color: var(--gy);
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  border-bottom: 1px solid var(--ga);
-  background: var(--g1);
+  background: var(--gy3);
+  border-bottom: 1px solid var(--gy2);
+  border-left: 3px solid var(--gy);
 }
-#matrix-nav .nav-divider { width:1px; background: var(--ga); margin: 6px 0; }
 
-/* Push content down when nav is sticky */
+/* Dropdown links — bright green default */
+#matrix-nav .nav-dropdown a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  color: var(--gx);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ga);
+  transition: all .1s;
+  font-size: 13px;
+}
+#matrix-nav .nav-dropdown a .lnk-icon {
+  color: var(--gd);
+  font-size: 10px;
+  flex-shrink: 0;
+  transition: color .1s;
+}
+
+/* Hover: amber accent with amber left border */
+#matrix-nav .nav-dropdown a:hover {
+  background: var(--gy3);
+  color: var(--gy);
+  border-left: 3px solid var(--gy);
+  padding-left: 11px;
+  text-shadow: 0 0 6px var(--gy);
+}
+#matrix-nav .nav-dropdown a:hover .lnk-icon { color: var(--gy); }
+
+/* Danger link override */
+#matrix-nav .nav-dropdown a.danger { color: var(--gr) !important; }
+#matrix-nav .nav-dropdown a.danger .lnk-icon { color: var(--gr) !important; }
+#matrix-nav .nav-dropdown a.danger:hover { background: #2a0000; border-left-color: var(--gr); color: var(--gr) !important; text-shadow: 0 0 6px var(--gr); }
+
+/* Vertical divider between groups */
+#matrix-nav .nav-divider {
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--gy2), transparent);
+  margin: 8px 0;
+  align-self: stretch;
+  opacity: 0.4;
+}
+
+/* Content offset */
 #content-main { margin-top: 0 !important; }
 </style>
 {% endblock %}
@@ -276,81 +385,92 @@ input[type=checkbox] { accent-color: var(--gx); }
   <div class="nav-inner">
 
     <div class="nav-group">
-      <div class="nav-label">&#9632; Gmail &#9660;</div>
+      <div class="nav-label">
+        <span class="nav-icon">&#9608;</span>Gmail<span class="nav-caret">&#9660;</span>
+      </div>
       <div class="nav-dropdown">
         <div class="nav-section">operations</div>
-        <a href="/admin/gmail/ops/">&#9654; Ops Console</a>
-        <a href="/admin/gmail/dashboard/">&#9654; Dashboard</a>
+        <a href="/admin/gmail/ops/"><span class="lnk-icon">&#9654;</span>Ops Console</a>
+        <a href="/admin/gmail/dashboard/"><span class="lnk-icon">&#9654;</span>Dashboard</a>
         <div class="nav-section">data</div>
-        <a href="/admin/google_gmail_backup/gmailmessage/">&#9654; Messages</a>
-        <a href="/admin/google_gmail_backup/gmailsyncstate/">&#9654; Sync State</a>
+        <a href="/admin/google_gmail_backup/gmailmessage/"><span class="lnk-icon">&#9654;</span>Messages</a>
+        <a href="/admin/google_gmail_backup/gmailsyncstate/"><span class="lnk-icon">&#9654;</span>Sync State</a>
         <div class="nav-section">rules</div>
-        <a href="/admin/gmail/rule-builder/">&#9654; &#9608; Rule Builder</a>
-        <a href="/admin/google_gmail_backup/cleanuprule/">&#9654; Cleanup Rules</a>
-        <a href="/admin/google_gmail_backup/protectedsender/">&#9654; Protected Senders</a>
-        <a href="/admin/google_gmail_backup/cleanupauditlog/">&#9654; Audit Log</a>
+        <a href="/admin/gmail/rule-builder/"><span class="lnk-icon">&#9608;</span>Rule Builder</a>
+        <a href="/admin/google_gmail_backup/cleanuprule/"><span class="lnk-icon">&#9654;</span>Cleanup Rules</a>
+        <a href="/admin/google_gmail_backup/protectedsender/"><span class="lnk-icon">&#9654;</span>Protected Senders</a>
+        <a href="/admin/google_gmail_backup/cleanupauditlog/"><span class="lnk-icon">&#9654;</span>Audit Log</a>
         <div class="nav-section">danger zone</div>
-        <a href="/admin/gmail/ops/" style="color:var(--gr)">&#9888; Empty Trash (in Ops)</a>
+        <a href="/admin/gmail/ops/" class="danger"><span class="lnk-icon">&#9888;</span>Empty Trash (in Ops)</a>
       </div>
     </div>
 
     <div class="nav-divider"></div>
 
     <div class="nav-group">
-      <div class="nav-label">&#9632; Drive &#9660;</div>
+      <div class="nav-label">
+        <span class="nav-icon">&#9608;</span>Drive<span class="nav-caret">&#9660;</span>
+      </div>
       <div class="nav-dropdown">
         <div class="nav-section">operations</div>
-        <a href="/admin/ops/">&#9654; Ops Console</a>
-        <a href="/admin/reports/">&#9654; Reports</a>
+        <a href="/admin/ops/"><span class="lnk-icon">&#9654;</span>Ops Console</a>
+        <a href="/admin/reports/"><span class="lnk-icon">&#9654;</span>Reports</a>
         <div class="nav-section">data</div>
-        <a href="/admin/google_media_backup/driveasset/">&#9654; Drive Assets</a>
-        <a href="/admin/google_media_backup/mediaitem/">&#9654; Media Items</a>
-        <a href="/admin/google_media_backup/runlog/">&#9654; Run Logs</a>
+        <a href="/admin/google_media_backup/driveasset/"><span class="lnk-icon">&#9654;</span>Drive Assets</a>
+        <a href="/admin/google_media_backup/mediaitem/"><span class="lnk-icon">&#9654;</span>Media Items</a>
+        <a href="/admin/google_media_backup/runlog/"><span class="lnk-icon">&#9654;</span>Run Logs</a>
       </div>
     </div>
 
     <div class="nav-divider"></div>
 
     <div class="nav-group">
-      <div class="nav-label">&#9632; Pipeline &#9660;</div>
+      <div class="nav-label">
+        <span class="nav-icon">&#9608;</span>Pipeline<span class="nav-caret">&#9660;</span>
+      </div>
       <div class="nav-dropdown">
         <div class="nav-section">progress</div>
-        <a href="/api/progress" target="_blank">&#9654; Drive Progress (JSON)</a>
-        <a href="/api/gmail/progress" target="_blank">&#9654; Gmail Progress (JSON)</a>
-        <div class="nav-section">api</div>
-        <a href="/api/docs" target="_blank">&#9654; Drive API Docs</a>
-        <a href="/api/gmail/docs" target="_blank">&#9654; Gmail API Docs</a>
+        <a href="/api/progress" target="_blank"><span class="lnk-icon">&#9654;</span>Drive Progress (JSON)</a>
+        <a href="/api/gmail/progress" target="_blank"><span class="lnk-icon">&#9654;</span>Gmail Progress (JSON)</a>
+        <div class="nav-section">api docs</div>
+        <a href="/api/docs" target="_blank"><span class="lnk-icon">&#9654;</span>Drive API Docs</a>
+        <a href="/api/gmail/docs" target="_blank"><span class="lnk-icon">&#9654;</span>Gmail API Docs</a>
+        <a href="/api/vault/docs" target="_blank"><span class="lnk-icon">&#9654;</span>Vault API Docs</a>
       </div>
     </div>
 
     <div class="nav-divider"></div>
 
     <div class="nav-group">
-      <div class="nav-label">&#9632; Media Vault &#9660;</div>
+      <div class="nav-label">
+        <span class="nav-icon">&#9608;</span>Media Vault<span class="nav-caret">&#9660;</span>
+      </div>
       <div class="nav-dropdown">
         <div class="nav-section">operations</div>
-        <a href="/admin/vault/ops/">&#9654; Vault Ops Console</a>
+        <a href="/admin/vault/ops/"><span class="lnk-icon">&#9654;</span>Vault Ops Console</a>
         <div class="nav-section">wagtail cms</div>
-        <a href="/cms/" target="_blank">&#9654; Wagtail CMS</a>
+        <a href="/cms/" target="_blank"><span class="lnk-icon">&#9654;</span>Wagtail CMS</a>
         <div class="nav-section">browse</div>
-        <a href="/cms/images/">&#9654; Images</a>
-        <a href="/cms/documents/">&#9654; Documents</a>
-        <a href="/cms/media/">&#9654; Videos &amp; Audio</a>
+        <a href="/cms/images/"><span class="lnk-icon">&#9654;</span>Images</a>
+        <a href="/cms/documents/"><span class="lnk-icon">&#9654;</span>Documents</a>
+        <a href="/cms/media/"><span class="lnk-icon">&#9654;</span>Videos &amp; Audio</a>
         <div class="nav-section">review</div>
-        <a href="/vault/review/">&#9654; Review Interface</a>
-        <a href="/api/vault/status" target="_blank">&#9654; Vault Status (JSON)</a>
+        <a href="/vault/review/"><span class="lnk-icon">&#9654;</span>Review Interface</a>
+        <a href="/api/vault/status" target="_blank"><span class="lnk-icon">&#9654;</span>Vault Status (JSON)</a>
       </div>
     </div>
 
     <div class="nav-divider"></div>
 
     <div class="nav-group">
-      <div class="nav-label">&#9632; Admin &#9660;</div>
+      <div class="nav-label">
+        <span class="nav-icon">&#9608;</span>Admin<span class="nav-caret">&#9660;</span>
+      </div>
       <div class="nav-dropdown">
-        <a href="/">&#9654; Landing Page</a>
-        <a href="/admin/">&#9654; Dashboard</a>
-        <a href="/admin/auth/user/">&#9654; Users</a>
-        <a href="/admin/django_apscheduler/djangojob/" title="Scheduled jobs">&#9654; Scheduler Jobs</a>
+        <a href="/"><span class="lnk-icon">&#9654;</span>Landing Page</a>
+        <a href="/admin/"><span class="lnk-icon">&#9654;</span>Admin Dashboard</a>
+        <a href="/admin/auth/user/"><span class="lnk-icon">&#9654;</span>Users</a>
+        <a href="/admin/django_apscheduler/djangojob/"><span class="lnk-icon">&#9654;</span>Scheduler Jobs</a>
       </div>
     </div>
 
