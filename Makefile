@@ -170,7 +170,7 @@ discover-files:
 	docker compose exec web python manage.py drive_pipeline discover-files --max-pages 20 --page-size 200
 
 discover-photos:
-	docker compose exec web python manage.py drive_pipeline discover-photos --max-pages 20 --page-size 200
+	docker compose exec web python manage.py drive_pipeline discover-photos --max-pages 20 --page-size 200 || true
 
 pipeline:
 	uv run python run_pipeline.py drive --limit $(LIMIT)

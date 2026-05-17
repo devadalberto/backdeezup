@@ -81,43 +81,16 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Discovered {discovered} new Drive {label}."))
 
     def _discover_photos(self, max_pages, page_size):
-        import uuid
-        from django.utils import timezone
-        from google_media_backup.models import DriveAsset, RunLog
-        from google_media_backup.services_google import list_photos_items
-
-        run = RunLog.objects.create(run_id=str(uuid.uuid4()), totals={"discovered": 0})
-        discovered = 0
-        token = None
-        pages = 0
-        self.stdout.write("Discovering Google Photos...")
-
-        while pages < max_pages:
-            items, token = list_photos_items(page_size=page_size, page_token=token)
-            for it in items:
-                pid = it.get("id")
-                if not pid:
-                    continue
-                _, created = DriveAsset.objects.get_or_create(
-                    drive_id=f"photos:{pid}",
-                    defaults=dict(
-                        name=it.get("filename") or pid,
-                        mime_type=it.get("mimeType") or "",
-                        size_bytes=0,
-                        md5_checksum="",
-                    ),
-                )
-                if created:
-                    discovered += 1
-            pages += 1
-            if not token:
-                break
-
-        run.totals["discovered"] = discovered
-        run.status = "OK"
-        run.finished_at = timezone.now()
-        run.save()
-        self.stdout.write(self.style.SUCCESS(f"Discovered {discovered} new Photos items."))
+        self.stdout.write(self.style.WARNING(
+            "BLOCKED: Google Photos discovery is disabled.\n"
+            "The old web OAuth client (1ql0o9aj) in this Google Cloud project blocks\n"
+            "the photoslibrary.readonly scope project-wide.\n\n"
+            "To unblock:\n"
+            "  1. Go to Google Auth Platform → Clients\n"
+            "  2. Delete the web client ending in '1ql0o9aj'\n"
+            "  3. Run: make auth\n"
+            "  4. Run: make discover-photos"
+        ))
 
     def _download(self, limit):
         import os

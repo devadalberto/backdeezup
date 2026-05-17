@@ -15,7 +15,8 @@ from .utils import get_fernet
 SCOPES = [
     "https://www.googleapis.com/auth/drive.readonly",
     "https://www.googleapis.com/auth/drive",
-    "https://www.googleapis.com/auth/photoslibrary.readonly",
+    # photoslibrary.readonly intentionally excluded — blocked project-wide by old web client
+    # Fix: delete client ending in 1ql0o9aj from Google Auth Platform → Clients, then re-auth
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.modify",
     "https://mail.google.com/",  # required for batchDelete and permanent deletion
