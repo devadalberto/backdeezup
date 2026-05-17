@@ -18,6 +18,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/photoslibrary.readonly",
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.modify",
+    "https://mail.google.com/",  # required for batchDelete and permanent deletion
 ]
 
 CLIENT_SECRETS = config("GOOGLE_CLIENT_SECRETS", default="secrets/google_client.json")

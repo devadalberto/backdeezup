@@ -164,13 +164,13 @@ HOST  ?= http://localhost:8844
 LIMIT ?= 100
 
 discover:
-	curl -s -X POST "$(HOST)/api/sync/discover?page_size=200&max_pages=10" | python3 -m json.tool || true
+	docker compose exec web python manage.py drive_pipeline discover --max-pages 20 --page-size 200
 
 discover-files:
-	curl -s -X POST "$(HOST)/api/sync/discover-files?page_size=200&max_pages=10" | python3 -m json.tool || true
+	docker compose exec web python manage.py drive_pipeline discover-files --max-pages 20 --page-size 200
 
 discover-photos:
-	curl -s -X POST "$(HOST)/api/sync/discover-photos?page_size=200&max_pages=20" | python3 -m json.tool || true
+	docker compose exec web python manage.py drive_pipeline discover-photos --max-pages 20 --page-size 200
 
 pipeline:
 	uv run python run_pipeline.py drive --limit $(LIMIT)
