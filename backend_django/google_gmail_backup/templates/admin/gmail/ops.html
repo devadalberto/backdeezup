@@ -271,12 +271,10 @@ li { margin: 3px 0; }
     <button class="btn btn-warn" onclick="call('gmail/ops/empty-trash?dry_run=true&skip_backup_check=true', 'POST', this)">
       &#9654; Dry-run (count trash only)
     </button>
-    <button class="btn btn-danger"
-      onclick="confirmAction('Empty Gmail Trash?','This PERMANENTLY DELETES all trashed messages. Your .eml backups are the only copy after this.',()=>call('gmail/ops/empty-trash?dry_run=false&skip_backup_check=false','POST',null))">
-      &#9888; Execute — Empty Trash (≥90% guard)
+    <button class="btn btn-danger" onclick="emptyTrash(false, this)">
+      &#9888; Execute — Empty Trash (&#8805;90% guard)
     </button>
-    <button class="btn btn-danger" style="border-color:#ff6600;color:#ff6600"
-      onclick="confirmAction('Force Empty Gmail Trash?','BYPASSES the 90% backup check. The trashed messages will NOT be in your backup. Proceed only if you already know what is in trash.',()=>call('gmail/ops/empty-trash?dry_run=false&skip_backup_check=true','POST',null))">
+    <button class="btn btn-danger" style="border-color:#ff6600;color:#ff6600" onclick="emptyTrash(true, this)">
       &#9888; Force Empty Trash (skip guard)
     </button>
   </div>
@@ -356,6 +354,16 @@ li { margin: 3px 0; }
 function getCookie(name) {
   const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
   return v ? v[2] : '';
+}
+
+function emptyTrash(skipGuard, btn) {
+  const msg = skipGuard
+    ? 'BYPASSES the 90% backup check.\n\nThe 7,293 trashed messages will be PERMANENTLY DELETED.\nYour .eml backups are the only copy after this.\n\nProceed?'
+    : 'Permanently delete ALL trashed messages?\nRequires ≥90% backup complete.\n\nProceed?';
+  if (!confirm(msg)) return;
+  const url = 'gmail/ops/empty-trash?dry_run=false&skip_backup_check=' + skipGuard;
+  call(url, 'POST', btn);
+}
 }
 
 async function call(path, method, btn) {
