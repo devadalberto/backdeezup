@@ -9,7 +9,7 @@ DJ    := backend_django/manage.py
         deploy redeploy \
         run docs \
         discover discover-files discover-photos \
-        gmail-discover gmail-incremental gmail-download gmail-verify gmail-run gmail-progress \
+        gmail-discover gmail-incremental gmail-download gmail-verify gmail-run gmail-loop gmail-progress \
         pipeline pipeline-gmail pipeline-all \
         progress \
         sync-download sync-import sync-verify sync-mark-delete sync-commit-delete sync-run \
@@ -71,10 +71,11 @@ help:
 	@echo "    make sync-commit-delete Execute Drive deletion (trash mode)"
 	@echo ""
 	@echo "  Gmail pipeline (uses management command, no HTTP auth needed)"
-	@echo "    make gmail-discover     Full Gmail snapshot discovery (max 20 pages)"
+	@echo "    make gmail-discover     Full Gmail snapshot discovery (max 50 pages)"
 	@echo "    make gmail-download     Download .eml files (LIMIT=$(LIMIT))"
 	@echo "    make gmail-verify       Verify .eml files on disk (LIMIT=$(LIMIT))"
 	@echo "    make gmail-run          Full pass: discover+download+verify (LIMIT=$(LIMIT))"
+	@echo "    make gmail-loop         Loop download+verify until queue empty (LIMIT=$(LIMIT))"
 	@echo ""
 	@echo "  Local dev (uv)"
 	@echo "    make run                Django dev server on :8844"
@@ -226,7 +227,7 @@ sync-commit-delete:
 
 # ── Gmail pipeline ────────────────────────────────────────────────────────────
 gmail-discover:
-	docker compose exec web python manage.py gmail_pipeline discover --max-pages 20 --page-size 500
+	docker compose exec web python manage.py gmail_pipeline discover --max-pages 50 --page-size 500
 
 gmail-incremental:
 	curl -s -X POST "$(HOST)/api/gmail/sync/incremental" | python3 -m json.tool || true
@@ -236,6 +237,15 @@ gmail-download:
 
 gmail-verify:
 	docker compose exec web python manage.py gmail_pipeline verify --limit $(LIMIT)
+
+gmail-loop:
+	@echo "Running gmail_pipeline all in a loop until queue is empty (Ctrl+C to stop)..."
+	@while docker compose exec web python manage.py gmail_pipeline all --limit $(LIMIT); do \
+		remaining=$$(docker compose exec -T web python manage.py shell -c \
+			"from google_gmail_backup.models import GmailMessage; print(GmailMessage.objects.filter(state='DISCOVERED').count())" 2>/dev/null | tr -d '\r'); \
+		echo "--- Remaining DISCOVERED: $$remaining ---"; \
+		[ "$$remaining" = "0" ] && break; \
+	done
 
 gmail-progress:
 	curl -s "$(HOST)/api/gmail/progress" | python3 -m json.tool || true
