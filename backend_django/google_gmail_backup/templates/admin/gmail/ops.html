@@ -263,12 +263,6 @@ li { margin: 3px 0; }
   </table>
 </div>
 
-<!-- Output -->
-<div class="card">
-  <b>Output</b>
-  <pre id="out">(results appear here)</pre>
-</div>
-
 <!-- Empty Gmail Trash -->
 <div class="card">
   <b>Empty Gmail Trash</b>&nbsp;
@@ -290,6 +284,13 @@ li { margin: 3px 0; }
     Note: the 22% gap IS the trash — the guard is circular. Use <b style="color:#ff6600">Force Empty</b> to bypass it.
     Dry-run first to confirm the count.
   </p>
+</div>
+
+<!-- Output — lives here so result is immediately visible after any action -->
+<div class="card" style="border-color:var(--gm);position:sticky;bottom:12px;z-index:50;">
+  <b style="color:var(--gx)">&#9654; Output</b>
+  <span style="font-size:11px;color:var(--gd);margin-left:8px">— result of last action appears here</span>
+  <pre id="out" style="margin-top:8px">(click any button above — result appears here)</pre>
 </div>
 
 <!-- Export -->
