@@ -239,12 +239,14 @@ gmail-verify:
 	docker compose exec web python manage.py gmail_pipeline verify --limit $(LIMIT)
 
 gmail-loop:
-	@echo "Running gmail_pipeline all in a loop until queue is empty (Ctrl+C to stop)..."
-	@while docker compose exec web python manage.py gmail_pipeline all --limit $(LIMIT); do \
+	@echo "Looping download+verify until DISCOVERED queue is empty (Ctrl+C to stop)..."
+	@while true; do \
+		docker compose exec web python manage.py gmail_pipeline download --limit $(LIMIT); \
+		docker compose exec web python manage.py gmail_pipeline verify --limit $(LIMIT); \
 		remaining=$$(docker compose exec -T web python manage.py shell -c \
 			"from google_gmail_backup.models import GmailMessage; print(GmailMessage.objects.filter(state='DISCOVERED').count())" 2>/dev/null | tr -d '\r'); \
-		echo "--- Remaining DISCOVERED: $$remaining ---"; \
-		[ "$$remaining" = "0" ] && break; \
+		echo "=== DISCOVERED remaining: $$remaining ==="; \
+		[ "$$remaining" = "0" ] && { echo "Queue empty — done."; break; }; \
 	done
 
 gmail-progress:
