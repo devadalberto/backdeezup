@@ -268,7 +268,7 @@ li { margin: 3px 0; }
   <b>Empty Gmail Trash</b>&nbsp;
   <span style="font-size:12px;color:var(--gd)">— permanently delete all trashed messages</span>
   <div class="row" style="margin-top:10px">
-    <button class="btn btn-warn" onclick="call('gmail/ops/empty-trash?dry_run=true&skip_backup_check=true', 'POST', this)">
+    <button class="btn btn-warn" onclick="dryRunTrash(this)">
       &#9654; Dry-run (count trash only)
     </button>
     <button class="btn btn-danger" onclick="emptyTrash(false, this)">
@@ -354,6 +354,10 @@ li { margin: 3px 0; }
 function getCookie(name) {
   const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
   return v ? v[2] : '';
+}
+
+function dryRunTrash(btn) {
+  call('gmail/ops/empty-trash?dry_run=true&skip_backup_check=true', 'POST', btn);
 }
 
 function emptyTrash(skipGuard, btn) {
