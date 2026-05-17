@@ -641,14 +641,16 @@ def gmail_empty_trash(request, skip_backup_check: bool = False, dry_run: bool = 
         actor_label=f"web:{request.user.username}", status="RUNNING",
     )
 
-    BATCH_SIZE = 1000
+    BATCH_SIZE = 100  # conservative — 1000 triggers quota errors on some accounts
     deleted = errors = 0
+    last_error = ""
     chunks = [trash_ids[i:i + BATCH_SIZE] for i in range(0, len(trash_ids), BATCH_SIZE)]
     for chunk in chunks:
         try:
             svc.users().messages().batchDelete(userId="me", body={"ids": chunk}).execute()
             deleted += len(chunk)
         except Exception as exc:
+            last_error = str(exc)
             errors += len(chunk)
 
     from django.utils import timezone
@@ -656,11 +658,11 @@ def gmail_empty_trash(request, skip_backup_check: bool = False, dry_run: bool = 
     audit.affected_gmail_ids = trash_ids[:100]
     audit.affected_ids_truncated = len(trash_ids) > 100
     audit.status = "OK" if errors == 0 else "ERROR"
-    audit.error_text = f"{errors} messages failed" if errors else ""
+    audit.error_text = last_error if last_error else ""
     audit.finished_at = timezone.now()
     audit.save()
 
-    return {"deleted": deleted, "errors": errors, "dry_run": False}
+    return {"deleted": deleted, "errors": errors, "dry_run": False, "last_error": last_error or None}
 
 
 # ── Export endpoints ──────────────────────────────────────────────────────────
