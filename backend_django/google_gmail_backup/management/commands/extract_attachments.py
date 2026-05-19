@@ -27,7 +27,6 @@ import re
 import time
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -78,10 +77,26 @@ TARGET_MIMES = IMAGE_MIMES | VIDEO_MIMES
 
 
 def _safe_filename(name: str) -> str:
-    """Strip path traversal and dangerous chars from attachment filename."""
-    name = os.path.basename(name or "attachment")
-    name = re.sub(r'[^\w.\-]', '_', name)
-    return name[:200] or "attachment"
+    """
+    Sanitise an untrusted attachment filename.
+    Handles: Windows backslash paths, POSIX path components, leading dots
+    (which would create hidden files), null bytes, and overlong names.
+    """
+    if not name:
+        return "attachment"
+    # Normalise backslash separators (Windows paths in email attachments)
+    name = name.replace("\\", "/")
+    # Take only the final path component — strips directory traversal
+    name = os.path.basename(name)
+    # Remove null bytes
+    name = name.replace("\x00", "")
+    # Strip leading dots to prevent hidden files (.htaccess, .env, etc.)
+    name = name.lstrip(".")
+    # Allow only safe characters: word chars, dot, hyphen
+    name = re.sub(r"[^\w.\-]", "_", name)
+    # Enforce maximum length
+    name = name[:200]
+    return name or "attachment"
 
 
 def _sha256(data: bytes) -> str:
@@ -110,7 +125,6 @@ def _parse_eml(raw_path: str):
         if ct not in TARGET_MIMES:
             continue
 
-        disp = str(part.get("Content-Disposition", ""))
         filename = part.get_filename() or ""
 
         # Skip inline images that are tiny tracking pixels (< 1KB)

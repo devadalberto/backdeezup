@@ -1,5 +1,5 @@
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Count, Sum
+from django.db.models import Count, Q, Sum
 from django.shortcuts import render
 
 from .models import CleanupRule, GmailMessage, GmailSyncState
@@ -18,12 +18,20 @@ def gmail_dashboard(request):
         .annotate(n=Count("id"), bytes=Sum("size_estimate"))
         .order_by("-n")[:20]
     )
+    # Single aggregate query — was 7 separate COUNT/SUM calls
+    agg = GmailMessage.objects.aggregate(
+        messages=Count("id"),
+        downloaded=Count("id", filter=Q(state=GmailMessage.State.DOWNLOADED)),
+        verified=Count("id", filter=Q(state=GmailMessage.State.VERIFIED)),
+        with_attachments=Count("id", filter=Q(has_attachments=True)),
+        bytes_total=Sum("size_estimate"),
+    )
     totals = {
-        "messages": GmailMessage.objects.count(),
-        "downloaded": GmailMessage.objects.filter(state=GmailMessage.STATE_DOWNLOADED).count(),
-        "verified": GmailMessage.objects.filter(state=GmailMessage.STATE_VERIFIED).count(),
-        "with_attachments": GmailMessage.objects.filter(has_attachments=True).count(),
-        "bytes_total": GmailMessage.objects.aggregate(s=Sum("size_estimate"))["s"] or 0,
+        "messages":         agg["messages"] or 0,
+        "downloaded":       agg["downloaded"] or 0,
+        "verified":         agg["verified"] or 0,
+        "with_attachments": agg["with_attachments"] or 0,
+        "bytes_total":      agg["bytes_total"] or 0,
     }
     ctx = {
         "title": "Gmail Dashboard",

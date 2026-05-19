@@ -11,7 +11,7 @@ class GmailSyncStateTest(TestCase):
     def test_create_sync_state(self):
         state = GmailSyncState.objects.create(email="test@example.com")
         self.assertEqual(str(state), "test@example.com")
-        self.assertIsNone(state.last_history_id)
+        self.assertEqual(state.last_history_id, "")  # null=True removed — blank string is the empty sentinel
         self.assertEqual(state.total_messages, 0)
 
     def test_unique_email(self):

@@ -69,8 +69,10 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
         protected = _protected_emails()
         cutoff = timezone.now() - timedelta(days=rule.min_age_days)
 
-        # Build local queryset from verified messages matching age requirement
-        qs = GmailMessage.objects.filter(
+        # Build local queryset from verified messages matching age requirement.
+        # select_for_update() prevents two concurrent rule runs from acting on
+        # the same messages (double-trash protection).
+        qs = GmailMessage.objects.select_for_update(skip_locked=True).filter(
             state=GmailMessage.STATE_VERIFIED,
             date__lte=cutoff,
         )
@@ -199,11 +201,30 @@ def apply_protected_sender_rules() -> CleanupAuditLog:
     executed = 0
     affected_ids = []
 
+    # Batch all senders into a single OR query — avoids N separate ILIKE scans
+    from django.db.models import Q as _Q
+    sender_q = _Q()
     for sender in protected:
-        msgs = list(GmailMessage.objects.filter(
-            from_address__icontains=sender.email,
+        sender_q |= _Q(from_address__icontains=sender.email)
+
+    all_candidate_msgs = list(
+        GmailMessage.objects.filter(
+            sender_q,
             state=GmailMessage.STATE_VERIFIED,
-        ).exclude(labels__contains=["STARRED"]))
+        ).exclude(labels__contains=["STARRED"])
+    )
+    # Group by sender for label assignment
+    candidate_by_email: dict = {}
+    for msg in all_candidate_msgs:
+        for sender in protected:
+            if sender.email.lower() in msg.from_address.lower():
+                candidate_by_email.setdefault(sender.email, []).append(msg)
+                break
+
+    for sender in protected:
+        msgs = candidate_by_email.get(sender.email, [])
+        if not msgs:
+            continue
 
         if not msgs:
             continue

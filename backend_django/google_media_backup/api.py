@@ -198,11 +198,12 @@ def sync_import(request, limit: int = 20):
 
 @api.post("/sync/verify")
 def sync_verify(request, limit: int = 50):
-    qs = DriveAsset.objects.filter(state='IMPORTED').order_by('imported_at')[:limit]
+    # select_related avoids N+1 MediaItem existence check per asset
+    qs = DriveAsset.objects.filter(state='IMPORTED').select_related('media_item').order_by('imported_at')[:limit]
     verified = 0
     for a in qs:
         ok_a = bool(a.download_path and os.path.exists(a.download_path))
-        ok_b = bool(a.media_item_id and MediaItem.objects.filter(id=a.media_item_id).exists())
+        ok_b = bool(a.media_item_id and a.media_item is not None)
         if ok_a and ok_b: a.state='VERIFIED'; a.error=None; verified += 1
         else: a.error="Verification failed"
         a.save(update_fields=['state','error'])
