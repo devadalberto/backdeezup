@@ -243,6 +243,15 @@ gmail-download:
 gmail-verify:
 	docker compose exec web python manage.py gmail_pipeline verify --limit $(LIMIT)
 
+gmail-extract-attachments:
+	docker compose exec web python manage.py extract_attachments --workers 8
+
+gmail-extract-attachments-dry:
+	docker compose exec web python manage.py extract_attachments --dry-run
+
+gmail-extract-all:
+	docker compose exec web python manage.py extract_attachments --all --workers 8
+
 gmail-loop:
 	@echo "Looping download+verify until DISCOVERED queue is empty (Ctrl+C to stop)..."
 	@while true; do \
