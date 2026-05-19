@@ -42,8 +42,11 @@ def htmx_audit_log(request):
 @staff_member_required
 @require_GET
 def htmx_gmail_progress(request):
-    """Gmail pipeline progress bar fragment."""
+    """Gmail pipeline progress bar fragment — includes disk usage stats."""
+    import os
+    import shutil
     from .models import GmailMessage, GmailSyncState
+    from django.conf import settings
     from django.db.models import Sum
 
     sync_total = GmailSyncState.objects.aggregate(t=Sum("total_messages"))["t"] or 0
@@ -53,11 +56,37 @@ def htmx_gmail_progress(request):
     filled = int(pct / 5)
     bar = "=" * filled + "-" * (20 - filled)
 
+    # Disk usage
+    gmail_dir = os.path.join(settings.MEDIA_ROOT, "gmail")
+    disk_total = disk_used = disk_free = gmail_size = 0
+    disk_pct = 0
+    try:
+        disk_total, disk_used, disk_free = shutil.disk_usage(settings.MEDIA_ROOT)
+        disk_pct = round(disk_used / max(disk_total, 1) * 100, 1)
+        if os.path.exists(gmail_dir):
+            gmail_size = sum(
+                os.path.getsize(os.path.join(r, f))
+                for r, _, files in os.walk(gmail_dir)
+                for f in files
+            )
+    except Exception as exc:
+        log.warning("htmx_gmail_progress disk usage error: %s", exc)
+
+    def _fmt(b):
+        if b >= 1024 ** 3:
+            return f"{b / 1024 ** 3:.1f} GB"
+        return f"{b / 1024 ** 2:.0f} MB"
+
     ctx = {
         "sync_total": sync_total,
         "verified": verified,
         "discovered": discovered,
         "pct": pct,
         "bar": bar,
+        "gmail_size": _fmt(gmail_size),
+        "disk_used": _fmt(disk_used),
+        "disk_total": _fmt(disk_total),
+        "disk_free": _fmt(disk_free),
+        "disk_pct": disk_pct,
     }
     return render(request, "admin/gmail/partials/gmail_progress.html", ctx)
