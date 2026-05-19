@@ -98,6 +98,9 @@ make test-full              # lint (ruff) + 30 unit tests
 ## SSH / Git config
 
 **Machine: WINWEB01** (Windows Server 2025) + **Debian WSL2** (user: saitama)
+- Host: 2 logical processors, Hyper-V guest VM, IP: 192.168.88.60
+- WSL2 limits (`C:\Users\Administrator\.wslconfig`): memory=8GB, processors=2, swap=4GB
+- Docker builds are memory-constrained — if build OOMs run `docker builder prune -f` first
 
 Both machines have identical `~/.ssh/config` and key files:
 
