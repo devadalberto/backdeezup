@@ -245,6 +245,33 @@ Graph output: `graphify-out/` (GRAPH_REPORT.md, wiki/index.md)
 - **vim not nano** — for any terminal editing.
 - **make preflight first** — always before any deploy action.
 - **SILENCED_SYSTEM_CHECKS = ["django_ratelimit.W001"]** — already in settings, don't re-add.
+## CI/CD Pipeline (GitHub Actions)
+
+7 stages on every push/PR to main — all containerized:
+
+| Stage | What | Tool |
+|---|---|---|
+| `lint` | Python style | ruff in python:3.12-slim |
+| `test` | Unit tests | Django SQLite in python:3.12-slim |
+| `sast-bandit` | Python SAST | Bandit → SARIF → GitHub Security tab |
+| `sast-safety` | Dep CVEs | Safety → JSON artifact |
+| `trivy` | Container CVEs | Trivy → SARIF → GitHub Security tab |
+| `compose-smoke` | Full stack test | docker compose up, HTTPS smoke, HTTP redirect |
+| `playwright` | E2E browser test | Chromium headless |
+
+Security findings visible at: github.com/devadalberto/backdeezup/security/code-scanning
+
+## Autostart on VM Boot
+
+**Debian WSL** — systemd service:
+- `/etc/systemd/system/backdeezup.service` — enabled, runs `docker compose up -d` on WSL boot
+- Install: `sudo bash scripts/autostart.sh`
+
+**Windows (WINWEB01)** — startup folder bat:
+- `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\backdeezup-autostart.bat`
+- Runs `wsl -d Debian -- docker compose up -d` on every Windows login
+- Already installed; logs to `%TEMP%\backdeezup-autostart.log`
+
 ## Standing best practices (apply every session)
 - **Feature branches always** — `feat/<name>`, `fix/<name>`. Never commit non-trivial changes directly to main.
 - **Run `make test-full` before every merge**
