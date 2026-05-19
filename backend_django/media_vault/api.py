@@ -92,6 +92,16 @@ def next_undecided(request, item_type: str = "image"):
     }
 
 
+@vault_api.get("/image-full/{image_id}")
+def image_full_url(request, image_id: int):
+    """Return full-size URL for image lightbox."""
+    item = VaultImage.objects.filter(id=image_id).first()
+    if not item:
+        return {"url": None, "error": "not found"}
+    rendition = item.get_rendition("max-1200x1200")
+    return {"url": rendition.url, "width": rendition.width, "height": rendition.height}
+
+
 @vault_api.post("/import")
 def trigger_import(request, source: str = "all", limit: int = 0, dry_run: bool = False):
     """

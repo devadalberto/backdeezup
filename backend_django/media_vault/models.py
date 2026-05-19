@@ -7,6 +7,17 @@ from wagtail.documents.models import AbstractDocument
 from wagtailmedia.models import AbstractMedia
 
 
+IDENTITY_TAG_CHOICES = [
+    ("adalberto",  "Adalberto (Jose)"),
+    ("monica",     "Monica"),
+    ("little-owls","Little Owls School"),
+    ("emiliano",   "Emiliano"),
+    ("julieta",    "Julieta"),
+    ("family",     "Family"),
+    ("other",      "Other"),
+]
+
+
 class VaultImage(AbstractImage):
     """
     Custom Wagtail image model.
@@ -22,11 +33,16 @@ class VaultImage(AbstractImage):
     imported_at = models.DateTimeField(default=timezone.now)
     keep = models.BooleanField(default=None, null=True, help_text="None=undecided, True=keep, False=delete")
     notes = models.TextField(blank=True, default="")
+    identity_tag = models.CharField(
+        max_length=20, choices=IDENTITY_TAG_CHOICES,
+        blank=True, default="", db_index=True,
+        help_text="Person this media belongs to",
+    )
 
     admin_form_fields = (
         "title", "file", "collection", "tags", "focal_point_x", "focal_point_y",
         "focal_point_width", "focal_point_height",
-        "source_type", "keep", "notes",
+        "source_type", "identity_tag", "keep", "notes",
     )
 
     class Meta(AbstractImage.Meta):
@@ -70,10 +86,15 @@ class VaultMedia(AbstractMedia):
     duration_seconds = models.IntegerField(default=0)
     width = models.IntegerField(default=0)
     height = models.IntegerField(default=0)
+    identity_tag = models.CharField(
+        max_length=20, choices=IDENTITY_TAG_CHOICES,
+        blank=True, default="", db_index=True,
+        help_text="Person this media belongs to",
+    )
 
     admin_form_fields = (
         "title", "file", "collection", "thumbnail",
-        "source_type", "duration_seconds", "keep", "notes",
+        "source_type", "identity_tag", "duration_seconds", "keep", "notes",
     )
 
     class Meta(AbstractMedia.Meta):

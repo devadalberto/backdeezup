@@ -1,0 +1,514 @@
+{% extends "media_vault/base.html" %}
+{% load wagtailimages_tags %}
+
+{% block content %}
+<style>
+/* ── Gallery layout ──────────────────────────────────────────── */
+.gallery-wrap {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 0;
+  min-height: calc(100vh - 60px);
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.sidebar {
+  background: var(--g1);
+  border-right: 1px solid var(--ga);
+  padding: 16px 12px;
+  position: sticky;
+  top: 60px;
+  height: calc(100vh - 60px);
+  overflow-y: auto;
+}
+.sidebar-section {
+  margin-bottom: 20px;
+}
+.sidebar-title {
+  font-size: 10px;
+  color: var(--gy);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--gy3);
+}
+.sidebar a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  border-radius: 3px;
+  color: var(--gm);
+  text-decoration: none;
+  font-size: 12px;
+  font-family: monospace;
+  transition: all .1s;
+}
+.sidebar a:hover, .sidebar a.active {
+  background: var(--ga);
+  color: var(--gx);
+}
+.sidebar a.active {
+  border-left: 2px solid var(--gy);
+  color: var(--gy);
+}
+.sidebar a .badge {
+  font-size: 10px;
+  color: var(--gd);
+  background: var(--g2);
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+
+/* ── Search bar ──────────────────────────────────────────────── */
+.gallery-topbar {
+  padding: 12px 16px;
+  background: var(--g1);
+  border-bottom: 1px solid var(--ga);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gallery-topbar input[type=search] {
+  background: var(--g2);
+  border: 1px solid var(--gd);
+  color: var(--gx);
+  padding: 6px 10px;
+  font-family: monospace;
+  font-size: 13px;
+  border-radius: 3px;
+  width: 260px;
+}
+.gallery-topbar input[type=search]:focus {
+  outline: 1px solid var(--gx);
+}
+.gallery-info {
+  font-size: 12px;
+  color: var(--gd);
+  font-family: monospace;
+  margin-left: auto;
+}
+
+/* ── Grid ────────────────────────────────────────────────────── */
+.gallery-main {
+  background: var(--g0);
+  display: flex;
+  flex-direction: column;
+}
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 4px;
+  padding: 16px;
+}
+
+/* ── Item card ───────────────────────────────────────────────── */
+.gallery-item {
+  position: relative;
+  background: var(--g1);
+  border: 1px solid var(--ga);
+  border-radius: 3px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+  aspect-ratio: 1;
+}
+.gallery-item:hover {
+  border-color: var(--gm);
+  box-shadow: 0 0 10px rgba(0,255,65,.2);
+  z-index: 1;
+}
+.gallery-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.gallery-item .video-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: var(--g2);
+}
+.gallery-item .play-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px;
+  color: rgba(0,255,65,.8);
+  text-shadow: 0 0 12px var(--gx);
+  pointer-events: none;
+}
+.gallery-item .item-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,.8));
+  padding: 20px 6px 6px;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.gallery-item:hover .item-overlay {
+  opacity: 1;
+}
+.gallery-item .item-title {
+  font-size: 10px;
+  color: var(--fw);
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gallery-item .item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: 3px;
+}
+.gallery-item .item-tag {
+  font-size: 9px;
+  background: rgba(0,255,65,.15);
+  color: var(--gx);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+.gallery-item .item-type-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 9px;
+  background: rgba(0,0,0,.7);
+  color: var(--gd);
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-family: monospace;
+}
+.gallery-item.keep-true { border-color: var(--gx); }
+.gallery-item.keep-false { border-color: var(--gr); opacity: .5; }
+
+/* ── Lightbox / detail modal ─────────────────────────────────── */
+.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.95);
+  z-index: 9999;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.lightbox.open { display: flex; }
+.lightbox-inner {
+  max-width: 90vw;
+  max-height: 85vh;
+  position: relative;
+}
+.lightbox img {
+  max-width: 90vw;
+  max-height: 80vh;
+  object-fit: contain;
+  border: 1px solid var(--gd);
+}
+.lightbox video {
+  max-width: 90vw;
+  max-height: 80vh;
+  background: #000;
+}
+.lightbox-meta {
+  margin-top: 10px;
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--gm);
+  text-align: center;
+}
+.lightbox-close {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  font-size: 28px;
+  color: var(--gx);
+  cursor: pointer;
+  background: none;
+  border: none;
+  z-index: 10000;
+}
+.lightbox-close:hover { color: var(--gy); }
+.lightbox-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  justify-content: center;
+}
+.lb-btn {
+  padding: 5px 16px;
+  font-family: monospace;
+  font-size: 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 1px solid;
+}
+.lb-keep  { background: rgba(0,255,65,.12); color: var(--gx); border-color: var(--gd); }
+.lb-del   { background: rgba(255,49,49,.12); color: var(--gr); border-color: var(--gr); }
+.lb-skip  { background: var(--g2); color: var(--gd); border-color: var(--ga); }
+
+/* ── Pagination ──────────────────────────────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px;
+  font-family: monospace;
+  font-size: 12px;
+}
+.pagination a, .pagination span {
+  padding: 4px 10px;
+  border: 1px solid var(--ga);
+  border-radius: 3px;
+  color: var(--gm);
+  text-decoration: none;
+}
+.pagination a:hover { border-color: var(--gx); color: var(--gx); }
+.pagination .current { border-color: var(--gy); color: var(--gy); }
+
+/* ── Empty state ─────────────────────────────────────────────── */
+.gallery-empty {
+  text-align: center;
+  padding: 80px 24px;
+  font-family: monospace;
+  color: var(--gd);
+}
+.gallery-empty .empty-icon { font-size: 48px; margin-bottom: 16px; }
+.gallery-empty p { font-size: 14px; margin-top: 8px; }
+.gallery-empty a { color: var(--gy); }
+</style>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+  <div class="lightbox-inner">
+    <div id="lbContent"></div>
+    <div class="lightbox-meta" id="lbMeta"></div>
+    <div class="lightbox-actions">
+      <button class="lb-btn lb-keep" onclick="lbDecide('keep')">&#10003; Keep (K)</button>
+      <button class="lb-btn lb-del"  onclick="lbDecide('delete')">&#10007; Delete (D)</button>
+      <button class="lb-btn lb-skip" onclick="closeLightbox()">Skip (Esc)</button>
+    </div>
+  </div>
+</div>
+
+<div class="gallery-wrap">
+
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">&#9608; Media Type</div>
+      <a href="?{% if active_person %}person={{ active_person }}&{% endif %}{% if active_tag %}tag={{ active_tag }}&{% endif %}type="
+         class="{% if not active_type %}active{% endif %}">
+        All <span class="badge">{{ count_images|add:count_videos }}</span>
+      </a>
+      <a href="?{% if active_person %}person={{ active_person }}&{% endif %}{% if active_tag %}tag={{ active_tag }}&{% endif %}type=image"
+         class="{% if active_type == 'image' %}active{% endif %}">
+        &#128247; Images <span class="badge">{{ count_images }}</span>
+      </a>
+      <a href="?{% if active_person %}person={{ active_person }}&{% endif %}{% if active_tag %}tag={{ active_tag }}&{% endif %}type=video"
+         class="{% if active_type == 'video' %}active{% endif %}">
+        &#127909; Videos <span class="badge">{{ count_videos }}</span>
+      </a>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">&#9608; Person</div>
+      <a href="?{% if active_type %}type={{ active_type }}&{% endif %}person="
+         class="{% if not active_person %}active{% endif %}">
+        Everyone
+      </a>
+      {% for value, label in identity_choices %}
+      <a href="?{% if active_type %}type={{ active_type }}&{% endif %}person={{ value }}"
+         class="{% if active_person == value %}active{% endif %}">
+        {{ label }}
+      </a>
+      {% endfor %}
+    </div>
+
+    {% if all_tags %}
+    <div class="sidebar-section">
+      <div class="sidebar-title">&#9608; Tags</div>
+      <a href="?{% if active_person %}person={{ active_person }}&{% endif %}{% if active_type %}type={{ active_type }}&{% endif %}tag="
+         class="{% if not active_tag %}active{% endif %}">
+        All tags
+      </a>
+      {% for tag in all_tags %}
+      <a href="?{% if active_person %}person={{ active_person }}&{% endif %}{% if active_type %}type={{ active_type }}&{% endif %}tag={{ tag.slug }}"
+         class="{% if active_tag == tag.slug %}active{% endif %}">
+        # {{ tag.name }}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">&#9608; Actions</div>
+      <a href="/vault/review/">&#9654; Review (triage)</a>
+      <a href="/admin/vault/ops/">&#9654; Vault Ops</a>
+      <a href="/cms/images/">&#9654; Image Library</a>
+      <a href="/cms/media/">&#9654; Media Library</a>
+    </div>
+
+  </aside>
+
+  <!-- ── Main content ── -->
+  <div class="gallery-main">
+
+    <!-- Top bar -->
+    <div class="gallery-topbar">
+      <form method="get" style="display:contents">
+        {% if active_person %}<input type="hidden" name="person" value="{{ active_person }}">{% endif %}
+        {% if active_type %}<input type="hidden" name="type" value="{{ active_type }}">{% endif %}
+        {% if active_tag %}<input type="hidden" name="tag" value="{{ active_tag }}">{% endif %}
+        <input type="search" name="q" value="{{ active_q }}"
+               placeholder="Search by title or email..." autocomplete="off">
+        <button type="submit" style="background:var(--ga);color:var(--gx);border:1px solid var(--gd);padding:5px 12px;font-family:monospace;cursor:pointer;border-radius:3px;">&#9654; Search</button>
+      </form>
+      <span class="gallery-info">{{ total }} item{% if total != 1 %}s{% endif %}</span>
+    </div>
+
+    <!-- Grid -->
+    <div class="gallery-grid">
+      {% for item_type, item in items %}
+
+        {% if item_type == "image" %}
+        <div class="gallery-item {% if item.keep == True %}keep-true{% elif item.keep == False %}keep-false{% endif %}"
+             onclick="openImage({{ item.id }}, '{{ item.title|escapejs }}', '{{ item.tags.all|join:', '|escapejs }}')"
+             title="{{ item.title }}">
+          {% image item "fill-180x180" as thumb %}
+          <img src="{{ thumb.url }}" alt="{{ item.title }}" loading="lazy">
+          <span class="item-type-badge">IMG</span>
+          <div class="item-overlay">
+            <div class="item-title">{{ item.title }}</div>
+            <div class="item-tags">
+              {% for tag in item.tags.all %}<span class="item-tag">#{{ tag.name }}</span>{% endfor %}
+              {% if item.identity_tag %}<span class="item-tag" style="color:var(--gy)">@{{ item.identity_tag }}</span>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        {% else %}
+        <div class="gallery-item {% if item.keep == True %}keep-true{% elif item.keep == False %}keep-false{% endif %}"
+             onclick="openVideo({{ item.id }}, '{{ item.title|escapejs }}', '{{ item.tags.all|join:', '|escapejs }}')"
+             title="{{ item.title }}">
+          {% if item.thumbnail %}
+            <img class="video-thumb" src="{{ item.thumbnail.url }}" alt="{{ item.title }}" loading="lazy">
+          {% else %}
+            <div class="video-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--gd);font-family:monospace;font-size:11px;">
+              {{ item.title|truncatechars:20 }}
+            </div>
+          {% endif %}
+          <span class="play-icon">&#9654;</span>
+          <span class="item-type-badge">VID</span>
+          <div class="item-overlay">
+            <div class="item-title">{{ item.title }}</div>
+            <div class="item-tags">
+              {% for tag in item.tags.all %}<span class="item-tag">#{{ tag.name }}</span>{% endfor %}
+              {% if item.identity_tag %}<span class="item-tag" style="color:var(--gy)">@{{ item.identity_tag }}</span>{% endif %}
+              {% if item.duration_seconds %}<span class="item-tag" style="color:var(--gt)">{{ item.duration_seconds }}s</span>{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+      {% empty %}
+      <div class="gallery-empty" style="grid-column:1/-1;">
+        <div class="empty-icon">&#128247;</div>
+        <div style="color:var(--gm);font-size:16px;">No media found</div>
+        <p>
+          {% if active_person or active_type or active_tag or active_q %}
+            No items match your filters. <a href="?">Clear filters</a>
+          {% else %}
+            Import media first: <a href="/admin/vault/ops/">Vault Ops Console</a>
+          {% endif %}
+        </p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if active_person %}&person={{ active_person }}{% endif %}{% if active_type %}&type={{ active_type }}{% endif %}{% if active_tag %}&tag={{ active_tag }}{% endif %}{% if active_q %}&q={{ active_q }}{% endif %}">&laquo; Prev</a>
+      {% endif %}
+      <span class="current">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if active_person %}&person={{ active_person }}{% endif %}{% if active_type %}&type={{ active_type }}{% endif %}{% if active_tag %}&tag={{ active_tag }}{% endif %}{% if active_q %}&q={{ active_q }}{% endif %}">Next &raquo;</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div><!-- /gallery-main -->
+</div><!-- /gallery-wrap -->
+
+<script>
+const CSRF = document.cookie.match('(^|;) ?csrftoken=([^;]*)(;|$)')?.[2] || '';
+let _lbItemType = null, _lbItemId = null;
+
+function openImage(id, title, tags) {
+  _lbItemType = 'image'; _lbItemId = id;
+  document.getElementById('lbContent').innerHTML =
+    '<img src="/api/vault/image-url/' + id + '/" alt="' + title + '" onerror="this.style.display=\'none\'">' +
+    '<img id="lbImg_' + id + '" alt="' + title + '" style="display:none">';
+  // Use wagtail image rendition URL
+  fetch('/api/vault/image-full/' + id + '/').then(r => r.json()).then(d => {
+    if (d.url) document.getElementById('lbContent').innerHTML = '<img src="' + d.url + '" alt="' + title + '">';
+  }).catch(() => {
+    document.getElementById('lbContent').innerHTML = '<div style="color:var(--gd);padding:40px;font-family:monospace">Image preview not available</div>';
+  });
+  document.getElementById('lbMeta').textContent = title + (tags ? ' · #' + tags : '');
+  document.getElementById('lightbox').classList.add('open');
+}
+
+function openVideo(id, title, tags) {
+  _lbItemType = 'video'; _lbItemId = id;
+  document.getElementById('lbContent').innerHTML =
+    '<video controls autoplay style="max-width:90vw;max-height:80vh;background:#000">' +
+    '<source src="/vault/stream/' + id + '/">' +
+    '</video>';
+  document.getElementById('lbMeta').textContent = title + (tags ? ' · #' + tags : '');
+  document.getElementById('lightbox').classList.add('open');
+}
+
+function closeLightbox() {
+  const lb = document.getElementById('lightbox');
+  lb.classList.remove('open');
+  // Stop video playback
+  const vid = lb.querySelector('video');
+  if (vid) { vid.pause(); vid.src = ''; }
+  document.getElementById('lbContent').innerHTML = '';
+  _lbItemType = null; _lbItemId = null;
+}
+
+function lbDecide(action) {
+  if (!_lbItemId) return;
+  fetch('/api/vault/decide', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+    body: JSON.stringify({ item_type: _lbItemType, item_id: _lbItemId, action: action }),
+  }).then(r => r.json()).then(d => {
+    if (d.recorded) closeLightbox();
+  });
+}
+
+document.addEventListener('keydown', e => {
+  const lb = document.getElementById('lightbox');
+  if (!lb.classList.contains('open')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'k' || e.key === 'K') lbDecide('keep');
+  if (e.key === 'd' || e.key === 'D') lbDecide('delete');
+});
+</script>
+{% endblock %}

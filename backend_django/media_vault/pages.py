@@ -172,3 +172,100 @@ class VaultHomePage(Page):
 
     class Meta:
         verbose_name = "Vault Home Page"
+
+
+class GalleryIndexPage(Page):
+    """
+    Stash-style gallery index — live-queries VaultImage + VaultMedia with
+    sidebar filters: person tag, media type, date range.
+    No StreamField — content is dynamic from the DB.
+    """
+    intro = models.TextField(blank=True, default="")
+    items_per_page = models.IntegerField(default=48)
+
+    content_panels = Page.content_panels + [
+        FieldPanel("intro"),
+        FieldPanel("items_per_page"),
+    ]
+
+    class Meta:
+        verbose_name = "Gallery Index Page"
+
+    def get_context(self, request, *args, **kwargs):
+        from media_vault.models import VaultImage, VaultMedia, IDENTITY_TAG_CHOICES
+        from taggit.models import Tag
+        from django.core.paginator import Paginator
+        from django.db.models import Q
+
+        ctx = super().get_context(request, *args, **kwargs)
+
+        # ── Filters from GET params ───────────────────────────────────────
+        person   = request.GET.get("person", "")
+        mtype    = request.GET.get("type", "")     # image | video | all
+        tag_slug = request.GET.get("tag", "")
+        q_search = request.GET.get("q", "")
+        page_num = int(request.GET.get("page", 1))
+
+        # ── Build querysets ───────────────────────────────────────────────
+        images_qs = VaultImage.objects.order_by("-imported_at")
+        videos_qs = VaultMedia.objects.order_by("-imported_at")
+
+        if person:
+            images_qs = images_qs.filter(identity_tag=person)
+            videos_qs = videos_qs.filter(identity_tag=person)
+
+        if tag_slug:
+            images_qs = images_qs.filter(tags__slug=tag_slug)
+            videos_qs = videos_qs.filter(tags__slug=tag_slug)
+
+        if q_search:
+            images_qs = images_qs.filter(
+                Q(title__icontains=q_search) | Q(source_email__icontains=q_search)
+            )
+            videos_qs = videos_qs.filter(
+                Q(title__icontains=q_search) | Q(source_email__icontains=q_search)
+            )
+
+        # ── Combine into unified list for grid ────────────────────────────
+        if mtype == "image":
+            items = [("image", img) for img in images_qs]
+            total = images_qs.count()
+        elif mtype == "video":
+            items = [("video", vid) for vid in videos_qs]
+            total = videos_qs.count()
+        else:
+            # Interleave: sort images + videos together by imported_at
+            combined = (
+                [("image", img) for img in images_qs] +
+                [("video", vid) for vid in videos_qs]
+            )
+            combined.sort(key=lambda x: x[1].imported_at, reverse=True)
+            items = combined
+            total = len(items)
+
+        # ── Paginate ──────────────────────────────────────────────────────
+        paginator = Paginator(items, self.items_per_page)
+        page_obj = paginator.get_page(page_num)
+
+        # ── Sidebar data ──────────────────────────────────────────────────
+        all_tags = Tag.objects.filter(
+            Q(media_vault_vaultimage_tags__isnull=False) |
+            Q(media_vault_vaultmedia_tags__isnull=False)
+        ).distinct().order_by("name")
+
+        ctx.update({
+            "page_obj": page_obj,
+            "items": page_obj.object_list,
+            "total": total,
+            "identity_choices": IDENTITY_TAG_CHOICES,
+            "all_tags": all_tags,
+            # active filters
+            "active_person": person,
+            "active_type": mtype,
+            "active_tag": tag_slug,
+            "active_q": q_search,
+            # counts for sidebar badges
+            "count_images": VaultImage.objects.count(),
+            "count_videos": VaultMedia.objects.count(),
+        })
+        return ctx
