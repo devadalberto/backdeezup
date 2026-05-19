@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DJANGO_SECRET_KEY: ci-test-key-not-for-production-use-only-in-ci
+  DEBUG: "True"
+  GOOGLE_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+  DATABASE_URL: ""
+
+jobs:
+  # ── lint and test run in parallel ─────────────────────────────────────────
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          # No pip cache — project uses uv which has its own cache above
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Ruff lint
+        run: uv run ruff check backend_django/ --select E,F,W --ignore E501,E701,E702
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Django system check
+        run: uv run python backend_django/manage.py check
+
+      - name: Run tests (SQLite)
+        run: uv run python backend_django/manage.py test google_media_backup google_gmail_backup --verbosity=2
+
+  playwright:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('uv.lock') }}
+          restore-keys: playwright-
+
+      - name: Install Playwright browsers
+        run: uv run playwright install --with-deps chromium
+
+      - name: Start Django server
+        run: |
+          uv run python backend_django/manage.py migrate --run-syncdb
+          uv run python backend_django/manage.py runserver 0.0.0.0:8844 &
+          sleep 3
+
+      - name: Playwright smoke test
+        run: |
+          uv run python -c "
+          from playwright.sync_api import sync_playwright
+          with sync_playwright() as p:
+              browser = p.chromium.launch(headless=True)
+              page = browser.new_page()
+              page.goto('http://localhost:8844/api/docs')
+              assert 'swagger' in page.content().lower() or page.title() != '', f'Swagger UI not loaded, title={page.title()}'
+              print('Swagger UI OK:', page.title())
+              page.goto('http://localhost:8844/api/gmail/docs')
+              assert 'swagger' in page.content().lower(), 'Gmail Swagger UI not loaded'
+              print('Gmail Swagger UI OK')
+              page.goto('http://localhost:8844/admin/login/')
+              assert page.locator('input[name=username]').count() > 0, 'Admin login not found'
+              print('Admin login OK')
+              browser.close()
+          "
