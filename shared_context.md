@@ -168,11 +168,16 @@ make vault-setup          # first deploy only
 
 ## Media Vault
 
-- **VaultImage** — Wagtail AbstractImage subclass, source_type/source_id tracking, keep=True/False/None
-- **VaultMedia** — Wagtail AbstractMedia, video/audio, same tracking
+- **VaultImage** — Wagtail AbstractImage subclass, source_type/source_id/identity_tag tracking
+- **VaultMedia** — Wagtail AbstractMedia, video/audio, identity_tag, duration_seconds
+- **GalleryIndexPage** — Stash-style Wagtail page at `/vault/gallery/`, sidebar filters (person/type/tag/search), pagination 48/page
 - **MediaDecision** — audit trail for keep/delete/skip decisions
-- Import pipeline: `POST /api/vault/import` or `/admin/vault/ops/` — scans verified Drive assets + Gmail attachments → VaultImage/VaultMedia (idempotent)
+- **Identity tags:** adalberto / monica / little-owls / emiliano / julieta / family / other
+- Import pipeline: `POST /api/vault/import` or `/admin/vault/ops/` (idempotent)
+- Attachment extraction: `make gmail-extract-attachments` — parses .eml, extracts image/video, saves to `media/gmail/attachments/`
 - Review UI at `/vault/review/` — keyboard: K=keep D=delete S=skip Z=undo
+- Video streaming: `/vault/stream/<id>/` — HTTP Range 206 Partial Content (seek/scrub works)
+- Gallery: `/vault/gallery/` — GalleryIndexPage must be created in Wagtail CMS first
 
 ---
 
@@ -218,6 +223,13 @@ Graph output: `graphify-out/` (GRAPH_REPORT.md, wiki/index.md)
 - **vim not nano** — for any terminal editing.
 - **make preflight first** — always before any deploy action.
 - **SILENCED_SYSTEM_CHECKS = ["django_ratelimit.W001"]** — already in settings, don't re-add.
+## Standing best practices (apply every session)
+- **Feature branches always** — `feat/<name>`, `fix/<name>`. Never commit non-trivial changes directly to main.
+- **Run `make test-full` before every merge**
+- **Run `graphify update .` on Debian after structural code changes**, commit graphify-out/
+- **Update shared_context.md + memory files** after every session that changes architecture/conventions
+- **Security defaults:** auth=django_auth on all APIs, no `&` in onclick attrs, sanitize file paths from untrusted input, no secrets in code
+
 - **All API endpoints require `auth=django_auth`** — no curl without CSRF token; use management commands for pipeline steps instead.
 - **Gmail pipeline runs as management command** — `manage.py gmail_pipeline discover|download|verify|all`, not via HTTP.
 - **Gmail download is concurrent** — `ThreadPoolExecutor(workers=10)` default. Each thread closes its own DB connection. Use `--workers N` to tune.
