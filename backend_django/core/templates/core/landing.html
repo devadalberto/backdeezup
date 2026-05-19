@@ -256,6 +256,46 @@ footer a:hover{color:var(--gy);}
   </div>
 </div>
 
+<!-- ── Cleanup Rules ── -->
+<div style="background:var(--g1);border-top:1px solid var(--ga);border-bottom:1px solid var(--ga);padding:48px 24px;">
+  <div class="section">
+    <div class="section-label">&#9608; Intelligent Gmail Cleanup</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;max-width:900px;margin:0 auto;">
+      <div>
+        <div style="font-size:11px;color:var(--gy);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px">Rule types</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          {% for label,color in rule_examples %}
+          <div style="display:flex;align-items:center;gap:10px;font-size:13px;font-family:monospace;">
+            <span style="color:{{ color }};font-size:10px;">&#9608;</span>
+            <span style="color:var(--fw);">{{ label }}</span>
+          </div>
+          {% empty %}
+          <div style="font-family:monospace;font-size:13px;color:var(--fw);">
+            <div style="display:flex;gap:10px;margin-bottom:6px;"><span style="color:var(--gr)">&#9608;</span> Trash newsletters older than 30d</div>
+            <div style="display:flex;gap:10px;margin-bottom:6px;"><span style="color:var(--gy)">&#9608;</span> Archive order confirmations 90d+</div>
+            <div style="display:flex;gap:10px;margin-bottom:6px;"><span style="color:var(--gt)">&#9608;</span> Label LinkedIn job alerts</div>
+            <div style="display:flex;gap:10px;margin-bottom:6px;"><span style="color:var(--gr)">&#9608;</span> Trash app notifications 60d+</div>
+            <div style="display:flex;gap:10px;margin-bottom:6px;"><span style="color:var(--gr)">&#9608;</span> Trash promotions/social 30d+</div>
+            <div style="display:flex;gap:10px;"><span style="color:var(--gx)">&#9608;</span> Star + protect family senders</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--gy);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px">Safety model</div>
+        <div style="font-family:monospace;font-size:13px;color:var(--fw);line-height:2;">
+          <div><span style="color:var(--gx)">&#10003;</span> Dry-run before every execution</div>
+          <div><span style="color:var(--gx)">&#10003;</span> Protected senders never trashed</div>
+          <div><span style="color:var(--gx)">&#10003;</span> Min-age guard per rule</div>
+          <div><span style="color:var(--gx)">&#10003;</span> Immutable audit log</div>
+          <div><span style="color:var(--gx)">&#10003;</span> AND/OR compound queries</div>
+          <div><span style="color:var(--gx)">&#10003;</span> Scheduler (3x/day, opt-in)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── Features ── -->
 <div style="background:var(--g0);border-bottom:1px solid var(--ga);">
   <div class="section">

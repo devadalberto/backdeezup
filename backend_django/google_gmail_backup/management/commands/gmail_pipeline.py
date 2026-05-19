@@ -20,6 +20,7 @@ class Command(BaseCommand):
         parser.add_argument("--max-pages", type=int, default=20)
         parser.add_argument("--page-size", type=int, default=500)
         parser.add_argument("--q", type=str, default="", help="Gmail search query e.g. 'in:trash'")
+        parser.add_argument("--workers", type=int, default=10, help="Concurrent download workers (default: 10)")
 
     def handle(self, *args, **options):
         step = options["step"]
@@ -28,7 +29,7 @@ class Command(BaseCommand):
         if step in ("discover", "all"):
             self._discover(options["max_pages"], options["page_size"], options["q"])
         if step in ("download", "all"):
-            self._download(limit)
+            self._download(limit, workers=options["workers"])
         if step in ("verify", "all"):
             self._verify(limit)
 
@@ -69,11 +70,13 @@ class Command(BaseCommand):
         state.save()
         self.stdout.write(self.style.SUCCESS(f"Discovered {discovered} new messages. Total: {state.total_messages}"))
 
-    def _download(self, limit):
+    def _download(self, limit, workers=10):
         import os
-        import sys
         import time
+        import threading
+        from concurrent.futures import ThreadPoolExecutor, as_completed
         from django.utils import timezone
+        from django import db
         from google_gmail_backup.models import GmailMessage
         from google_gmail_backup.services_gmail import (
             get_message_metadata, get_message_raw, extract_headers,
@@ -86,26 +89,28 @@ class Command(BaseCommand):
             return
 
         total = len(qs)
-        downloaded = errors = 0
+        counters = {"ok": 0, "err": 0, "done": 0}
+        lock = threading.Lock()
         start = time.time()
-        # Print a status line every N messages (works in both TTY and non-TTY)
-        REPORT_EVERY = max(1, total // 20)  # ~5% increments, at least every 1 msg
+        REPORT_EVERY = max(1, total // 20)
 
-        def _print_progress(n):
+        def _print_progress():
             elapsed = time.time() - start
+            n = counters["done"]
             rate = n / elapsed if elapsed > 0 else 0
             pct = n / total * 100
-            bar_filled = int(pct / 5)
-            bar = "=" * bar_filled + "-" * (20 - bar_filled)
+            bar = "=" * int(pct / 5) + "-" * (20 - int(pct / 5))
             eta = (total - n) / rate if rate > 0 else 0
             self.stderr.write(
                 f"\r  [{bar}] {pct:5.1f}%  {n}/{total}  "
                 f"{rate:.1f} msg/s  ETA {int(eta//60):02d}:{int(eta%60):02d}  "
-                f"ok={downloaded} err={errors}          "
+                f"ok={counters['ok']} err={counters['err']}          "
             )
             self.stderr.flush()
 
-        for i, msg in enumerate(qs, 1):
+        def _process(msg):
+            # Each thread needs its own DB connection
+            db.close_old_connections()
             try:
                 if not msg.subject and not msg.from_address:
                     meta = get_message_metadata(msg.gmail_id)
@@ -126,8 +131,7 @@ class Command(BaseCommand):
                     msg.error = "Empty raw response"
                     msg.last_attempt_at = timezone.now()
                     msg.save(update_fields=["error", "last_attempt_at"])
-                    errors += 1
-                    continue
+                    return False
 
                 path = ensure_eml_path(msg.account_email, msg.date, msg.gmail_id)
                 with open(path, "wb") as f:
@@ -143,18 +147,33 @@ class Command(BaseCommand):
                     "snippet", "labels", "size_estimate", "has_attachments",
                     "raw_path", "sha256", "downloaded_at", "state", "error",
                 ])
-                downloaded += 1
+                return True
             except Exception as exc:
                 msg.error = str(exc)
                 msg.last_attempt_at = timezone.now()
                 msg.save(update_fields=["error", "last_attempt_at"])
-                errors += 1
+                return False
+            finally:
+                db.close_old_connections()
 
-            if i % REPORT_EVERY == 0 or i == total:
-                _print_progress(i)
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = {pool.submit(_process, msg): msg for msg in qs}
+            for future in as_completed(futures):
+                ok = future.result()
+                with lock:
+                    counters["done"] += 1
+                    if ok:
+                        counters["ok"] += 1
+                    else:
+                        counters["err"] += 1
+                    if counters["done"] % REPORT_EVERY == 0 or counters["done"] == total:
+                        _print_progress()
 
         self.stderr.write("\n")
-        self.stdout.write(self.style.SUCCESS(f"Downloaded {downloaded} messages ({errors} errors)"))
+        self.stdout.write(self.style.SUCCESS(
+            f"Downloaded {counters['ok']} messages ({counters['err']} errors) "
+            f"using {workers} workers"
+        ))
 
     def _verify(self, limit):
         import os

@@ -232,8 +232,10 @@ gmail-discover:
 gmail-incremental:
 	curl -s -X POST "$(HOST)/api/gmail/sync/incremental" | python3 -m json.tool || true
 
+WORKERS ?= 10
+
 gmail-download:
-	docker compose exec web python manage.py gmail_pipeline download --limit $(LIMIT)
+	docker compose exec web python manage.py gmail_pipeline download --limit $(LIMIT) --workers $(WORKERS)
 
 gmail-verify:
 	docker compose exec web python manage.py gmail_pipeline verify --limit $(LIMIT)

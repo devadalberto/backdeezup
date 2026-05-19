@@ -23,12 +23,12 @@
 
 ---
 
-## Pipeline status (2026-05-16)
+## Pipeline status (2026-05-18)
 
 | Pipeline | Status |
 |---|---|
 | Drive | 2176/2176 verified — COMPLETE |
-| Gmail | ~13k/32258 verified — IN PROGRESS (gmail-loop running) |
+| Gmail | 25,034/32,258 verified — 78% (trash emptied: 7,293 msgs deleted) |
 | Photos | BLOCKED — delete old web client `1ql0o9aj` from Google Auth Platform → Clients, then `make auth` |
 
 ---
@@ -86,8 +86,8 @@ make auth                   # Google OAuth (Desktop app client, headless)
 make redeploy               # git pull + build + down + up + migrate
 make seed-rules             # Seed 4 family protected senders + 8 cleanup rules
 make vault-setup            # Create Wagtail VaultHomePage (run once)
-make gmail-discover         # Discover all Gmail messages (50 pages × 500 = 25k cap)
-make gmail-loop LIMIT=500   # Loop download+verify until DISCOVERED queue = 0
+make gmail-discover                    # Discover all Gmail messages (50 pages × 500)
+make gmail-loop LIMIT=500 WORKERS=10  # Concurrent download+verify loop (10 threads)
 make gmail-progress         # Show current progress JSON
 make sync-run               # Drive pipeline loop
 make test-full              # lint (ruff) + 30 unit tests
@@ -220,7 +220,12 @@ Graph output: `graphify-out/` (GRAPH_REPORT.md, wiki/index.md)
 - **SILENCED_SYSTEM_CHECKS = ["django_ratelimit.W001"]** — already in settings, don't re-add.
 - **All API endpoints require `auth=django_auth`** — no curl without CSRF token; use management commands for pipeline steps instead.
 - **Gmail pipeline runs as management command** — `manage.py gmail_pipeline discover|download|verify|all`, not via HTTP.
+- **Gmail download is concurrent** — `ThreadPoolExecutor(workers=10)` default. Each thread closes its own DB connection. Use `--workers N` to tune.
+- **Drive pipeline runs as management command** — `manage.py drive_pipeline discover|discover-files|discover-photos|download|verify`.
 - **Progress bars in management commands** — use periodic print with `\r`, not tqdm (docker exec has no TTY).
 - **Pydantic v2 everywhere** — `model_validate()` / `model_validate_json()`, no v1 adapters.
+- **OAuth scopes** — `mail.google.com` required for batchDelete (NOT just gmail.modify). Token must include all scopes — if missing any, delete token + `make auth`. Current required scopes: drive, drive.readonly, gmail.readonly, gmail.modify, mail.google.com.
+- **photoslibrary.readonly de-scoped** — blocked project-wide by old web client `1ql0o9aj`. Do NOT add back to SCOPES until that client is deleted from Google Auth Platform.
+- **HTML onclick with & params** — NEVER put URLs with & in onclick attributes. Use named JS functions. Breaking this rule broke buttons 3 times.
 - **Private GitHub repo:** https://github.com/devadalberto/backdeezup
 - **Ubuntu remote** — hostname: DTC-5CG4155DQ9, IP: 192.168.88.20, user: jose, SSH port 2222

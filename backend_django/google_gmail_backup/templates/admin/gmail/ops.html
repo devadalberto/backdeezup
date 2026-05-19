@@ -1,6 +1,15 @@
 {% extends "admin/base_site.html" %}
 {% block content %}
 
+<!-- Live backup progress (HTMX) -->
+<div id="backupProgress"
+     hx-get="/htmx/gmail/progress/"
+     hx-trigger="load, every 15s"
+     hx-swap="innerHTML"
+     style="margin-bottom:16px;padding:14px 16px;background:var(--g1);border:1px solid var(--gm);border-radius:4px;box-shadow:0 0 10px rgba(0,255,65,.1);">
+  <span style="color:var(--gd);font-family:monospace;font-size:12px;">Loading backup progress...</span>
+</div>
+
 <!-- KPI Dashboard -->
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px" id="kpiGrid">
   <div class="card" style="text-align:center">
@@ -188,17 +197,19 @@ li { margin: 3px 0; }
 <!-- Protected senders -->
 <div class="card">
   <b>Protected Senders</b>&nbsp;
-  <span style="font-size:12px;color:#666">— starred + labeled, never trashed by any cleanup rule</span>
+  <span style="font-size:12px;color:var(--gd)">— starred + labeled, never trashed by any cleanup rule</span>
   <div class="row" style="margin-top:10px">
     <button class="btn btn-primary" onclick="call('gmail/protected-senders/apply', 'POST', this)">
       Apply Protected Sender Rules (star + label all family emails)
     </button>
+    <a class="btn btn-sm" href="/admin/google_gmail_backup/protectedsender/" style="margin-left:8px">Manage</a>
   </div>
-  <ul style="margin:8px 0 0 16px; font-size:13px; color:#444">
-    <li>mony.bello@gmail.com → family</li>
-    <li>mony_littleowls@outlook.com → family</li>
-    <li>virlochov@gmail.com → family</li>
-    <li>julietvlhr@gmail.com → family</li>
+  <ul style="margin:8px 0 0 16px;font-size:13px;">
+    {% for ps in protected_senders %}
+    <li style="color:var(--gm);margin:3px 0;">{{ ps.email }} <span style="color:var(--gd)">&#8594; {{ ps.label_to_apply }}</span>{% if ps.star %} <span style="color:var(--gy)">&#9733;</span>{% endif %}</li>
+    {% empty %}
+    <li style="color:var(--gd)">None seeded — run: <code>make seed-rules</code></li>
+    {% endfor %}
   </ul>
 </div>
 
@@ -217,46 +228,42 @@ li { margin: 3px 0; }
     <a href="/admin/google_gmail_backup/cleanuprule/" class="btn">Manage Rules in Admin</a>
   </div>
 
-  <table style="width:100%; border-collapse:collapse; margin-top:12px; font-size:13px;">
+  <table style="margin-top:12px">
     <thead>
-      <tr style="background:#f5f5f5">
-        <th style="padding:6px 8px; text-align:left">Rule</th>
-        <th style="padding:6px 8px">Status</th>
-        <th style="padding:6px 8px">Action</th>
-        <th style="padding:6px 8px">Min age</th>
-        <th style="padding:6px 8px">Last dry-run</th>
-        <th style="padding:6px 8px">Last real run</th>
-        <th style="padding:6px 8px">Actions</th>
+      <tr>
+        <th>Rule</th>
+        <th>Status</th>
+        <th>Action</th>
+        <th>Min Age</th>
+        <th>Last Dry-Run</th>
+        <th>Last Real Run</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
     {% for rule in rules %}
-    <tr style="border-bottom:1px solid #eee">
-      <td style="padding:6px 8px">
+    <tr>
+      <td>
         <b>{{ rule.name }}</b><br>
-        <span style="color:#888;font-size:11px">{{ rule.gmail_query }}</span>
+        <span style="color:var(--gd);font-size:11px;font-family:monospace">{{ rule.gmail_query|truncatechars:80 }}</span>
       </td>
-      <td style="padding:6px 8px; text-align:center">
+      <td style="text-align:center">
         {% if rule.enabled %}<span class="badge-on">ON</span>{% else %}<span class="badge-off">OFF</span>{% endif %}
       </td>
-      <td style="padding:6px 8px; text-align:center"><code>{{ rule.action }}</code></td>
-      <td style="padding:6px 8px; text-align:center">{{ rule.min_age_days }}d</td>
-      <td style="padding:6px 8px; text-align:center">{{ rule.last_dry_run_count }} msgs</td>
-      <td style="padding:6px 8px; text-align:center">
-        {% if rule.last_run_at %}{{ rule.last_run_at|date:"M d H:i" }} ({{ rule.last_affected_count }}){% else %}never{% endif %}
+      <td style="text-align:center"><code>{{ rule.action }}</code></td>
+      <td style="text-align:center">{{ rule.min_age_days }}d</td>
+      <td style="text-align:center">{{ rule.last_dry_run_count }} msgs</td>
+      <td style="text-align:center">
+        {% if rule.last_run_at %}{{ rule.last_run_at|date:"M d H:i" }}<br><span style="color:var(--gd);font-size:11px">{{ rule.last_affected_count }} affected</span>{% else %}<span style="color:var(--gd)">never</span>{% endif %}
       </td>
-      <td style="padding:6px 8px">
-        <button class="btn btn-sm btn-warn" onclick="call('gmail/rules/{{ rule.id }}/dry-run', 'POST', this)">
-          Dry-run
-        </button>
+      <td>
+        <button class="btn btn-sm btn-warn" onclick="call('gmail/rules/{{ rule.id }}/dry-run', 'POST', this)">Dry-run</button>
         <button class="btn btn-sm btn-danger" style="margin-left:4px"
-          onclick="confirmAction('Execute rule: {{ rule.name }}?', 'This will {{ rule.action }} matching emails for real.', () => call(\'gmail/rules/{{ rule.id }}/execute\', \'POST\', null))">
-          Execute
-        </button>
+          onclick="execRule({{ rule.id }}, '{{ rule.name|escapejs }}', '{{ rule.action }}', this)">Execute</button>
       </td>
     </tr>
     {% empty %}
-    <tr><td colspan="7" style="padding:12px;color:#888">No rules seeded yet. Run: <code>make seed-rules</code></td></tr>
+    <tr><td colspan="7" style="padding:12px;color:var(--gd)">No rules seeded yet. Run: <code>make seed-rules</code></td></tr>
     {% endfor %}
     </tbody>
   </table>
@@ -390,7 +397,15 @@ async function call(path, method, btn) {
 
 function callLimit(path, btn) {
   const limit = document.getElementById('limit').value || '100';
-  call(path + '?limit=' + limit, 'POST', btn);
+  const q = document.getElementById('qfilter') ? document.getElementById('qfilter').value : '';
+  let url = path + '?limit=' + limit;
+  if (q) url += '&q=' + encodeURIComponent(q);
+  call(url, 'POST', btn);
+}
+
+function execRule(ruleId, ruleName, action, btn) {
+  if (!confirm('Execute rule: ' + ruleName + '?\nThis will ' + action + ' matching emails for real.')) return;
+  call('gmail/rules/' + ruleId + '/execute', 'POST', btn);
 }
 
 let _confirmCallback = null;
