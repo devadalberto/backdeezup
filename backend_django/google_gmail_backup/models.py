@@ -1,251 +1,352 @@
+from __future__ import annotations
+
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
 
-class GmailSyncState(models.Model):
-    """One row per synced account — tracks historyId for incremental sync."""
-    email = models.EmailField(unique=True)
-    last_history_id = models.CharField(max_length=64, blank=True, null=True)
-    last_full_sync_at = models.DateTimeField(blank=True, null=True)
-    last_incremental_at = models.DateTimeField(blank=True, null=True)
-    total_messages = models.IntegerField(default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+# ── Validators ────────────────────────────────────────────────────────────────
 
-    def __str__(self):
+def _validate_list_of_strings(value: object) -> None:
+    if not isinstance(value, list):
+        raise ValidationError("Value must be a JSON array.")
+    if not all(isinstance(v, str) for v in value):
+        raise ValidationError("All array elements must be strings.")
+
+
+# ── Gmail Sync State ──────────────────────────────────────────────────────────
+
+class GmailSyncState(models.Model):
+    """One row per synced Gmail account — tracks historyId for incremental sync."""
+
+    email               = models.EmailField(unique=True)
+    last_history_id     = models.CharField(max_length=64, blank=True, default="")
+    last_full_sync_at   = models.DateTimeField(blank=True, null=True)
+    last_incremental_at = models.DateTimeField(blank=True, null=True)
+    total_messages      = models.IntegerField(default=0)
+    created_at          = models.DateTimeField(auto_now_add=True)
+    updated_at          = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
         return self.email
 
     class Meta:
-        verbose_name = "Gmail Sync State"
+        verbose_name        = "Gmail Sync State"
+        verbose_name_plural = "Gmail Sync States"
+        ordering            = ["email"]
 
+
+# ── Gmail Message ─────────────────────────────────────────────────────────────
 
 class GmailMessage(models.Model):
-    STATE_DISCOVERED = "DISCOVERED"
-    STATE_DOWNLOADED = "DOWNLOADED"
-    STATE_VERIFIED = "VERIFIED"
-    STATE_TRASHED = "TRASHED"
-    STATE_DELETED = "DELETED"
 
-    STATE_CHOICES = [
-        (STATE_DISCOVERED, "Discovered"),
-        (STATE_DOWNLOADED, "Downloaded"),
-        (STATE_VERIFIED, "Verified"),
-        (STATE_TRASHED, "Trashed in Gmail"),
-        (STATE_DELETED, "Permanently Deleted"),
-    ]
+    class State(models.TextChoices):
+        DISCOVERED = "DISCOVERED", "Discovered"
+        DOWNLOADED = "DOWNLOADED", "Downloaded"
+        VERIFIED   = "VERIFIED",   "Verified"
+        TRASHED    = "TRASHED",    "Trashed in Gmail"
+        DELETED    = "DELETED",    "Permanently Deleted"
 
-    gmail_id = models.CharField(max_length=64, unique=True)
-    thread_id = models.CharField(max_length=64, db_index=True)
-    history_id = models.CharField(max_length=64, blank=True, null=True)
+    # Keep old-style constants as aliases so existing code doesn't break
+    STATE_DISCOVERED = State.DISCOVERED
+    STATE_DOWNLOADED = State.DOWNLOADED
+    STATE_VERIFIED   = State.VERIFIED
+    STATE_TRASHED    = State.TRASHED
+    STATE_DELETED    = State.DELETED
+    STATE_CHOICES    = State.choices
 
-    subject = models.TextField(blank=True, default="")
+    # Identity
+    gmail_id   = models.CharField(max_length=64, unique=True)
+    thread_id  = models.CharField(max_length=64, blank=True, default="", db_index=True)
+    history_id = models.CharField(max_length=64, blank=True, default="")
+
+    # Headers
+    subject      = models.TextField(blank=True, default="")
+    # RFC 5321 max address length is 320 chars; +display name overhead → 1000 is intentional
     from_address = models.CharField(max_length=1000, blank=True, default="")
-    to_address = models.TextField(blank=True, default="")
-    date = models.DateTimeField(blank=True, null=True, db_index=True)
-    snippet = models.TextField(blank=True, default="")
-    labels = models.JSONField(default=list)
-    size_estimate = models.IntegerField(default=0)
-    has_attachments = models.BooleanField(default=False)
+    # to_address may contain multiple recipients separated by ", "
+    to_address   = models.TextField(blank=True, default="")
+    date         = models.DateTimeField(blank=True, null=True, db_index=True)
+    snippet      = models.TextField(blank=True, default="")
+    labels       = models.JSONField(default=list, validators=[_validate_list_of_strings])
+    size_estimate     = models.IntegerField(default=0)
+    has_attachments   = models.BooleanField(default=False)
 
-    raw_path = models.TextField(blank=True, null=True)
-    sha256 = models.CharField(max_length=64, blank=True, null=True)
+    # Local backup
+    raw_path = models.TextField(blank=True, default="")
+    sha256   = models.CharField(max_length=64, blank=True, default="")
 
-    state = models.CharField(max_length=20, choices=STATE_CHOICES, default=STATE_DISCOVERED, db_index=True)
-    error = models.TextField(blank=True, null=True)
+    # State machine
+    state = models.CharField(
+        max_length=20, choices=State, default=State.DISCOVERED, db_index=True,
+    )
+    error = models.TextField(blank=True, default="")
 
-    discovered_at = models.DateTimeField(default=timezone.now)
-    downloaded_at = models.DateTimeField(blank=True, null=True)
+    # Audit timeline
+    discovered_at   = models.DateTimeField(default=timezone.now)
+    downloaded_at   = models.DateTimeField(blank=True, null=True)
     last_attempt_at = models.DateTimeField(blank=True, null=True)
-    account_email = models.EmailField(db_index=True)
 
-    def __str__(self):
+    # account_email mirrors GmailSyncState.email — not a FK to prevent cascade on sync reset
+    account_email = models.EmailField(
+        db_index=True,
+        help_text="Mirrors GmailSyncState.email — logical FK, not enforced at DB level.",
+    )
+
+    def __str__(self) -> str:
         return f"{self.subject or '(no subject)'} <{self.from_address}>"
 
     class Meta:
-        verbose_name = "Gmail Message"
+        verbose_name        = "Gmail Message"
+        verbose_name_plural = "Gmail Messages"
         indexes = [
             models.Index(fields=["account_email", "state"]),
             models.Index(fields=["account_email", "date"]),
             models.Index(fields=["from_address"]),
         ]
+        constraints = [
+            models.CheckConstraint(
+                condition=~models.Q(gmail_id=""),
+                name="gmail_message_id_not_empty",
+            ),
+        ]
 
+
+# ── Gmail Attachment ──────────────────────────────────────────────────────────
 
 class GmailAttachment(models.Model):
-    message = models.ForeignKey(GmailMessage, on_delete=models.CASCADE, related_name="attachments")
+    """An extracted attachment from a downloaded .eml file."""
+
+    message       = models.ForeignKey(GmailMessage, on_delete=models.CASCADE, related_name="attachments")
     attachment_id = models.CharField(max_length=256)
-    filename = models.CharField(max_length=512, blank=True, default="")
-    mime_type = models.CharField(max_length=128, blank=True, default="")
-    size = models.IntegerField(default=0)
-    sha256 = models.CharField(max_length=64, blank=True, null=True)
-    local_path = models.TextField(blank=True, null=True)
+    filename      = models.CharField(max_length=512, blank=True, default="")
+    mime_type     = models.CharField(max_length=128, blank=True, default="")
+    size          = models.IntegerField(default=0)
+    sha256        = models.CharField(max_length=64, blank=True, default="")
+    local_path    = models.TextField(blank=True, default="")
     downloaded_at = models.DateTimeField(blank=True, null=True)
 
+    def __str__(self) -> str:
+        return f"{self.filename or self.attachment_id} ({self.mime_type})"
+
     class Meta:
-        unique_together = [("message", "attachment_id")]
+        unique_together     = [("message", "attachment_id")]
+        verbose_name        = "Gmail Attachment"
+        verbose_name_plural = "Gmail Attachments"
 
 
-# ── Cleanup rules engine ──────────────────────────────────────────────────────
+# ── Protected Senders ─────────────────────────────────────────────────────────
 
 class ProtectedSender(models.Model):
-    """Emails from these senders are always kept — never trashed, never deleted."""
-    email = models.EmailField(unique=True)
-    label_to_apply = models.CharField(max_length=100, blank=True, default="")
-    star = models.BooleanField(default=False)
-    note = models.CharField(max_length=200, blank=True, default="")
-    created_at = models.DateTimeField(auto_now_add=True)
+    """Emails from these senders are never trashed or deleted by any cleanup rule."""
 
-    def __str__(self):
+    email          = models.EmailField(unique=True)
+    label_to_apply = models.CharField(max_length=100, blank=True, default="")
+    star           = models.BooleanField(default=False)
+    note           = models.CharField(max_length=200, blank=True, default="")
+    created_at     = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
         return self.email
 
     class Meta:
-        verbose_name = "Protected Sender"
-        ordering = ["email"]
+        verbose_name        = "Protected Sender"
+        verbose_name_plural = "Protected Senders"
+        ordering            = ["email"]
 
+
+# ── Cleanup Rule ──────────────────────────────────────────────────────────────
 
 class CleanupRule(models.Model):
-    ACTION_TRASH = "trash"
-    ACTION_STAR = "star"
-    ACTION_LABEL = "label"
-    ACTION_ARCHIVE = "archive"
 
-    ACTION_CHOICES = [
-        (ACTION_TRASH, "Move to Trash"),
-        (ACTION_STAR, "Star"),
-        (ACTION_LABEL, "Apply Label"),
-        (ACTION_ARCHIVE, "Archive (remove INBOX)"),
-    ]
+    class Action(models.TextChoices):
+        TRASH   = "trash",   "Move to Trash"
+        STAR    = "star",    "Star"
+        LABEL   = "label",   "Apply Label"
+        ARCHIVE = "archive", "Archive (remove INBOX)"
 
-    name = models.CharField(max_length=200)
+    # Keep old-style constants as aliases
+    ACTION_TRASH   = Action.TRASH
+    ACTION_STAR    = Action.STAR
+    ACTION_LABEL   = Action.LABEL
+    ACTION_ARCHIVE = Action.ARCHIVE
+    ACTION_CHOICES = Action.choices
+
+    name        = models.CharField(max_length=200)
     description = models.TextField(blank=True, default="")
 
-    # Gmail query syntax — same as the Gmail search box
-    gmail_query = models.TextField(help_text="Gmail search query, e.g. 'category:promotions older_than:30d'")
+    gmail_query = models.TextField(
+        help_text="Gmail search query, e.g. 'category:promotions older_than:30d'",
+    )
+    min_age_days = models.IntegerField(
+        default=30,
+        help_text="Minimum message age in days before rule applies (0 = any age)",
+    )
 
-    # Local DB filter applied in addition to gmail_query results (optional)
-    min_age_days = models.IntegerField(default=30, help_text="Minimum age in days before rule applies")
+    action     = models.CharField(max_length=20, choices=Action)
+    label_name = models.CharField(
+        max_length=100, blank=True, default="",
+        help_text="Label to apply (required when action=label)",
+    )
 
-    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
-    label_name = models.CharField(max_length=100, blank=True, default="",
-                                  help_text="Label to apply (for action=label)")
-
-    enabled = models.BooleanField(default=False)
-    dry_run_default = models.BooleanField(default=True)
+    enabled                   = models.BooleanField(default=False)
+    dry_run_default           = models.BooleanField(default=True)
     respect_protected_senders = models.BooleanField(default=True)
 
-    # Stats from last run
-    last_run_at = models.DateTimeField(blank=True, null=True)
-    last_run_dry = models.BooleanField(default=True)
+    last_run_at         = models.DateTimeField(blank=True, null=True)
+    last_run_dry        = models.BooleanField(default=True)
     last_affected_count = models.IntegerField(default=0)
-    last_dry_run_count = models.IntegerField(default=0)
+    last_dry_run_count  = models.IntegerField(default=0)
 
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
-                                   on_delete=models.SET_NULL, related_name="rules_created")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="rules_created",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"{self.name} ({'enabled' if self.enabled else 'disabled'})"
+    def __str__(self) -> str:
+        status = "enabled" if self.enabled else "disabled"
+        return f"{self.name} [{status}]"
 
     class Meta:
-        verbose_name = "Cleanup Rule"
-        ordering = ["name"]
+        verbose_name        = "Cleanup Rule"
+        verbose_name_plural = "Cleanup Rules"
+        ordering            = ["name"]
+        indexes             = [models.Index(fields=["enabled", "name"])]
 
+
+# ── Rule Condition ────────────────────────────────────────────────────────────
 
 class RuleCondition(models.Model):
     """
-    A single condition in a compound rule query.
-    Multiple conditions are AND/OR-combined to produce a Gmail q= string.
+    A single condition inside a compound CleanupRule query.
+    Conditions are ordered and joined by their `logic` field to build the Gmail q= string.
 
-    Example (LinkedIn jobs):
-      field=sender,  operator=contains,     value=linkedin.com,  logic=AND, order=1
-      field=subject, operator=contains,     value=job,           logic=OR,  order=2
-      field=subject, operator=contains,     value=recruiter,     logic=OR,  order=3
-      field=subject, operator=contains,     value=applied,       logic=OR,  order=4
-    → from:linkedin.com (subject:job OR subject:recruiter OR subject:applied)
+    Example (LinkedIn job emails):
+      field=sender,  operator=contains,  value=linkedin.com,  logic=AND, order=1
+      field=subject, operator=contains,  value=job,           logic=OR,  order=2
+    → from:linkedin.com (subject:job)
     """
-    FIELD_SENDER     = "sender"
-    FIELD_SUBJECT    = "subject"
-    FIELD_BODY       = "body"
-    FIELD_LABEL      = "label"
-    FIELD_CATEGORY   = "category"
-    FIELD_HAS_ATTACH = "has_attachment"
-    FIELD_AGE        = "age_days"
-    FIELD_TO         = "to"
 
-    FIELD_CHOICES = [
-        (FIELD_SENDER,     "Sender (from)"),
-        (FIELD_TO,         "Recipient (to)"),
-        (FIELD_SUBJECT,    "Subject"),
-        (FIELD_BODY,       "Body"),
-        (FIELD_LABEL,      "Label"),
-        (FIELD_CATEGORY,   "Category"),
-        (FIELD_HAS_ATTACH, "Has Attachment"),
-        (FIELD_AGE,        "Age (days)"),
-    ]
+    class Field(models.TextChoices):
+        SENDER     = "sender",         "Sender (from)"
+        TO         = "to",             "Recipient (to)"
+        SUBJECT    = "subject",        "Subject"
+        BODY       = "body",           "Body"
+        LABEL      = "label",          "Label"
+        CATEGORY   = "category",       "Category"
+        HAS_ATTACH = "has_attachment", "Has Attachment"
+        AGE        = "age_days",       "Age (days)"
 
-    OP_CONTAINS     = "contains"
-    OP_NOT_CONTAINS = "not_contains"
-    OP_EQUALS       = "equals"
-    OP_NOT_EQUALS   = "not_equals"
-    OP_STARTS_WITH  = "starts_with"
-    OP_OLDER_THAN   = "older_than"
-    OP_NEWER_THAN   = "newer_than"
-    OP_IS_TRUE      = "is_true"
+    class Operator(models.TextChoices):
+        CONTAINS     = "contains",     "contains"
+        NOT_CONTAINS = "not_contains", "does not contain"
+        EQUALS       = "equals",       "equals"
+        NOT_EQUALS   = "not_equals",   "does not equal"
+        STARTS_WITH  = "starts_with",  "starts with"
+        OLDER_THAN   = "older_than",   "older than"
+        NEWER_THAN   = "newer_than",   "newer than"
+        IS_TRUE      = "is_true",      "is true"
 
-    OP_CHOICES = [
-        (OP_CONTAINS,     "contains"),
-        (OP_NOT_CONTAINS, "does not contain"),
-        (OP_EQUALS,       "equals"),
-        (OP_NOT_EQUALS,   "does not equal"),
-        (OP_STARTS_WITH,  "starts with"),
-        (OP_OLDER_THAN,   "older than"),
-        (OP_NEWER_THAN,   "newer than"),
-        (OP_IS_TRUE,      "is true"),
-    ]
+    class Logic(models.TextChoices):
+        AND = "AND", "AND"
+        OR  = "OR",  "OR"
 
-    LOGIC_AND = "AND"
-    LOGIC_OR  = "OR"
-    LOGIC_CHOICES = [(LOGIC_AND, "AND"), (LOGIC_OR, "OR")]
+    # Keep old-style constants as aliases
+    FIELD_SENDER     = Field.SENDER
+    FIELD_SUBJECT    = Field.SUBJECT
+    FIELD_BODY       = Field.BODY
+    FIELD_LABEL      = Field.LABEL
+    FIELD_CATEGORY   = Field.CATEGORY
+    FIELD_HAS_ATTACH = Field.HAS_ATTACH
+    FIELD_AGE        = Field.AGE
+    FIELD_TO         = Field.TO
+    FIELD_CHOICES    = Field.choices
+
+    OP_CONTAINS     = Operator.CONTAINS
+    OP_NOT_CONTAINS = Operator.NOT_CONTAINS
+    OP_EQUALS       = Operator.EQUALS
+    OP_NOT_EQUALS   = Operator.NOT_EQUALS
+    OP_STARTS_WITH  = Operator.STARTS_WITH
+    OP_OLDER_THAN   = Operator.OLDER_THAN
+    OP_NEWER_THAN   = Operator.NEWER_THAN
+    OP_IS_TRUE      = Operator.IS_TRUE
+    OP_CHOICES      = Operator.choices
+
+    LOGIC_AND     = Logic.AND
+    LOGIC_OR      = Logic.OR
+    LOGIC_CHOICES = Logic.choices
 
     rule     = models.ForeignKey(CleanupRule, on_delete=models.CASCADE, related_name="conditions")
     order    = models.PositiveSmallIntegerField(default=0)
-    field    = models.CharField(max_length=20, choices=FIELD_CHOICES)
-    operator = models.CharField(max_length=20, choices=OP_CHOICES)
+    field    = models.CharField(max_length=20, choices=Field)
+    operator = models.CharField(max_length=20, choices=Operator)
     value    = models.CharField(max_length=500, blank=True, default="")
-    logic    = models.CharField(max_length=3, choices=LOGIC_CHOICES, default=LOGIC_AND,
-                                help_text="How this condition joins with the NEXT condition")
+    logic    = models.CharField(
+        max_length=3, choices=Logic, default=Logic.AND,
+        help_text="How this condition joins with the NEXT condition",
+    )
 
-    class Meta:
-        ordering = ["order"]
-        verbose_name = "Rule Condition"
-
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.field} {self.operator} '{self.value}' ({self.logic})"
 
+    class Meta:
+        ordering            = ["order"]
+        verbose_name        = "Rule Condition"
+        verbose_name_plural = "Rule Conditions"
+
+
+# ── Cleanup Audit Log ─────────────────────────────────────────────────────────
 
 class CleanupAuditLog(models.Model):
-    """Immutable log of every cleanup action (dry-run or real)."""
-    rule = models.ForeignKey(CleanupRule, null=True, blank=True,
-                             on_delete=models.SET_NULL, related_name="audit_logs")
+    """Immutable append-only log of every cleanup action (dry-run or real)."""
+
+    rule      = models.ForeignKey(
+        CleanupRule, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="audit_logs",
+    )
     rule_name = models.CharField(max_length=200)
-    action = models.CharField(max_length=20)
-    dry_run = models.BooleanField(default=True)
-    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
-                              on_delete=models.SET_NULL, related_name="audit_logs")
+    action    = models.CharField(max_length=20, choices=CleanupRule.Action)
+    dry_run   = models.BooleanField(default=True)
+
+    actor       = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="audit_logs",
+    )
     actor_label = models.CharField(max_length=100, default="system")
 
-    affected_count = models.IntegerField(default=0)
-    affected_gmail_ids = models.JSONField(default=list, help_text="First 100 IDs max")
-    affected_ids_truncated = models.BooleanField(default=False, help_text="True when >100 IDs were affected")
-    sample_subjects = models.JSONField(default=list)
+    affected_count        = models.IntegerField(default=0)
+    affected_gmail_ids    = models.JSONField(
+        default=list,
+        validators=[_validate_list_of_strings],
+        help_text="First 100 affected Gmail message IDs",
+    )
+    affected_ids_truncated = models.BooleanField(
+        default=False,
+        help_text="True when more than 100 messages were affected",
+    )
+    sample_subjects = models.JSONField(
+        default=list,
+        validators=[_validate_list_of_strings],
+    )
 
-    started_at = models.DateTimeField(default=timezone.now)
+    started_at  = models.DateTimeField(default=timezone.now)
     finished_at = models.DateTimeField(blank=True, null=True)
-    status = models.CharField(max_length=20, default="OK")
-    error_text = models.TextField(blank=True, default="")
+    status      = models.CharField(max_length=20, default="OK")
+    error_text  = models.TextField(blank=True, default="")
+
+    def __str__(self) -> str:
+        prefix = "[DRY]" if self.dry_run else "[LIVE]"
+        return f"{prefix} {self.rule_name} → {self.affected_count} affected"
 
     class Meta:
-        verbose_name = "Cleanup Audit Log"
-        ordering = ["-started_at"]
-        # Append-only: no update permission in admin
+        verbose_name        = "Cleanup Audit Log"
+        verbose_name_plural = "Cleanup Audit Logs"
+        ordering            = ["-started_at"]
+        indexes             = [
+            models.Index(fields=["-started_at"]),
+            models.Index(fields=["rule", "-started_at"]),
+            models.Index(fields=["status", "-started_at"]),
+        ]

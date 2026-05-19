@@ -44,10 +44,29 @@ def _load_creds() -> Optional[Credentials]:
 
 
 def _save_creds(creds: Credentials) -> None:
-    os.makedirs(os.path.dirname(TOKEN_FILE_ENC), exist_ok=True)
+    """
+    Atomically write the encrypted token file.
+    Uses write-to-temp-then-rename to prevent partial writes from corrupting
+    the token on concurrent refreshes or power loss mid-write.
+    Sets file permissions to 0o600 (owner read/write only).
+    """
+    import tempfile
+    token_dir = os.path.dirname(TOKEN_FILE_ENC)
+    os.makedirs(token_dir, exist_ok=True)
     wrapped = {"payload": get_fernet().encrypt(creds.to_json().encode()).decode()}
-    with open(TOKEN_FILE_ENC, "w") as f:
-        json.dump(wrapped, f, indent=2)
+    # Write to a sibling temp file, then atomically rename
+    fd, tmp_path = tempfile.mkstemp(dir=token_dir, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump(wrapped, f, indent=2)
+        os.chmod(tmp_path, 0o600)  # owner read/write only — never world-readable
+        os.replace(tmp_path, TOKEN_FILE_ENC)  # atomic on POSIX
+    except Exception:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
 
 
 def start_oauth_local() -> str:
