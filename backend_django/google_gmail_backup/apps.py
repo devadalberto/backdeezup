@@ -1,5 +1,3 @@
-import os
-
 from django.apps import AppConfig
 
 
@@ -9,7 +7,5 @@ class GoogleGmailBackupConfig(AppConfig):
     verbose_name = "Gmail Backup"
 
     def ready(self):
-        # Only start scheduler in the main process, not during migrations/tests
-        if os.environ.get("BACKDEEZUP_SCHEDULER", "0") == "1":
-            from .scheduler import start_scheduler
-            start_scheduler()
+        # Import tasks so Celery autodiscover finds them
+        import google_gmail_backup.tasks  # noqa: F401

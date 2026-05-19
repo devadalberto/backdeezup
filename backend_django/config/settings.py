@@ -69,7 +69,8 @@ INSTALLED_APPS = [
 
     # Project apps
     'corsheaders',
-    'django_apscheduler',
+    'django_celery_beat',
+    'django_celery_results',
     'django_ratelimit',
     'django_htmx',
     'google_media_backup',
@@ -211,7 +212,43 @@ CACHES = {
 }
 RATELIMIT_USE_CACHE = "default"
 
-# ── APScheduler ───────────────────────────────────────────────────────────────
-BACKDEEZUP_SCHEDULER = config('BACKDEEZUP_SCHEDULER', cast=bool, default=False)
+# ── Celery ────────────────────────────────────────────────────────────────────
+CELERY_BROKER_URL              = config('REDIS_URL', default='redis://redis:6379/0')
+CELERY_RESULT_BACKEND          = 'django-db'
+CELERY_RESULT_EXTENDED         = True
+CELERY_BEAT_SCHEDULER          = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_TASK_SERIALIZER         = 'json'
+CELERY_RESULT_SERIALIZER       = 'json'
+CELERY_ACCEPT_CONTENT          = ['json']
+CELERY_TIMEZONE                = 'America/Los_Angeles'
+CELERY_TASK_TRACK_STARTED      = True
+CELERY_TASK_TIME_LIMIT         = 3600        # 1h hard limit per task
+CELERY_TASK_SOFT_TIME_LIMIT    = 3300        # 55min soft limit (raises SoftTimeLimitExceeded)
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 50       # recycle workers to prevent memory leaks
+
+# ── Sentry ────────────────────────────────────────────────────────────────────
+_sentry_dsn = config('SENTRY_DSN', default='')
+if _sentry_dsn:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.celery import CeleryIntegration
+    from sentry_sdk.integrations.redis import RedisIntegration
+    from sentry_sdk.integrations.logging import LoggingIntegration
+    import logging as _logging
+
+    sentry_sdk.init(
+        dsn=_sentry_dsn,
+        environment=config('SENTRY_ENVIRONMENT', default='production'),
+        release=config('SENTRY_RELEASE', default=''),
+        integrations=[
+            DjangoIntegration(transaction_style='url'),
+            CeleryIntegration(monitor_beat_tasks=True),
+            RedisIntegration(),
+            LoggingIntegration(level=_logging.INFO, event_level=_logging.ERROR),
+        ],
+        traces_sample_rate=0.1,      # 10% of requests traced (adjust as needed)
+        profiles_sample_rate=0.05,   # 5% profiled
+        send_default_pii=False,      # never send PII (emails, names) to Sentry
+    )
 
 SILENCED_SYSTEM_CHECKS = ["django_ratelimit.W001"]

@@ -13,5 +13,8 @@ dist/
 .DS_Store
 setup*.sh
 graphify-out/cache/
+nginx/certs/*.crt
+nginx/certs/*.key
+nginx/certs/*.pem
 graphify-out/.rebuild.lock
 .claude/settings.local.json

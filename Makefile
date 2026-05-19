@@ -5,8 +5,9 @@ DJ    := backend_django/manage.py
         preflight \
         build up down restart logs ps \
         migrate superuser shell check fix-user-migration gmail-empty-trash gmail-empty-trash-dry \
+        gen-certs \
         auth \
-        deploy redeploy \
+        deploy redeploy celery-logs celery-status celery-purge \
         run docs \
         discover discover-files discover-photos \
         gmail-discover gmail-incremental gmail-download gmail-verify gmail-run gmail-loop gmail-progress \
@@ -97,12 +98,24 @@ down:
 
 restart: down up
 
+gen-certs:
+	bash scripts/gen-dev-certs.sh
+
 redeploy:
 	git pull origin main
 	docker compose build
 	docker compose down
 	docker compose up -d
 	docker compose exec web python manage.py migrate
+
+celery-logs:
+	docker compose logs -f --tail=100 celery celerybeat
+
+celery-status:
+	docker compose exec celery celery -A celery_app inspect active
+
+celery-purge:
+	docker compose exec celery celery -A celery_app purge -f
 
 logs:
 	docker compose logs -f --tail=100
