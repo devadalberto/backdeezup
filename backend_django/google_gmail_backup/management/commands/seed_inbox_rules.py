@@ -46,7 +46,7 @@ INBOX_RULES = [
         "name": "Archive Apple Developer emails",
         "description": "WWDC, App Store, developer.apple.com notifications.",
         "gmail_query": "from:(developer.apple.com OR apple.com) subject:(developer OR WWDC OR \"App Store\")",
-        "min_age_days": 7,
+        "min_age_days": 3,
         "action": CleanupRule.ACTION_ARCHIVE,
     },
     # ── Food delivery / loyalty rewards → trash ───────────────────────────
@@ -57,7 +57,7 @@ INBOX_RULES = [
             "from:(jimmyjohns.com OR temu.com OR doordash.com OR ubereats.com OR grubhub.com) "
             "-subject:(receipt OR order confirmation OR delivery)"
         ),
-        "min_age_days": 3,
+        "min_age_days": 1,
         "action": CleanupRule.ACTION_TRASH,
     },
     # ── USPS / shipping notifications → archive after delivery ───────────
@@ -68,7 +68,7 @@ INBOX_RULES = [
             "from:(usps.com OR informeddelivery.usps.com OR ups.com OR fedex.com OR dhl.com) "
             "subject:(delivered OR \"out for delivery\" OR tracking)"
         ),
-        "min_age_days": 1,
+        "min_age_days": 0,
         "action": CleanupRule.ACTION_ARCHIVE,
     },
     # ── Pharma / medical marketing → trash ───────────────────────────────
@@ -84,7 +84,7 @@ INBOX_RULES = [
         "name": "Trash Steam and gaming promotions",
         "description": "Steam sale notifications, wishlist updates.",
         "gmail_query": "from:(steampowered.com OR store.steampowered.com) -subject:receipt",
-        "min_age_days": 3,
+        "min_age_days": 1,
         "action": CleanupRule.ACTION_TRASH,
     },
     # ── Instagram / social DM notifications → trash ──────────────────────
@@ -92,7 +92,7 @@ INBOX_RULES = [
         "name": "Trash Instagram notification emails",
         "description": "Instagram DM and activity notifications — check app instead.",
         "gmail_query": "from:(facebookmail.com OR instagram.com) subject:(messaged OR \"new message\" OR \"unread\")",
-        "min_age_days": 1,
+        "min_age_days": 0,
         "action": CleanupRule.ACTION_TRASH,
     },
     # ── Powerball / lottery → trash ──────────────────────────────────────
@@ -151,8 +151,20 @@ class Command(BaseCommand):
                 created_count += 1
                 self.stdout.write(self.style.SUCCESS(f"  + {obj.name}"))
             else:
-                skipped_count += 1
-                self.stdout.write(f"  = {obj.name} [already exists]")
+                # Update min_age_days if changed
+                changed = False
+                if obj.min_age_days != data["min_age_days"]:
+                    obj.min_age_days = data["min_age_days"]
+                    changed = True
+                if not obj.enabled:
+                    obj.enabled = True
+                    changed = True
+                if changed:
+                    obj.save(update_fields=["min_age_days", "enabled"])
+                    self.stdout.write(f"  ~ {obj.name} [updated]")
+                else:
+                    skipped_count += 1
+                    self.stdout.write(f"  = {obj.name} [unchanged]")
 
         self.stdout.write(self.style.SUCCESS(
             f"\nDone. {created_count} rules created, {skipped_count} already existed.\n"

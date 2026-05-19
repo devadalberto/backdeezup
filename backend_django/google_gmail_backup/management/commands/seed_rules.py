@@ -41,59 +41,59 @@ PROTECTED_SENDERS = [
 
 CLEANUP_RULES = [
     {
-        "name": "Trash Promotions older than 30 days",
-        "description": "Emails categorized as Promotions older than 30 days.",
+        "name": "Trash Promotions older than 5 days",
+        "description": "Emails categorized as Promotions older than 5 days.",
         "gmail_query": "category:promotions",
-        "min_age_days": 30,
+        "min_age_days": 5,
         "action": CleanupRule.ACTION_TRASH,
     },
     {
-        "name": "Trash Social notifications older than 30 days",
-        "description": "Social notifications (Facebook, LinkedIn, etc.) older than 30 days.",
+        "name": "Trash Social notifications older than 5 days",
+        "description": "Social notifications (Facebook, LinkedIn, etc.) older than 5 days.",
         "gmail_query": "category:social",
-        "min_age_days": 30,
+        "min_age_days": 5,
         "action": CleanupRule.ACTION_TRASH,
     },
     {
-        "name": "Trash Forums older than 60 days",
-        "description": "Forum digests and mailing lists older than 60 days.",
+        "name": "Trash Forums older than 15 days",
+        "description": "Forum digests and mailing lists older than 15 days.",
         "gmail_query": "category:forums",
-        "min_age_days": 60,
+        "min_age_days": 15,
         "action": CleanupRule.ACTION_TRASH,
     },
     {
-        "name": "Trash Updates older than 30 days",
-        "description": "Automated updates (receipts, confirmations) older than 30 days.",
+        "name": "Trash Updates older than 5 days",
+        "description": "Automated updates (receipts, confirmations) older than 5 days.",
         "gmail_query": "category:updates",
-        "min_age_days": 30,
+        "min_age_days": 5,
         "action": CleanupRule.ACTION_TRASH,
     },
     {
-        "name": "Trash newsletters older than 30 days",
-        "description": "Emails containing unsubscribe links older than 30 days.",
-        "gmail_query": "unsubscribe older_than:30d -is:starred -label:important",
-        "min_age_days": 30,
+        "name": "Trash newsletters older than 5 days",
+        "description": "Emails containing unsubscribe links older than 5 days.",
+        "gmail_query": "unsubscribe older_than:5d -is:starred -label:important",
+        "min_age_days": 5,
         "action": CleanupRule.ACTION_TRASH,
     },
     {
-        "name": "Trash no-reply senders older than 60 days",
-        "description": "Automated no-reply emails older than 60 days.",
+        "name": "Trash no-reply senders older than 15 days",
+        "description": "Automated no-reply emails older than 15 days.",
         "gmail_query": "from:(no-reply OR noreply OR donotreply) -is:starred -label:important",
-        "min_age_days": 60,
+        "min_age_days": 15,
         "action": CleanupRule.ACTION_TRASH,
     },
     {
-        "name": "Trash mailing lists older than 60 days",
-        "description": "List mail older than 60 days that is not starred.",
+        "name": "Trash mailing lists older than 15 days",
+        "description": "List mail older than 15 days that is not starred.",
         "gmail_query": "list:* -is:starred -label:important",
-        "min_age_days": 60,
+        "min_age_days": 15,
         "action": CleanupRule.ACTION_TRASH,
     },
     {
         "name": "Trash spam folder",
         "description": "Messages sitting in the Spam folder.",
         "gmail_query": "in:spam",
-        "min_age_days": 7,
+        "min_age_days": 0,
         "action": CleanupRule.ACTION_TRASH,
     },
 ]
@@ -125,12 +125,19 @@ class Command(BaseCommand):
                     "gmail_query": data["gmail_query"],
                     "min_age_days": data["min_age_days"],
                     "action": data["action"],
-                    "enabled": False,  # all rules OFF by default — review before enabling
+                    "enabled": True,
                     "dry_run_default": True,
                 },
             )
-            status = "created" if created else "exists"
-            self.stdout.write(f"  {obj.name} [{status}]")
+            if not created and obj.min_age_days != data["min_age_days"]:
+                # Update min_age_days if it changed
+                obj.min_age_days = data["min_age_days"]
+                obj.enabled = True
+                obj.save(update_fields=["min_age_days", "enabled"])
+                self.stdout.write(f"  {obj.name} [updated min_age_days={data['min_age_days']}]")
+            else:
+                status = "created" if created else "exists"
+                self.stdout.write(f"  {obj.name} [{status}]")
 
         self.stdout.write(self.style.SUCCESS(
             f"\nDone. {len(PROTECTED_SENDERS)} protected senders, "
