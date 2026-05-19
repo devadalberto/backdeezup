@@ -123,6 +123,9 @@ migrate:
 seed-rules:
 	docker compose exec web python manage.py seed_rules
 
+seed-inbox-rules:
+	docker compose exec web python manage.py seed_inbox_rules
+
 vault-setup:
 	docker compose exec web python manage.py vault_setup
 
