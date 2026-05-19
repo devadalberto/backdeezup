@@ -118,26 +118,33 @@ class Command(BaseCommand):
 
         self.stdout.write("\nSeeding cleanup rules...")
         for data in CLEANUP_RULES:
-            obj, created = CleanupRule.objects.get_or_create(
-                name=data["name"],
-                defaults={
-                    "description": data["description"],
-                    "gmail_query": data["gmail_query"],
-                    "min_age_days": data["min_age_days"],
-                    "action": data["action"],
-                    "enabled": True,
-                    "dry_run_default": True,
-                },
-            )
-            if not created and obj.min_age_days != data["min_age_days"]:
-                # Update min_age_days if it changed
-                obj.min_age_days = data["min_age_days"]
-                obj.enabled = True
-                obj.save(update_fields=["min_age_days", "enabled"])
-                self.stdout.write(f"  {obj.name} [updated min_age_days={data['min_age_days']}]")
+            # Match on gmail_query (the invariant) not name (which encodes the old threshold)
+            # This ensures re-running seed updates existing rules regardless of name changes
+            existing = CleanupRule.objects.filter(gmail_query=data["gmail_query"]).first()
+            if existing:
+                changed = []
+                if existing.name != data["name"]:
+                    existing.name = data["name"]; changed.append("name")
+                if existing.min_age_days != data["min_age_days"]:
+                    existing.min_age_days = data["min_age_days"]; changed.append("min_age_days")
+                if not existing.enabled:
+                    existing.enabled = True; changed.append("enabled")
+                if changed:
+                    existing.save(update_fields=changed)
+                    self.stdout.write(f"  {existing.name} [updated: {', '.join(changed)}]")
+                else:
+                    self.stdout.write(f"  {existing.name} [unchanged]")
             else:
-                status = "created" if created else "exists"
-                self.stdout.write(f"  {obj.name} [{status}]")
+                CleanupRule.objects.create(
+                    name=data["name"],
+                    description=data["description"],
+                    gmail_query=data["gmail_query"],
+                    min_age_days=data["min_age_days"],
+                    action=data["action"],
+                    enabled=True,
+                    dry_run_default=True,
+                )
+                self.stdout.write(self.style.SUCCESS(f"  + {data['name']} [created]"))
 
         self.stdout.write(self.style.SUCCESS(
             f"\nDone. {len(PROTECTED_SENDERS)} protected senders, "

@@ -250,7 +250,7 @@ li { margin: 3px 0; }
       <td style="text-align:center">
         {% if rule.enabled %}<span class="badge-on">ON</span>{% else %}<span class="badge-off">OFF</span>{% endif %}
       </td>
-      <td style="text-align:center"><code>{{ rule.action }}</code></td>
+      <td style="text-align:center"><code style="color:var(--gt)">{{ rule.action }}</code></td>
       <td style="text-align:center">{{ rule.min_age_days }}d</td>
       <td style="text-align:center">{{ rule.last_dry_run_count }} msgs</td>
       <td style="text-align:center">
@@ -432,7 +432,7 @@ async function refreshAudit() {
   tbody.innerHTML = data.map(e => `
     <tr>
       <td>${e.rule}</td>
-      <td><code>${e.action}</code></td>
+      <td><code style="color:var(--gt)">${e.action}</code></td>
       <td>${e.dry_run ? '<span class="tag tag-dry">dry</span>' : '<b>REAL</b>'}</td>
       <td>${e.affected}</td>
       <td>${e.actor}</td>

@@ -1,7 +1,7 @@
 {% for entry in audit_log %}
 <tr>
   <td>{{ entry.rule_name }}</td>
-  <td><code>{{ entry.action }}</code></td>
+  <td><code style="color:var(--gt)">{{ entry.action }}</code></td>
   <td>{% if entry.dry_run %}<span class="tag tag-dry">dry</span>{% else %}<b>REAL</b>{% endif %}</td>
   <td>{{ entry.affected_count }}</td>
   <td>{{ entry.actor_label }}</td>
