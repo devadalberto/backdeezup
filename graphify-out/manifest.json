@@ -29,6 +29,11 @@
     "ast_hash": "9276b535256dc065bd7b8b84e15abd95",
     "semantic_hash": ""
   },
+  "/home/saitama/repos/github/devadalberto/backdeezup/scripts/autostart.sh": {
+    "mtime": 1779203571.3918238,
+    "ast_hash": "5afc88050d78ff93a01e01b208bc8215",
+    "semantic_hash": ""
+  },
   "/home/saitama/repos/github/devadalberto/backdeezup/scripts/gen-dev-certs.sh": {
     "mtime": 1779192122.0205326,
     "ast_hash": "d30779cea43b39577a3754ceaecf7b33",
@@ -270,7 +275,7 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/management/commands/seed_rules.py": {
-    "mtime": 1779194219.368398,
+    "mtime": 1779201580.004071,
     "ast_hash": "a1fe7c79b7cb95d20758aeeb9e5c195e",
     "semantic_hash": ""
   },
@@ -470,8 +475,8 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/README.md": {
-    "mtime": 1779173040.36916,
-    "ast_hash": "b9b00907da193917998fdc07939e11fd",
+    "mtime": 1779206800.5920663,
+    "ast_hash": "2f3e819ede0f7bca650cedd50a85c095",
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/AGENTS.md": {
@@ -490,8 +495,8 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/shared_context.md": {
-    "mtime": 1779184153.2365015,
-    "ast_hash": "8a971bc346cfa22ffdf8720c333a2065",
+    "mtime": 1779206800.5920663,
+    "ast_hash": "5df39582424a49e8b83dcee32f80e761",
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/accounts/migrations/MIGRATION_GUIDE.md": {
@@ -560,7 +565,7 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/templates/admin/gmail/ops.html": {
-    "mtime": 1779194219.368398,
+    "mtime": 1779201580.008071,
     "ast_hash": "cadc5d2e2b68b979833054fa98cd55a1",
     "semantic_hash": ""
   },
@@ -575,7 +580,7 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/templates/admin/gmail/partials/audit_log.html": {
-    "mtime": 1779194219.368398,
+    "mtime": 1779201580.008071,
     "ast_hash": "d3a5ce8b49d7906d8a43d4c0229ce73f",
     "semantic_hash": ""
   },
@@ -715,8 +720,8 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/.github/workflows/ci.yml": {
-    "mtime": 1778969373.9136508,
-    "ast_hash": "68a27a0e1d086f0f134f1e56b6ab27e0",
+    "mtime": 1779203571.3838239,
+    "ast_hash": "04d1a3c512bc5078104266e8cf5f8456",
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/.github/workflows/gh-pages.yml": {
