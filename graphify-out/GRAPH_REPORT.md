@@ -1,16 +1,16 @@
-# Graph Report - backdeezup  (2026-05-18)
+# Graph Report - backdeezup  (2026-05-19)
 
 ## Corpus Check
-- 106 files · ~47,431 words
+- 108 files · ~49,483 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1125 nodes · 1543 edges · 108 communities (83 shown, 25 thin omitted)
-- Extraction: 81% EXTRACTED · 19% INFERRED · 0% AMBIGUOUS · INFERRED: 297 edges (avg confidence: 0.56)
+- 1161 nodes · 1600 edges · 117 communities (90 shown, 27 thin omitted)
+- Extraction: 81% EXTRACTED · 19% INFERRED · 0% AMBIGUOUS · INFERRED: 305 edges (avg confidence: 0.56)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `701803a1`
+- Built from commit: `58025c0d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -99,24 +99,33 @@
 - [[_COMMUNITY_Community 99|Community 99]]
 - [[_COMMUNITY_Community 100|Community 100]]
 - [[_COMMUNITY_Community 102|Community 102]]
+- [[_COMMUNITY_Community 108|Community 108]]
+- [[_COMMUNITY_Community 109|Community 109]]
+- [[_COMMUNITY_Community 110|Community 110]]
+- [[_COMMUNITY_Community 111|Community 111]]
+- [[_COMMUNITY_Community 112|Community 112]]
+- [[_COMMUNITY_Community 113|Community 113]]
+- [[_COMMUNITY_Community 114|Community 114]]
+- [[_COMMUNITY_Community 115|Community 115]]
+- [[_COMMUNITY_Community 116|Community 116]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `GmailMessage` - 33 edges
-2. `GmailSyncState` - 32 edges
-3. `CleanupRule` - 31 edges
-4. `RuleCondition` - 28 edges
-5. `apply_rule()` - 28 edges
-6. `ProtectedSender` - 27 edges
-7. `CleanupAuditLog` - 25 edges
+1. `GmailMessage` - 35 edges
+2. `GmailSyncState` - 33 edges
+3. `CleanupRule` - 33 edges
+4. `ProtectedSender` - 28 edges
+5. `RuleCondition` - 28 edges
+6. `apply_rule()` - 28 edges
+7. `CleanupAuditLog` - 26 edges
 8. `gmail_service()` - 19 edges
-9. `CleanupRulesEngineTest` - 17 edges
-10. `VaultImage` - 16 edges
+9. `BackDeezUp` - 18 edges
+10. `GmailAttachment` - 17 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `rule_dry_run()` --calls--> `apply_rule()`  [INFERRED]
   backend_django/google_gmail_backup/api.py → backend_django/google_gmail_backup/services_rules.py
-- `export_audit_log()` --calls--> `export_queryset()`  [INFERRED]
-  backend_django/google_gmail_backup/api.py → backend_django/google_gmail_backup/exports.py
+- `rule_execute()` --calls--> `apply_rule()`  [INFERRED]
+  backend_django/google_gmail_backup/api.py → backend_django/google_gmail_backup/services_rules.py
 - `export_messages()` --calls--> `export_queryset()`  [INFERRED]
   backend_django/google_gmail_backup/api.py → backend_django/google_gmail_backup/exports.py
 - `export_assets()` --calls--> `export_queryset()`  [INFERRED]
@@ -124,15 +133,15 @@
 - `Command` --uses--> `DriveAsset`  [INFERRED]
   backend_django/media_vault/management/commands/import_media.py → backend_django/google_media_backup/models.py
 
-## Communities (108 total, 25 thin omitted)
+## Communities (117 total, 27 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.21
 Nodes (14): auth_connect(), download_file(), drive_service(), _load_creds(), photos_service(), Google Photos Library API client., Google Photos Library API client., Headless OAuth for Desktop App (installed) client type.      On a server with no (+6 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.06
-Nodes (28): Command, Management command to run cleanup rules with safety checks.  Usage:     make cle, run_dry_run(), run_execute(), rule_execute(), rules_run_all(), apply_rule(), _get_or_create_label() (+20 more)
+Cohesion: 0.07
+Nodes (25): run_dry_run(), run_execute(), rules_run_all(), apply_rule(), _get_or_create_label(), _is_protected(), _normalize_email(), _protected_emails() (+17 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.17
@@ -143,8 +152,8 @@ Cohesion: 0.1
 Nodes (14): AccountsConfig, AppConfig, CoreConfig, GoogleGmailBackupConfig, get_scheduler(), job_apply_protected_senders(), job_run_cleanup_rules(), APScheduler jobs for periodic Gmail sync and cleanup. All jobs are OFF by defaul (+6 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.05
-Nodes (53): 1. Create `.env`, 2. Place Google OAuth credentials, 3. Build and start, 4. Run migrations, 5. Create superuser, 6. Authenticate with Google, 7. Verify the deployment, Acknowledgements (+45 more)
+Cohesion: 0.18
+Nodes (14): 1. Create `.env`, 3. Build and start, 5. Create superuser, 6. Authenticate with Google, code:bash (make test-full          # ruff lint + 59 unit + regression t), code:bash (python3 -c "import base64, os; print(base64.urlsafe_b64encod), code:bash (python -c "import secrets; print(secrets.token_urlsafe(50))"), code:bash (# Build image (runs collectstatic automatically)) (+6 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.08
@@ -176,7 +185,7 @@ Nodes (10): [0.5.1] - 2026-05-14, [0.8.0] - 2026-05-15, [0.9.0] - 2026-05-16, Ad
 
 ### Community 27 - "Community 27"
 Cohesion: 0.06
-Nodes (36): API endpoints (`/api`), Apps, code:bash (make preflight              # ALWAYS run first — checks Dock), code:bash (# Personal repos), code:block3 (C:\Users\Administrator\repos\github\), code:bash (make redeploy), code:block5 (DriveAsset ──FK──> MediaItem), code:block6 (DISCOVERED -> DOWNLOADED -> IMPORTED -> VERIFIED -> DELETE_P) (+28 more)
+Nodes (38): API endpoints (`/api`), Apps, code:bash (make preflight              # ALWAYS run first — checks Dock), code:bash (# Personal repos), code:block3 (C:\Users\Administrator\repos\github\), code:bash (make redeploy), code:block5 (DriveAsset ──FK──> MediaItem), code:block6 (DISCOVERED -> DOWNLOADED -> IMPORTED -> VERIFIED -> DELETE_P) (+30 more)
 
 ### Community 28 - "Community 28"
 Cohesion: 0.11
@@ -255,8 +264,8 @@ Cohesion: 0.33
 Nodes (6): [0.1.0] - 2026-05-12, Added, Added, Added, Added, Safety Features
 
 ### Community 61 - "Community 61"
-Cohesion: 0.08
-Nodes (27): BulkMediaDecisionPayload, DriveDiscoverParams, DriveDownloadParams, ErrorDetail, ErrorResponse, GmailDiscoverParams, GmailSyncParams, LooseSchema (+19 more)
+Cohesion: 0.12
+Nodes (22): BulkMediaDecisionPayload, DriveDiscoverParams, DriveDownloadParams, ErrorDetail, ErrorResponse, GmailDiscoverParams, GmailSyncParams, LooseSchema (+14 more)
 
 ### Community 62 - "Community 62"
 Cohesion: 0.09
@@ -276,11 +285,11 @@ Nodes (22): gmail_label(), batch_trash_messages(), delete_message_permanent(), g
 
 ### Community 66 - "Community 66"
 Cohesion: 0.12
-Nodes (12): export_audit_log(), export_messages(), gmail_empty_trash(), gmail_verify(), Verify .eml file exists on disk for DOWNLOADED messages., Verify .eml file exists on disk for DOWNLOADED messages., Verify .eml file exists on disk for DOWNLOADED messages., Return field/operator/logic choices for the frontend builder. (+4 more)
+Nodes (12): export_messages(), gmail_empty_trash(), gmail_verify(), Verify .eml file exists on disk for DOWNLOADED messages., Verify .eml file exists on disk for DOWNLOADED messages., Verify .eml file exists on disk for DOWNLOADED messages., Return field/operator/logic choices for the frontend builder., Return field/operator/logic choices for the frontend builder. (+4 more)
 
 ### Community 67 - "Community 67"
-Cohesion: 0.42
-Nodes (9): _coerce(), _export_csv(), _export_json(), _export_pdf(), export_queryset(), _export_xlsx(), _export_xml(), Export engine — CSV, XLSX, JSON, XML, PDF. Usage: call export_queryset(request, (+1 more)
+Cohesion: 0.36
+Nodes (10): export_audit_log(), _coerce(), _export_csv(), _export_json(), _export_pdf(), export_queryset(), _export_xlsx(), _export_xml() (+2 more)
 
 ### Community 68 - "Community 68"
 Cohesion: 0.22
@@ -299,8 +308,8 @@ Cohesion: 0.15
 Nodes (13): [0.4.2] - 2026-05-13, [0.6.0] - 2026-05-15, Added, Added, Added, Added, Added, Added (+5 more)
 
 ### Community 76 - "Community 76"
-Cohesion: 0.1
-Nodes (13): AuditLogTest, GmailLoopLogicTest, GmailProgressAPITest, make_message(), ProtectedSenderExclusionTest, Regression tests — each test is named after the bug it prevents.  Every test her, BUG: make gmail-loop called gmail_pipeline all on every iteration,     re-runnin, BUG: Ops console KPI labelled 'TRASHED' was actually showing prog.discovered (+5 more)
+Cohesion: 0.09
+Nodes (9): AdminTemplateDuplicateH1Test, AuditLogTest, GmailProgressAPITest, make_message(), make_user(), Regression tests — each test is named after the bug it prevents.  Every test her, BUG: Gmail dashboard template had its own <h1>Gmail Dashboard</h1>     on top of, BUG: Ops console KPI labelled 'TRASHED' was actually showing prog.discovered (+1 more)
 
 ### Community 77 - "Community 77"
 Cohesion: 0.2
@@ -308,15 +317,11 @@ Nodes (10): eml_dir(), eml_path(), ensure_eml_path(), Returns deterministic .eml
 
 ### Community 78 - "Community 78"
 Cohesion: 0.13
-Nodes (5): ProtectedSender, Emails from these senders are always kept — never trashed, never deleted., GmailAttachmentTest, GmailMessageModelTest, GmailSyncStateTest
+Nodes (6): GmailAttachmentTest, GmailMessageModelTest, GmailSyncStateTest, ProtectedSenderExclusionTest, Regression: Protected senders must NEVER be affected by cleanup rules,     regar, TestCase
 
 ### Community 82 - "Community 82"
 Cohesion: 0.18
 Nodes (9): AssetOut, export_assets(), list_assets(), sync_commit_delete(), sync_download(), sync_import(), copy_into_media(), deterministic_path() (+1 more)
-
-### Community 83 - "Community 83"
-Cohesion: 0.15
-Nodes (5): AdminTemplateDuplicateH1Test, CleanupRuleRatelimitTest, make_user(), BUG: Gmail dashboard template had its own <h1>Gmail Dashboard</h1>     on top of, BUG: Dry-run All Enabled Rules returned HTTP 500 because 'redis' Python     pack
 
 ### Community 84 - "Community 84"
 Cohesion: 0.18
@@ -334,13 +339,9 @@ Nodes (9): [0.5.0] - 2026-05-14, Added, Added, Added, Added, Fixed, Fixed, Fixed
 Cohesion: 0.22
 Nodes (8): code:bash (make migrate), code:bash (docker compose exec web python manage.py migrate accounts --), code:bash (docker compose exec web python manage.py shell -c "), Context, Custom User Model Migration Guide, For a fresh deployment (no existing data), For an existing deployment with users already in the DB, Verify
 
-### Community 88 - "Community 88"
-Cohesion: 0.22
-Nodes (5): GmailSyncState, One row per synced account — tracks historyId for incremental sync., One row per synced account — tracks historyId for incremental sync., GmailPipelineCommandTest, BUG: gmail_pipeline discover had no --q flag.     make gmail-discover --q "in:tr
-
 ### Community 89 - "Community 89"
 Cohesion: 0.25
-Nodes (7): htmx_audit_log(), htmx_cleanup_status(), htmx_gmail_progress(), HTMX partial views for Gmail ops console. Returns HTML fragments for live update, Live cleanup job status — polled by HTMX every 3s when a job is running., Latest audit log entries — polled every 10s., Gmail pipeline progress bar fragment.
+Nodes (7): htmx_audit_log(), htmx_cleanup_status(), htmx_gmail_progress(), HTMX partial views for Gmail ops console. Returns HTML fragments for live update, Live cleanup job status — polled by HTMX every 3s when a job is running., Latest audit log entries — polled every 10s., Gmail pipeline progress bar fragment — includes disk usage stats.
 
 ### Community 92 - "Community 92"
 Cohesion: 0.25
@@ -362,25 +363,61 @@ Nodes (3): ErrorResponseTest, BUG: except Exception: errors += len(chunk) with n
 Cohesion: 0.4
 Nodes (5): sync_discover(), list_media_files(), Return one page of media files (images/videos) from Drive., Return one page of media files (images/videos) from Drive., Return one page of media-like files (images/videos or shortcuts to them).     Lo
 
+### Community 108 - "Community 108"
+Cohesion: 0.08
+Nodes (13): BaseCommand, Command, Permanently delete all messages currently in Gmail trash.  WARNING: This is irre, Command, _parse_eml(), Extract images and videos from downloaded .eml files into GmailAttachment record, Parse a .eml file and yield (attachment_id, filename, mime_type, data) tuples, Strip path traversal and dangerous chars from attachment filename. (+5 more)
+
+### Community 109 - "Community 109"
+Cohesion: 0.17
+Nodes (15): After first-time deploy — seed rules and apply protected senders, code:bash (make build && make up   # postgres + nginx on :8844), code:bash (# 1. Clone), code:bash (# Gmail — full discovery + download loop), code:bash (# .env), Deploy, Docker (prod-like), Enable scheduler (3× per day automation) (+7 more)
+
+### Community 110 - "Community 110"
+Cohesion: 0.14
+Nodes (9): Command, Management command to seed protected senders and default cleanup rules. Safe to, ProtectedSender, Emails from these senders are always kept — never trashed, never deleted., ConcurrentDownloaderTest, Feature: gmail_pipeline download now uses ThreadPoolExecutor.     Test that:, With no DISCOVERED messages, download exits without error., BUG: shared_context claimed Gmail was complete at 10010/10010 but actual     DB (+1 more)
+
+### Community 111 - "Community 111"
+Cohesion: 0.21
+Nodes (12): code:mermaid (flowchart LR), code:mermaid (stateDiagram-v2), code:mermaid (stateDiagram-v2), code:mermaid (flowchart TD), Data model, Drive / Photos pipeline, Gmail cleanup rules, Gmail pipeline (+4 more)
+
+### Community 112 - "Community 112"
+Cohesion: 0.18
+Nodes (10): Acknowledgements, Admin UI, AI agent collaboration, API reference, Apps, BackDeezUp, Configuration, Modern tooling (+2 more)
+
+### Community 113 - "Community 113"
+Cohesion: 0.29
+Nodes (7): 4. Run migrations, code:env (# ── Django ────────────────────────────────────────────────), code:bash (docker compose exec web python manage.py migrate), code:block23 (backdeezup/), code:block9 (backdeezup/), Project structure, Subsequent runs (incremental)
+
+### Community 114 - "Community 114"
+Cohesion: 0.29
+Nodes (5): GmailSyncState, One row per synced account — tracks historyId for incremental sync., One row per synced account — tracks historyId for incremental sync., GmailLoopLogicTest, BUG: make gmail-loop called gmail_pipeline all on every iteration,     re-runnin
+
+### Community 115 - "Community 115"
+Cohesion: 0.33
+Nodes (6): 2. Place Google OAuth credentials, 7. Verify the deployment, code:bash (# Bash (Linux / Mac / WSL)), code:bash (mkdir -p secrets), code:bash (# Static files served by nginx (should return 200)), Development commands
+
+### Community 116 - "Community 116"
+Cohesion: 0.67
+Nodes (3): code:block8 (make preflight          Check Docker, .env, google_client.js), Enable automatic scheduling (3x per day), Key make targets
+
 ## Knowledge Gaps
-- **475 isolated node(s):** `PreToolUse`, `BeforeTool`, `Project-wide Pydantic v2 schemas. Use these for input validation in ALL Django v`, `Base schema — forbids extra fields, strips whitespace from strings.`, `Base schema — ignores extra fields (safe for external API responses).` (+470 more)
+- **483 isolated node(s):** `PreToolUse`, `BeforeTool`, `Project-wide Pydantic v2 schemas. Use these for input validation in ALL Django v`, `Base schema — forbids extra fields, strips whitespace from strings.`, `Base schema — ignores extra fields (safe for external API responses).` (+478 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **25 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **27 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Command` connect `Community 49` to `Community 2`, `Community 18`, `Community 61`?**
-  _High betweenness centrality (0.048) - this node is a cross-community bridge._
-- **Why does `gmail_service()` connect `Community 65` to `Community 64`, `Community 1`, `Community 66`, `Community 0`, `Community 68`, `Community 69`, `Community 70`, `Community 61`?**
-  _High betweenness centrality (0.029) - this node is a cross-community bridge._
-- **Why does `GmailAttachment` connect `Community 18` to `Community 49`, `Community 84`, `Community 78`, `Community 1`?**
+- **Why does `Command` connect `Community 49` to `Community 2`, `Community 18`, `Community 108`?**
+  _High betweenness centrality (0.047) - this node is a cross-community bridge._
+- **Why does `GmailMessage` connect `Community 18` to `Community 96`, `Community 1`, `Community 98`, `Community 64`, `Community 76`, `Community 108`, `Community 78`, `Community 110`, `Community 114`, `Community 83`, `Community 84`, `Community 88`, `Community 90`, `Community 94`?**
+  _High betweenness centrality (0.033) - this node is a cross-community bridge._
+- **Why does `GmailAttachment` connect `Community 18` to `Community 1`, `Community 108`, `Community 78`, `Community 49`, `Community 84`?**
   _High betweenness centrality (0.028) - this node is a cross-community bridge._
-- **Are the 29 inferred relationships involving `GmailMessage` (e.g. with `GmailMessageOut` and `GmailFilterIn`) actually correct?**
-  _`GmailMessage` has 29 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 28 inferred relationships involving `GmailSyncState` (e.g. with `GmailMessageOut` and `GmailFilterIn`) actually correct?**
-  _`GmailSyncState` has 28 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 29 inferred relationships involving `CleanupRule` (e.g. with `GmailMessageOut` and `GmailFilterIn`) actually correct?**
-  _`CleanupRule` has 29 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 25 inferred relationships involving `RuleCondition` (e.g. with `StrictSchema` and `LooseSchema`) actually correct?**
-  _`RuleCondition` has 25 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 31 inferred relationships involving `GmailMessage` (e.g. with `GmailMessageOut` and `GmailFilterIn`) actually correct?**
+  _`GmailMessage` has 31 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 29 inferred relationships involving `GmailSyncState` (e.g. with `GmailMessageOut` and `GmailFilterIn`) actually correct?**
+  _`GmailSyncState` has 29 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 31 inferred relationships involving `CleanupRule` (e.g. with `GmailMessageOut` and `GmailFilterIn`) actually correct?**
+  _`CleanupRule` has 31 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 25 inferred relationships involving `ProtectedSender` (e.g. with `GmailSyncStateAdmin` and `GmailAttachmentAdmin`) actually correct?**
+  _`ProtectedSender` has 25 INFERRED edges - model-reasoned connections that need verification._
