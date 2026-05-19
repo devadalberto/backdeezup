@@ -219,7 +219,23 @@ class Command(BaseCommand):
                 att_dir = _attachment_dir(msg.account_email, year, month, msg.gmail_id)
 
                 for att_id, filename, mime_type, data in parts:
-                    # Deduplicate by sha256 within this message
+                    # Strip EXIF and preserve metadata BEFORE writing to disk
+                    IMAGE_MIMES = {"image/jpeg","image/jpg","image/png","image/webp","image/tiff","image/tif"}
+                    if mime_type.lower() in IMAGE_MIMES:
+                        from media_vault.exif_strip import strip_and_preserve
+                        # Use placeholder path for initial sha — will update after strip
+                        pre_sha = _sha256(data)
+                        clean_data, _meta = strip_and_preserve(
+                            data=data,
+                            source_path=os.path.join(att_dir, f"_tmp_{pre_sha[:8]}_{filename}"),
+                            filename=filename,
+                            mime_type=mime_type,
+                            sha256=pre_sha,
+                            gmail_message_id=msg.gmail_id,
+                        )
+                        data = clean_data
+
+                    # Deduplicate by sha256 of clean data
                     sha = _sha256(data)
 
                     # Build unique path — avoid overwriting if same filename
@@ -230,6 +246,13 @@ class Command(BaseCommand):
 
                     with open(dest, "wb") as f:
                         f.write(data)
+
+                    # Update metadata record with final dest path
+                    if mime_type.lower() in IMAGE_MIMES:
+                        from media_vault.models import MediaMetadata
+                        MediaMetadata.objects.filter(
+                            source_path=os.path.join(att_dir, f"_tmp_{pre_sha[:8]}_{filename}")
+                        ).update(source_path=dest, source_sha256=sha)
 
                     GmailAttachment.objects.update_or_create(
                         message=msg,

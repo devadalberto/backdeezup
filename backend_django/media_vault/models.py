@@ -7,6 +7,51 @@ from wagtail.documents.models import AbstractDocument
 from wagtailmedia.models import AbstractMedia
 
 
+class MediaMetadata(models.Model):
+    """
+    Preserved EXIF/metadata from a media file BEFORE it was stripped.
+    Linked to the source file path (not VaultImage FK — metadata is extracted
+    during attachment phase, before vault import).
+    Immutable — append-only. Never update, never delete.
+    """
+    # Source identification
+    source_path = models.TextField(unique=True, help_text="Absolute path to the stripped file")
+    source_sha256 = models.CharField(max_length=64, blank=True, db_index=True)
+    gmail_message_id = models.CharField(max_length=256, blank=True, db_index=True)
+    filename = models.CharField(max_length=512, blank=True)
+    mime_type = models.CharField(max_length=128, blank=True)
+
+    # Preserved metadata (JSON — full EXIF dump)
+    raw_exif = models.JSONField(default=dict, help_text="Full EXIF tag dump before strip")
+
+    # Key fields extracted for quick querying
+    device_make = models.CharField(max_length=100, blank=True)
+    device_model = models.CharField(max_length=100, blank=True)
+    datetime_original = models.DateTimeField(null=True, blank=True)
+    datetime_digitized = models.DateTimeField(null=True, blank=True)
+    software = models.CharField(max_length=200, blank=True)
+
+    # GPS (stored as decimal degrees for easy querying)
+    gps_latitude = models.FloatField(null=True, blank=True)
+    gps_longitude = models.FloatField(null=True, blank=True)
+    gps_altitude = models.FloatField(null=True, blank=True)
+    gps_speed = models.FloatField(null=True, blank=True)
+    gps_timestamp = models.DateTimeField(null=True, blank=True)
+
+    # Strip audit
+    stripped_at = models.DateTimeField(auto_now_add=True)
+    original_size_bytes = models.IntegerField(default=0)
+    stripped_size_bytes = models.IntegerField(default=0)
+
+    class Meta:
+        verbose_name = "Media Metadata"
+        verbose_name_plural = "Media Metadata Records"
+        ordering = ["-stripped_at"]
+
+    def __str__(self):
+        return f"{self.filename} ({self.device_make} {self.device_model})"
+
+
 class VaultImage(AbstractImage):
     """
     Custom Wagtail image model.

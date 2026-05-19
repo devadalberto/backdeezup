@@ -10,7 +10,7 @@ from wagtail import hooks
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet, SnippetViewSetGroup
 
-from .models import MediaDecision, VaultDocument, VaultImage, VaultMedia
+from .models import MediaDecision, MediaMetadata, VaultDocument, VaultImage, VaultMedia
 
 
 # ── Matrix theme injection ────────────────────────────────────────────────────
@@ -73,11 +73,28 @@ class MediaDecisionViewSet(SnippetViewSet):
         return False
 
 
+class MediaMetadataViewSet(SnippetViewSet):
+    model = MediaMetadata
+    icon = "tag"
+    menu_label = "EXIF Records"
+    list_display = ["filename", "device_make", "device_model", "datetime_original", "gps_latitude", "gps_longitude", "stripped_at"]
+    list_filter = ["device_make", "mime_type"]
+    search_fields = ["filename", "device_make", "device_model", "gmail_message_id"]
+    ordering = ["-stripped_at"]
+
+    # Read-only — metadata is immutable audit trail
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 class MediaVaultGroup(SnippetViewSetGroup):
     menu_label = "Media Vault"
     menu_icon = "folder-open-inverse"
     menu_order = 200
-    items = [VaultImageViewSet, VaultMediaViewSet, VaultDocumentViewSet, MediaDecisionViewSet]
+    items = [VaultImageViewSet, VaultMediaViewSet, VaultDocumentViewSet, MediaDecisionViewSet, MediaMetadataViewSet]
 
 
 register_snippet(MediaVaultGroup)
