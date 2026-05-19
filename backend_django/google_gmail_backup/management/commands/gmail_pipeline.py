@@ -71,7 +71,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Discovered {discovered} new messages. Total: {state.total_messages}"))
 
     def _download(self, limit, workers=10):
-        import os
         import time
         import threading
         from concurrent.futures import ThreadPoolExecutor, as_completed

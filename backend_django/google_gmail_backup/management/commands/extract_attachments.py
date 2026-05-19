@@ -27,7 +27,6 @@ import re
 import time
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -126,7 +125,6 @@ def _parse_eml(raw_path: str):
         if ct not in TARGET_MIMES:
             continue
 
-        disp = str(part.get("Content-Disposition", ""))
         filename = part.get_filename() or ""
 
         # Skip inline images that are tiny tracking pixels (< 1KB)

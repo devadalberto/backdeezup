@@ -4,9 +4,7 @@ Regression tests — each test is named after the bug it prevents.
 Every test here corresponds to a real production failure from the session log.
 If you break one of these, you've re-introduced a known bug.
 """
-import json
 import os
-import tempfile
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client, override_settings
@@ -59,18 +57,14 @@ class EmptyTrashGuardTest(TestCase):
     def test_guard_blocks_below_90_pct(self):
         r = self.client.post("/api/gmail/ops/empty-trash?dry_run=true&skip_backup_check=false")
         self.assertEqual(r.status_code, 200)
-        data = r.json()
-        # dry_run=true, skip=false at 78% → either blocked or dry_run result
-        # The important thing is it doesn't crash
-        self.assertIn(r.status_code, [200])
+        # dry_run=true, skip=false at 78% — must not crash (blocked or dry_run response both OK)
 
     def test_skip_backup_check_bypasses_guard(self):
         """dry_run with skip=true must not be blocked by backup % check."""
         r = self.client.post("/api/gmail/ops/empty-trash?dry_run=true&skip_backup_check=true")
         self.assertEqual(r.status_code, 200)
-        data = r.json()
         # Not authenticated in tests — but must NOT return blocked:true
-        self.assertNotIn("blocked", data,
+        self.assertNotIn("blocked", r.json(),
             "skip_backup_check=true must bypass the guard — got blocked response")
 
     def test_empty_trash_endpoint_requires_auth(self):
@@ -95,10 +89,7 @@ class ErrorResponseTest(TestCase):
         """Response schema must always include last_error (even if null)."""
         r = self.client.post("/api/gmail/ops/empty-trash?dry_run=true&skip_backup_check=true")
         self.assertEqual(r.status_code, 200)
-        data = r.json()
-        # dry_run responses don't have last_error — but real execution does
-        # Just ensure the endpoint doesn't 500
-        self.assertNotEqual(r.status_code, 500)
+        # dry_run responses don't have last_error — just ensure the endpoint doesn't 500
 
 
 # ── BUG: gmail-pipeline discover had no --q flag ─────────────────────────────

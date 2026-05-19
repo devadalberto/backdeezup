@@ -3,11 +3,9 @@ Tests for media_vault — EXIF strip, MediaMetadata, video streaming, gallery.
 """
 import io
 import os
-import struct
-import tempfile
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase, Client, override_settings
+from django.test import TestCase, Client
 
 User = get_user_model()
 
@@ -205,7 +203,6 @@ class VideoStreamingTest(TestCase):
         self.assertEqual(r.status_code, 404)
 
     def test_stream_requires_staff(self):
-        from django.contrib.auth import get_user_model
         anon = Client()
         r = anon.get("/vault/stream/1/")
         # Should redirect to login, not 200
