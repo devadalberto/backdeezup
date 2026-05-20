@@ -1,6 +1,121 @@
-# BackDeezUp — Playbook
+# BackDeezUp — Prompts & Playbook (2026-05-19)
 
-Step-by-step reference for every operation. Copy the prompts and commands directly.
+Two sections in one file:
+- **Part 1** — Raw session prompts (what was asked, in order)
+- **Part 2** — Reusable playbook (step-by-step operations + copy-paste prompts)
+
+---
+
+## Part 1 — Session Prompts (2026-05-19)
+
+What was asked during the full development session. Numbers preserved for reference.
+Useful ones to reuse are marked **★**.
+
+1. *(session resumed from prior context — see shared_context.md)*
+2. Gmail progress stuck at 18.8% — why is it not moving forward?
+3. What else is missing? Does it depend on the download?
+4. **★** Take care of all priorities listed. Ensure all this can be done from the webpage too.
+5. Where can I see the backup progress in the dashboard?
+6. Still at 78% with no way to delete anything.
+7. Clicked the button and confirmed — how do I see the execution status?
+8. Fix the dry-run button — not showing any result.
+9. Dry-run does not show any result after clicking.
+10. Clicked dry-run, then Force Empty — nothing happening.
+11. Fix the broken button again.
+12. **★** Analyze as a team in a parallel task — ensure you learn what is making you not as efficient as you could be.
+13. De-scope Google Photos — it keeps getting 403.
+14. How to handle the blocked Photos scope?
+15. Output is taking a while — how do I see what is going on? (logs)
+16. Shit is breaking left and right — Photos 403 again.
+17. **★** How does this start cataloging, reviewing, and cleaning up my inbox?
+18. **★** Here is a screenshot of my inbox — most of it should be moved to a folder or trash. How is that happening now?
+19. Options A and B for fixing the download are both failing.
+20. **★** Chop the rule age thresholds — from 60 to 15 and from 30 to 5. Why wait 30 days for forums and spam?
+21. **★** Research curated lists for Gmail cleanup rules — like awesome-docker but for inbox zero. Check agentic forums and the web.
+22. **★** Consider methods like Pi-hole that use maintenance block lists. Next big chunk: attachments from me and family.
+23. **★** Multiple email addresses I can't remember — farfer, farferkugel, farmaikamx and combinations. Catalog as 'farferkugel'. Get me the list first for confirmation. Want thumbnails in Wagtail and video streaming.
+24. Also check category tag pelos, .Far-, far.maika.mx, farmaikamx.
+25. Separate Monica and Maika — everything Maika goes to farferkugel tag.
+26. Update tags: farferkugel → 'adalberto', juliet → 'julieta'.
+27. Think about edge cases — what will happen when each hits?
+28. **★** Investigate https://github.com/stashapp/stash — implement something similar for media management in Wagtail. Basics only: thumbnails and tags.
+29. Option B — new Wagtail page type (Stash-style).
+30. **★** Always follow best practices and track everything on a new branch.
+31. **★** Add a theme configurator — amber/orange fonts preferred, include the blue from the logo, 4 themes, HUD-style switcher. Looks from the future. Separate branch.
+32. **★** Media metadata needs to be wiped before storage, but saved somewhere first.
+33. **★** Needless to say, always follow best practices: security, SDLC branch management, update graphify, update shared context and memory.
+34. **★** Bring 3 pairs of eyes — Python master, Django jedi, and a god-mode programmer — to review the models. Make any Linux geek cry blood tears reading the most optimized and secure code. Iterate with test updates.
+35. Have the tests updated.
+36. Continue with the agent loop and previous tasks.
+37. **★** In parallel, have agents acting as white-hat hackers auditing the whole application in a loop. Break when done.
+38. Next big chunk: attachments specifically from me and family.
+39. Also check category or tag pelos.
+40. Merge order question — older to newer?
+41. **★** Fix 3 issues: Gmail Dashboard duplicate title, DOWNLOADED fluctuating confusingly, loop keeps re-discovering.
+42. **★** Bring the design expert — menus and pages should match the logo (3 colors, green dominant). What else is missing to run and leave it running?
+43. Still at 78% with no delete path.
+44. Logging is a basic security feature — why is nothing being logged?
+45. **★** Analyze efficiency failures as a team.
+46. Photos still getting 403.
+47. De-scope Photos for now.
+48. Output taking a while — dry-run showed 7293, then Force Empty deleted them all.
+49. Want this running a few times a day filtering spam.
+50. Inbox screenshot — rules confirmation.
+51. Options A and B both failing.
+52. Chop the thresholds again.
+53. **★** Need to set up git config for multiple accounts.
+54. Just want to know my SSH config.
+55. Apply SSH config changes.
+56. Why does DOWNLOADED go up and down?
+57. **★** Can't reconcile the numbers. Also need disk usage percentage for Gmail.
+58. How does cataloging, reviewing, and cleaning up work?
+59. Inbox screenshot for rules.
+60. Options A/B failing.
+61. Chop thresholds.
+62. **★** Research curated lists (second pass).
+63. Next big chunk: attachments from family.
+64. Git config setup.
+65. SSH keys sorting.
+66. Want all keys on all profiles.
+67. Apply config changes.
+68. Use vertex automation key, not devadalberto.
+69. Explain the freelance-launch repo structure.
+70. With git information on top.
+71. Why is the git remote not under the org?
+72. Handle freelance-launch repo creation.
+73. **★** Give me a prompt to tell another Claude session to follow the same shared_context and AI conventions.
+74. Update the prompt — wrong directory path.
+75. Convert the prompt to freelance-launch.
+76. Current working path question.
+77. Explain git accounts to another Claude chat.
+78. How does cataloging and cleanup work?
+79. **★** Bring 3 pairs of eyes — models review with graphify. (Second pass.)
+80. Think about edge cases creatively.
+81. Have tests updated.
+82. Continue agent loop.
+83. **★** Recommend CI/CD pipeline with Docker Compose including first-class security scans — all containerized.
+84. **★** Full loop audit — architecture to implementation. Re-think and re-implement if needed. New branch. Best practices.
+85. WSL config needs to be updated — 2 procs, 8GB max. Update all files.
+86. Efficiency retrospective.
+87. Photos 403 again.
+88. **★** If a respected authority checked the stack, what would they criticize and why?
+89. **★** Replace APScheduler with Celery, add TLS, move to secrets manager, add Sentry. TLS is localhost for now.
+90. Must pull first before make gen-certs exists.
+91. Took option B — certs generated. Now what?
+92. Should I proceed with the PR now?
+93. **★** How to install/trust a self-signed cert.
+94. **★** Copy certs to Windows and install them everywhere they need to be. Document the path and type.
+95. **★** Why are there still 60d and 30d rules? Did you not apply the changes? Action column should use blue.
+96. README still talks about APScheduler — update all documents.
+97. Registered 2FA.
+98. **★** Start CI/CD pipeline with security scanning, 100% containerized. Configure autostart on WINWEB01 VM boot.
+99. **★** How do I verify I'm in the right state?
+100. **★** Update all documents, shared context, memory, and graphify. Full ops manual README.
+101. **★** Create a file with all prompts from this session.
+
+---
+
+## Part 2 — Reusable Playbook
 
 ---
 
