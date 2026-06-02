@@ -27,13 +27,14 @@ class GmailAttachmentAdmin(admin.ModelAdmin):
 
 @admin.register(GmailMessage)
 class GmailMessageAdmin(admin.ModelAdmin):
-    list_display = ["subject", "from_address", "date", "state", "has_attachments", "account_email"]
-    list_filter = ["state", "has_attachments", "account_email"]
+    list_display = ["subject", "from_address", "date", "state", "deleted_at", "deletion_source", "has_attachments", "account_email"]
+    list_filter = ["state", "deletion_source", "has_attachments", "account_email"]
     search_fields = ["subject", "from_address", "gmail_id"]
     readonly_fields = ["gmail_id", "thread_id", "history_id", "discovered_at",
-                       "downloaded_at", "last_attempt_at", "sha256", "raw_path"]
+                       "downloaded_at", "last_attempt_at", "sha256", "raw_path",
+                       "deleted_at", "deletion_source", "metadata_snapshot"]
     date_hierarchy = "date"
-    actions = ["action_trash"]
+    actions = ["action_trash", "action_reconcile"]
 
     @admin.action(description="Trash selected in Gmail (requires gmail.modify scope)")
     def action_trash(self, request, queryset):
@@ -45,6 +46,46 @@ class GmailMessageAdmin(admin.ModelAdmin):
                 msg.save(update_fields=["state"])
                 trashed += 1
         self.message_user(request, f"Trashed {trashed} message(s).")
+
+    @admin.action(description="Reconcile selected — check if still in Gmail")
+    def action_reconcile(self, request, queryset):
+        from .services_gmail import gmail_service
+        from django.utils import timezone
+        svc = gmail_service()
+        if not svc:
+            self.message_user(request, "Not authenticated — run make auth", level="error")
+            return
+        reconciled = 0
+        for msg in queryset.filter(state__in=[GmailMessage.STATE_VERIFIED, GmailMessage.STATE_DOWNLOADED]):
+            try:
+                result = svc.users().messages().get(userId="me", id=msg.gmail_id, format="minimal").execute()
+                labels = result.get("labelIds", [])
+                if "TRASH" in labels:
+                    msg.state = GmailMessage.STATE_SOFT_DELETED
+                    msg.deleted_at = timezone.now()
+                    msg.deletion_source = "gmail_user"
+                    if not msg.metadata_snapshot:
+                        msg.metadata_snapshot = {
+                            "subject": msg.subject, "from_address": msg.from_address,
+                            "to_address": msg.to_address, "date": str(msg.date) if msg.date else None,
+                            "labels": msg.labels, "size_estimate": msg.size_estimate,
+                        }
+                    msg.save(update_fields=["state", "deleted_at", "deletion_source", "metadata_snapshot"])
+                    reconciled += 1
+            except Exception as exc:
+                if "404" in str(exc) or "notFound" in str(exc):
+                    msg.state = GmailMessage.STATE_SOFT_DELETED
+                    msg.deleted_at = timezone.now()
+                    msg.deletion_source = "gmail_sync"
+                    if not msg.metadata_snapshot:
+                        msg.metadata_snapshot = {
+                            "subject": msg.subject, "from_address": msg.from_address,
+                            "to_address": msg.to_address, "date": str(msg.date) if msg.date else None,
+                            "labels": msg.labels, "size_estimate": msg.size_estimate,
+                        }
+                    msg.save(update_fields=["state", "deleted_at", "deletion_source", "metadata_snapshot"])
+                    reconciled += 1
+        self.message_user(request, f"Reconciled {reconciled} message(s) — marked as soft-deleted.")
 
 
 @admin.register(ProtectedSender)

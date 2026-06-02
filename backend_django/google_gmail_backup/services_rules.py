@@ -69,106 +69,118 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
         protected = _protected_emails()
         cutoff = timezone.now() - timedelta(days=rule.min_age_days)
 
-        # Build local queryset from verified messages matching age requirement.
-        # select_for_update() prevents two concurrent rule runs from acting on
-        # the same messages (double-trash protection).
-        qs = GmailMessage.objects.select_for_update(skip_locked=True).filter(
-            state=GmailMessage.STATE_VERIFIED,
-            date__lte=cutoff,
-        )
+        with transaction.atomic():
+            # select_for_update requires an open transaction — prevents concurrent
+            # rule runs from double-trashing the same messages.
+            qs = GmailMessage.objects.select_for_update(skip_locked=True).filter(
+                state=GmailMessage.STATE_VERIFIED,
+                date__lte=cutoff,
+            )
 
-        # For dry-run: count from local DB only (fast, no Gmail API call)
-        # For real run: also cross-reference live Gmail query to catch label changes
-        if not dry_run and rule.gmail_query.strip():
+            # For dry-run: count from local DB only (fast, no Gmail API call)
+            # For real run: also cross-reference live Gmail query to catch label changes
+            if not dry_run and rule.gmail_query.strip():
+                svc = gmail_service()
+                if svc:
+                    matching_ids = set()
+                    page_token = None
+                    while True:
+                        params = dict(userId="me", q=rule.gmail_query, maxResults=500)
+                        if page_token:
+                            params["pageToken"] = page_token
+                        res = svc.users().messages().list(**params).execute()
+                        for m in res.get("messages", []):
+                            matching_ids.add(m["id"])
+                        page_token = res.get("nextPageToken")
+                        if not page_token:
+                            break
+                    qs = qs.filter(gmail_id__in=matching_ids)
+
+            # Exclude protected senders — push filter to DB, not Python iteration
+            if rule.respect_protected_senders and protected:
+                normalized = {e.lower() for e in protected}
+                for email in normalized:
+                    qs = qs.exclude(from_address__icontains=email)
+            candidates = list(qs[:5000])  # hard cap to prevent memory exhaustion
+
+            affected_ids = [m.gmail_id for m in candidates]
+            sample_subjects = [m.subject[:80] for m in candidates[:10]]
+            audit.affected_count = len(affected_ids)
+            audit.affected_gmail_ids = affected_ids[:100]
+            audit.affected_ids_truncated = len(affected_ids) > 100
+            audit.sample_subjects = sample_subjects
+
+            if dry_run:
+                audit.status = "DRY_RUN"
+                audit.finished_at = timezone.now()
+                audit.save()
+                rule.last_dry_run_count = len(affected_ids)
+                rule.save(update_fields=["last_dry_run_count"])
+                return audit
+
+            # Execute the action
             svc = gmail_service()
-            if svc:
-                matching_ids = set()
-                page_token = None
-                while True:
-                    params = dict(userId="me", q=rule.gmail_query, maxResults=500)
-                    if page_token:
-                        params["pageToken"] = page_token
-                    res = svc.users().messages().list(**params).execute()
-                    for m in res.get("messages", []):
-                        matching_ids.add(m["id"])
-                    page_token = res.get("nextPageToken")
-                    if not page_token:
-                        break
-                qs = qs.filter(gmail_id__in=matching_ids)
+            if not svc:
+                raise RuntimeError("Not authenticated — run make auth first")
 
-        # Exclude protected senders — push filter to DB, not Python iteration
-        if rule.respect_protected_senders and protected:
-            normalized = {e.lower() for e in protected}
-            # Filter out messages where from_address contains a protected email
-            for email in normalized:
-                qs = qs.exclude(from_address__icontains=email)
-        candidates = list(qs[:5000])  # hard cap to prevent memory exhaustion
-
-        affected_ids = [m.gmail_id for m in candidates]
-        sample_subjects = [m.subject[:80] for m in candidates[:10]]
-        audit.affected_count = len(affected_ids)
-        audit.affected_gmail_ids = affected_ids[:100]
-        audit.affected_ids_truncated = len(affected_ids) > 100
-        audit.sample_subjects = sample_subjects
-
-        if dry_run:
-            audit.status = "DRY_RUN"
-            audit.finished_at = timezone.now()
-            audit.save()
-            rule.last_dry_run_count = len(affected_ids)
-            rule.save(update_fields=["last_dry_run_count"])
-            return audit
-
-        # Execute the action
-        svc = gmail_service()
-        if not svc:
-            raise RuntimeError("Not authenticated — run make auth first")
-
-        executed = 0
-        if rule.action == CleanupRule.ACTION_TRASH:
-            trashed_ids = []
-            for msg in candidates:
-                if trash_message(msg.gmail_id):
-                    trashed_ids.append(msg.gmail_id)
-                    executed += 1
-            # Batch DB update — single query instead of N saves
-            if trashed_ids:
-                with transaction.atomic():
+            executed = 0
+            if rule.action == CleanupRule.ACTION_TRASH:
+                trashed_ids = []
+                for msg in candidates:
+                    if trash_message(msg.gmail_id):
+                        trashed_ids.append(msg.gmail_id)
+                        executed += 1
+                if trashed_ids:
+                    now = timezone.now()
+                    # Snapshot metadata for each trashed message
+                    for msg in candidates:
+                        if msg.gmail_id in trashed_ids and not msg.metadata_snapshot:
+                            msg.metadata_snapshot = {
+                                "subject": msg.subject,
+                                "from_address": msg.from_address,
+                                "to_address": msg.to_address,
+                                "date": str(msg.date) if msg.date else None,
+                                "labels": msg.labels,
+                                "size_estimate": msg.size_estimate,
+                            }
+                            msg.save(update_fields=["metadata_snapshot"])
                     GmailMessage.objects.filter(gmail_id__in=trashed_ids).update(
-                        state=GmailMessage.STATE_TRASHED
+                        state=GmailMessage.STATE_TRASHED,
+                        deleted_at=now,
+                        deletion_source="cleanup_rule",
                     )
 
-        elif rule.action == CleanupRule.ACTION_STAR:
-            for msg in candidates:
-                if modify_labels(msg.gmail_id, add_labels=["STARRED"]):
-                    if "STARRED" not in msg.labels:
-                        msg.labels = list(msg.labels) + ["STARRED"]
-                        msg.save(update_fields=["labels"])
-                    executed += 1
+            elif rule.action == CleanupRule.ACTION_STAR:
+                for msg in candidates:
+                    if modify_labels(msg.gmail_id, add_labels=["STARRED"]):
+                        if "STARRED" not in msg.labels:
+                            msg.labels = list(msg.labels) + ["STARRED"]
+                            msg.save(update_fields=["labels"])
+                        executed += 1
 
-        elif rule.action == CleanupRule.ACTION_LABEL:
-            label_id = _get_or_create_label(svc, rule.label_name)
-            for msg in candidates:
-                if modify_labels(msg.gmail_id, add_labels=[label_id]):
-                    executed += 1
+            elif rule.action == CleanupRule.ACTION_LABEL:
+                label_id = _get_or_create_label(svc, rule.label_name)
+                for msg in candidates:
+                    if modify_labels(msg.gmail_id, add_labels=[label_id]):
+                        executed += 1
 
-        elif rule.action == CleanupRule.ACTION_ARCHIVE:
-            for msg in candidates:
-                if modify_labels(msg.gmail_id, remove_labels=["INBOX"]):
-                    executed += 1
+            elif rule.action == CleanupRule.ACTION_ARCHIVE:
+                for msg in candidates:
+                    if modify_labels(msg.gmail_id, remove_labels=["INBOX"]):
+                        executed += 1
 
-        audit.affected_count = executed
-        audit.status = "OK"
-        audit.finished_at = timezone.now()
-        audit.save()
+            audit.affected_count = executed
+            audit.status = "OK"
+            audit.finished_at = timezone.now()
+            audit.save()
 
-        rule.last_run_at = timezone.now()
-        rule.last_run_dry = False
-        rule.last_affected_count = executed
-        rule.save(update_fields=["last_run_at", "last_run_dry", "last_affected_count"])
+            rule.last_run_at = timezone.now()
+            rule.last_run_dry = False
+            rule.last_affected_count = executed
+            rule.save(update_fields=["last_run_at", "last_run_dry", "last_affected_count"])
 
-        log.info("Rule '%s' executed: %d messages affected (dry=%s)", rule.name, executed, dry_run)
-        return audit
+            log.info("Rule '%s' executed: %d messages affected (dry=%s)", rule.name, executed, dry_run)
+            return audit
 
     except Exception as e:
         audit.status = "ERROR"

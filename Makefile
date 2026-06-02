@@ -10,7 +10,7 @@ DJ    := backend_django/manage.py
         deploy redeploy celery-logs celery-status celery-purge \
         run docs \
         discover discover-files discover-photos \
-        gmail-discover gmail-incremental gmail-download gmail-verify gmail-run gmail-loop gmail-progress \
+        gmail-discover gmail-incremental gmail-download gmail-verify gmail-run gmail-loop gmail-progress gmail-reconcile gmail-purge-expired \
         pipeline pipeline-gmail pipeline-all \
         progress \
         sync-download sync-import sync-verify sync-mark-delete sync-commit-delete sync-run \
@@ -77,6 +77,8 @@ help:
 	@echo "    make gmail-verify       Verify .eml files on disk (LIMIT=$(LIMIT))"
 	@echo "    make gmail-run          Full pass: discover+download+verify (LIMIT=$(LIMIT))"
 	@echo "    make gmail-loop         Loop download+verify until queue empty (LIMIT=$(LIMIT))"
+	@echo "    make gmail-reconcile    Reconcile: check soft-deleted messages against Gmail"
+	@echo "    make gmail-purge-expired  Purge expired soft-deletes (past retention window)"
 	@echo ""
 	@echo "  Local dev (uv)"
 	@echo "    make run                Django dev server on :8844"
@@ -278,6 +280,12 @@ gmail-loop:
 
 gmail-progress:
 	curl -s "$(HOST)/api/gmail/progress" | python3 -m json.tool || true
+
+gmail-reconcile:
+	docker compose exec web bash -c "cd /app/backend_django && python manage.py shell -c \"from google_gmail_backup.tasks import task_gmail_reconcile; print(task_gmail_reconcile())\""
+
+gmail-purge-expired:
+	docker compose exec web bash -c "cd /app/backend_django && python manage.py shell -c \"from google_gmail_backup.tasks import task_purge_expired_soft_deletes; print(task_purge_expired_soft_deletes())\""
 
 gmail-run:
 	docker compose exec web python manage.py gmail_pipeline all --limit $(LIMIT)

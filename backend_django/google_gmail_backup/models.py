@@ -42,19 +42,23 @@ class GmailSyncState(models.Model):
 class GmailMessage(models.Model):
 
     class State(models.TextChoices):
-        DISCOVERED = "DISCOVERED", "Discovered"
-        DOWNLOADED = "DOWNLOADED", "Downloaded"
-        VERIFIED   = "VERIFIED",   "Verified"
-        TRASHED    = "TRASHED",    "Trashed in Gmail"
-        DELETED    = "DELETED",    "Permanently Deleted"
+        DISCOVERED   = "DISCOVERED",   "Discovered"
+        DOWNLOADED   = "DOWNLOADED",   "Downloaded"
+        VERIFIED     = "VERIFIED",     "Verified"
+        TRASHED      = "TRASHED",      "Trashed in Gmail"
+        DELETED      = "DELETED",      "Permanently Deleted"
+        SOFT_DELETED = "SOFT_DELETED", "Soft Deleted (gone from Gmail, backup retained)"
 
     # Keep old-style constants as aliases so existing code doesn't break
-    STATE_DISCOVERED = State.DISCOVERED
-    STATE_DOWNLOADED = State.DOWNLOADED
-    STATE_VERIFIED   = State.VERIFIED
-    STATE_TRASHED    = State.TRASHED
-    STATE_DELETED    = State.DELETED
-    STATE_CHOICES    = State.choices
+    STATE_DISCOVERED    = State.DISCOVERED
+    STATE_DOWNLOADED    = State.DOWNLOADED
+    STATE_VERIFIED      = State.VERIFIED
+    STATE_TRASHED       = State.TRASHED
+    STATE_DELETED       = State.DELETED
+    STATE_SOFT_DELETED  = State.SOFT_DELETED
+    STATE_CHOICES       = State.choices
+
+    RETENTION_DAYS = 90
 
     # Identity
     gmail_id   = models.CharField(max_length=64, unique=True)
@@ -82,6 +86,17 @@ class GmailMessage(models.Model):
         max_length=20, choices=State, default=State.DISCOVERED, db_index=True,
     )
     error = models.TextField(blank=True, default="")
+
+    # Soft-delete tracking
+    deleted_at = models.DateTimeField(blank=True, null=True, db_index=True)
+    deletion_source = models.CharField(
+        max_length=30, blank=True, default="",
+        help_text="How this message was removed: gmail_user, cleanup_rule, gmail_sync, manual",
+    )
+    metadata_snapshot = models.JSONField(
+        default=dict, blank=True,
+        help_text="Frozen copy of subject/from/to/date/labels/size at deletion time",
+    )
 
     # Audit timeline
     discovered_at   = models.DateTimeField(default=timezone.now)
