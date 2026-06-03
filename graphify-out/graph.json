@@ -1645,7 +1645,7 @@
       "label": "_guess_mime()",
       "file_type": "code",
       "source_file": "backend_django/media_vault/management/commands/import_media.py",
-      "source_location": "L40",
+      "source_location": "L55",
       "id": "commands_import_media_guess_mime",
       "community": 49,
       "norm_label": "_guess_mime()"
@@ -1654,7 +1654,7 @@
       "label": "Command",
       "file_type": "code",
       "source_file": "backend_django/media_vault/management/commands/import_media.py",
-      "source_location": "L45",
+      "source_location": "L60",
       "id": "commands_import_media_command",
       "community": 49,
       "norm_label": "command"
@@ -1672,7 +1672,7 @@
       "label": ".add_arguments()",
       "file_type": "code",
       "source_file": "backend_django/media_vault/management/commands/import_media.py",
-      "source_location": "L48",
+      "source_location": "L63",
       "id": "commands_import_media_command_add_arguments",
       "community": 49,
       "norm_label": ".add_arguments()"
@@ -1681,7 +1681,7 @@
       "label": ".handle()",
       "file_type": "code",
       "source_file": "backend_django/media_vault/management/commands/import_media.py",
-      "source_location": "L53",
+      "source_location": "L68",
       "id": "commands_import_media_command_handle",
       "community": 49,
       "norm_label": ".handle()"
@@ -1690,7 +1690,7 @@
       "label": "._import_drive()",
       "file_type": "code",
       "source_file": "backend_django/media_vault/management/commands/import_media.py",
-      "source_location": "L76",
+      "source_location": "L91",
       "id": "commands_import_media_command_import_drive",
       "community": 49,
       "norm_label": "._import_drive()"
@@ -1699,7 +1699,7 @@
       "label": "._import_gmail()",
       "file_type": "code",
       "source_file": "backend_django/media_vault/management/commands/import_media.py",
-      "source_location": "L153",
+      "source_location": "L193",
       "id": "commands_import_media_command_import_gmail",
       "community": 49,
       "norm_label": "._import_gmail()"
@@ -1764,7 +1764,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L64",
       "id": "google_gmail_backup_api_gmail_profile",
-      "community": 66,
+      "community": 70,
       "norm_label": "gmail_profile()"
     },
     {
@@ -1800,7 +1800,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L286",
       "id": "google_gmail_backup_api_gmail_verify",
-      "community": 123,
+      "community": 66,
       "norm_label": "gmail_verify()"
     },
     {
@@ -1809,7 +1809,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L313",
       "id": "google_gmail_backup_api_gmail_trash",
-      "community": 122,
+      "community": 68,
       "norm_label": "gmail_trash()"
     },
     {
@@ -1818,7 +1818,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L336",
       "id": "google_gmail_backup_api_gmail_label",
-      "community": 66,
+      "community": 115,
       "norm_label": "gmail_label()"
     },
     {
@@ -1872,7 +1872,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L443",
       "id": "google_gmail_backup_api_rules_run_all",
-      "community": 1,
+      "community": 121,
       "norm_label": "rules_run_all()"
     },
     {
@@ -1908,7 +1908,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L494",
       "id": "google_gmail_backup_api_rule_builder_dry_run",
-      "community": 126,
+      "community": 101,
       "norm_label": "rule_builder_dry_run()"
     },
     {
@@ -1926,7 +1926,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L583",
       "id": "google_gmail_backup_api_rule_builder_fields",
-      "community": 127,
+      "community": 66,
       "norm_label": "rule_builder_fields()"
     },
     {
@@ -1935,7 +1935,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L597",
       "id": "google_gmail_backup_api_gmail_empty_trash",
-      "community": 135,
+      "community": 66,
       "norm_label": "gmail_empty_trash()"
     },
     {
@@ -1989,7 +1989,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L287",
       "id": "google_gmail_backup_api_rationale_287",
-      "community": 123,
+      "community": 66,
       "norm_label": "verify .eml file exists on disk for downloaded messages."
     },
     {
@@ -1998,7 +1998,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L314",
       "id": "google_gmail_backup_api_rationale_314",
-      "community": 122,
+      "community": 68,
       "norm_label": "trash messages in gmail. dry-run by default \u2014 pass dry_run=false to execute."
     },
     {
@@ -2016,7 +2016,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L495",
       "id": "google_gmail_backup_api_rationale_495",
-      "community": 126,
+      "community": 101,
       "norm_label": "post body: {\"conditions\": [...], \"action\": \"trash\", \"min_age_days\": 30, \"name\":"
     },
     {
@@ -2034,7 +2034,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L584",
       "id": "google_gmail_backup_api_rationale_584",
-      "community": 127,
+      "community": 66,
       "norm_label": "return field/operator/logic choices for the frontend builder."
     },
     {
@@ -2043,7 +2043,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L598",
       "id": "google_gmail_backup_api_rationale_598",
-      "community": 135,
+      "community": 66,
       "norm_label": "permanently delete all messages in gmail trash.     dry_run=true (default): coun"
     },
     {
@@ -2268,7 +2268,7 @@
       "source_file": "backend_django/google_gmail_backup/models.py",
       "source_location": "L20",
       "id": "google_gmail_backup_models_gmailsyncstate",
-      "community": 84,
+      "community": 78,
       "norm_label": "gmailsyncstate"
     },
     {
@@ -2277,7 +2277,7 @@
       "source_file": "backend_django/google_gmail_backup/models.py",
       "source_location": "L31",
       "id": "google_gmail_backup_models_gmailsyncstate_str",
-      "community": 84,
+      "community": 78,
       "norm_label": ".__str__()"
     },
     {
@@ -2448,7 +2448,7 @@
       "source_file": "backend_django/google_gmail_backup/models.py",
       "source_location": "L21",
       "id": "google_gmail_backup_models_rationale_21",
-      "community": 84,
+      "community": 78,
       "norm_label": "one row per synced gmail account \u2014 tracks historyid for incremental sync."
     },
     {
@@ -2493,7 +2493,7 @@
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L1",
       "id": "backend_django_google_gmail_backup_services_rules_py",
-      "community": 1,
+      "community": 84,
       "norm_label": "services_rules.py"
     },
     {
@@ -2502,7 +2502,7 @@
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L24",
       "id": "google_gmail_backup_services_rules_protected_emails",
-      "community": 1,
+      "community": 84,
       "norm_label": "_protected_emails()"
     },
     {
@@ -2511,7 +2511,7 @@
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L28",
       "id": "google_gmail_backup_services_rules_normalize_email",
-      "community": 1,
+      "community": 84,
       "norm_label": "_normalize_email()"
     },
     {
@@ -2520,7 +2520,7 @@
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L35",
       "id": "google_gmail_backup_services_rules_is_protected",
-      "community": 1,
+      "community": 84,
       "norm_label": "_is_protected()"
     },
     {
@@ -2529,7 +2529,7 @@
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L40",
       "id": "google_gmail_backup_services_rules_get_or_create_label",
-      "community": 1,
+      "community": 84,
       "norm_label": "_get_or_create_label()"
     },
     {
@@ -2556,7 +2556,7 @@
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L270",
       "id": "google_gmail_backup_services_rules_run_all_enabled_rules",
-      "community": 1,
+      "community": 121,
       "norm_label": "run_all_enabled_rules()"
     },
     {
@@ -2565,7 +2565,7 @@
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L1",
       "id": "google_gmail_backup_services_rules_rationale_1",
-      "community": 1,
+      "community": 84,
       "norm_label": "cleanup rules engine. all actions support dry_run=true (default) \u2014 nothing touch"
     },
     {
@@ -2574,7 +2574,7 @@
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L29",
       "id": "google_gmail_backup_services_rules_rationale_29",
-      "community": 1,
+      "community": 84,
       "norm_label": "extract bare email from 'name <email>' format."
     },
     {
@@ -2583,7 +2583,7 @@
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L41",
       "id": "google_gmail_backup_services_rules_rationale_41",
-      "community": 1,
+      "community": 84,
       "norm_label": "get gmail label id by name, creating it if needed."
     },
     {
@@ -2610,7 +2610,7 @@
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L271",
       "id": "google_gmail_backup_services_rules_rationale_271",
-      "community": 1,
+      "community": 121,
       "norm_label": "run all enabled cleanuprules. returns list of audit log records."
     },
     {
@@ -2691,7 +2691,7 @@
       "source_file": "backend_django/google_gmail_backup/admin.py",
       "source_location": "L51",
       "id": "google_gmail_backup_admin_action_reconcile",
-      "community": 65,
+      "community": 115,
       "norm_label": "action_reconcile()"
     },
     {
@@ -2799,7 +2799,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L1",
       "id": "backend_django_google_gmail_backup_services_gmail_py",
-      "community": 77,
+      "community": 115,
       "norm_label": "services_gmail.py"
     },
     {
@@ -2808,7 +2808,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L20",
       "id": "google_gmail_backup_services_gmail_gmail_service",
-      "community": 65,
+      "community": 115,
       "norm_label": "gmail_service()"
     },
     {
@@ -2862,7 +2862,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L94",
       "id": "google_gmail_backup_services_gmail_get_attachment_data",
-      "community": 77,
+      "community": 115,
       "norm_label": "get_attachment_data()"
     },
     {
@@ -2889,7 +2889,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L146",
       "id": "google_gmail_backup_services_gmail_batch_trash_messages",
-      "community": 65,
+      "community": 115,
       "norm_label": "batch_trash_messages()"
     },
     {
@@ -2898,7 +2898,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L167",
       "id": "google_gmail_backup_services_gmail_delete_message_permanent",
-      "community": 130,
+      "community": 115,
       "norm_label": "delete_message_permanent()"
     },
     {
@@ -2907,7 +2907,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L183",
       "id": "google_gmail_backup_services_gmail_modify_labels",
-      "community": 65,
+      "community": 115,
       "norm_label": "modify_labels()"
     },
     {
@@ -2988,7 +2988,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L286",
       "id": "google_gmail_backup_services_gmail_extract_attachment_metadata",
-      "community": 77,
+      "community": 115,
       "norm_label": "extract_attachment_metadata()"
     },
     {
@@ -3051,7 +3051,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L147",
       "id": "google_gmail_backup_services_gmail_rationale_147",
-      "community": 65,
+      "community": 115,
       "norm_label": "trash multiple messages using gmail batchmodify. returns count of successful tra"
     },
     {
@@ -3060,7 +3060,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L168",
       "id": "google_gmail_backup_services_gmail_rationale_168",
-      "community": 130,
+      "community": 115,
       "norm_label": "permanently delete a message. requires https://mail.google.com/ scope."
     },
     {
@@ -3114,7 +3114,7 @@
       "source_file": "backend_django/google_gmail_backup/query_compiler.py",
       "source_location": "L1",
       "id": "backend_django_google_gmail_backup_query_compiler_py",
-      "community": 69,
+      "community": 101,
       "norm_label": "query_compiler.py"
     },
     {
@@ -3123,7 +3123,7 @@
       "source_file": "backend_django/google_gmail_backup/query_compiler.py",
       "source_location": "L32",
       "id": "google_gmail_backup_query_compiler_term",
-      "community": 69,
+      "community": 101,
       "norm_label": "_term()"
     },
     {
@@ -3132,7 +3132,7 @@
       "source_file": "backend_django/google_gmail_backup/query_compiler.py",
       "source_location": "L97",
       "id": "google_gmail_backup_query_compiler_compile_conditions",
-      "community": 69,
+      "community": 101,
       "norm_label": "compile_conditions()"
     },
     {
@@ -3141,7 +3141,7 @@
       "source_file": "backend_django/google_gmail_backup/query_compiler.py",
       "source_location": "L140",
       "id": "google_gmail_backup_query_compiler_conditions_to_dict",
-      "community": 69,
+      "community": 101,
       "norm_label": "conditions_to_dict()"
     },
     {
@@ -3159,7 +3159,7 @@
       "source_file": "backend_django/google_gmail_backup/query_compiler.py",
       "source_location": "L1",
       "id": "google_gmail_backup_query_compiler_rationale_1",
-      "community": 69,
+      "community": 101,
       "norm_label": "query compiler: translates rulecondition rows into a gmail q= search string.  gm"
     },
     {
@@ -3168,7 +3168,7 @@
       "source_file": "backend_django/google_gmail_backup/query_compiler.py",
       "source_location": "L33",
       "id": "google_gmail_backup_query_compiler_rationale_33",
-      "community": 69,
+      "community": 101,
       "norm_label": "convert a single condition to a gmail query term. returns none if not applicable"
     },
     {
@@ -3177,7 +3177,7 @@
       "source_file": "backend_django/google_gmail_backup/query_compiler.py",
       "source_location": "L98",
       "id": "google_gmail_backup_query_compiler_rationale_98",
-      "community": 69,
+      "community": 101,
       "norm_label": "takes a queryset/list of rulecondition ordered by `order`.     returns a gmail q"
     },
     {
@@ -3186,7 +3186,7 @@
       "source_file": "backend_django/google_gmail_backup/query_compiler.py",
       "source_location": "L141",
       "id": "google_gmail_backup_query_compiler_rationale_141",
-      "community": 69,
+      "community": 101,
       "norm_label": "serialize conditions for the frontend builder."
     },
     {
@@ -3276,7 +3276,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L78",
       "id": "google_gmail_backup_tests_regression_errorresponsetest",
-      "community": 76,
+      "community": 98,
       "norm_label": "errorresponsetest"
     },
     {
@@ -3285,7 +3285,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L84",
       "id": "google_gmail_backup_tests_regression_errorresponsetest_setup",
-      "community": 76,
+      "community": 98,
       "norm_label": ".setup()"
     },
     {
@@ -3303,7 +3303,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L97",
       "id": "google_gmail_backup_tests_regression_gmailpipelinecommandtest",
-      "community": 63,
+      "community": 126,
       "norm_label": "gmailpipelinecommandtest"
     },
     {
@@ -3312,7 +3312,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L103",
       "id": "google_gmail_backup_tests_regression_gmailpipelinecommandtest_test_discover_step_accepts_q_flag",
-      "community": 63,
+      "community": 126,
       "norm_label": ".test_discover_step_accepts_q_flag()"
     },
     {
@@ -3321,7 +3321,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L120",
       "id": "google_gmail_backup_tests_regression_gmailpipelinecommandtest_test_download_step_exists",
-      "community": 63,
+      "community": 126,
       "norm_label": ".test_download_step_exists()"
     },
     {
@@ -3330,7 +3330,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L124",
       "id": "google_gmail_backup_tests_regression_gmailpipelinecommandtest_test_drive_pipeline_command_exists",
-      "community": 63,
+      "community": 126,
       "norm_label": ".test_drive_pipeline_command_exists()"
     },
     {
@@ -3339,7 +3339,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L131",
       "id": "google_gmail_backup_tests_regression_gmaillooplogictest",
-      "community": 84,
+      "community": 63,
       "norm_label": "gmaillooplogictest"
     },
     {
@@ -3348,7 +3348,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L138",
       "id": "google_gmail_backup_tests_regression_gmaillooplogictest_test_gmail_loop_makefile_does_not_call_all",
-      "community": 84,
+      "community": 63,
       "norm_label": ".test_gmail_loop_makefile_does_not_call_all()"
     },
     {
@@ -3573,7 +3573,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L340",
       "id": "google_gmail_backup_tests_regression_protectedsenderexclusiontest_test_protected_sender_not_in_candidates",
-      "community": 1,
+      "community": 131,
       "norm_label": ".test_protected_sender_not_in_candidates()"
     },
     {
@@ -3582,7 +3582,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L349",
       "id": "google_gmail_backup_tests_regression_auditlogtest",
-      "community": 1,
+      "community": 76,
       "norm_label": "auditlogtest"
     },
     {
@@ -3708,7 +3708,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L79",
       "id": "google_gmail_backup_tests_regression_rationale_79",
-      "community": 76,
+      "community": 98,
       "norm_label": "bug: except exception: errors += len(chunk) with no logging.     user got delete"
     },
     {
@@ -3726,7 +3726,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L98",
       "id": "google_gmail_backup_tests_regression_rationale_98",
-      "community": 63,
+      "community": 126,
       "norm_label": "bug: gmail_pipeline discover had no --q flag.     make gmail-discover --q \"in:tr"
     },
     {
@@ -3735,7 +3735,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L132",
       "id": "google_gmail_backup_tests_regression_rationale_132",
-      "community": 84,
+      "community": 63,
       "norm_label": "bug: make gmail-loop called gmail_pipeline all on every iteration,     re-runnin"
     },
     {
@@ -3789,7 +3789,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L341",
       "id": "google_gmail_backup_tests_regression_rationale_341",
-      "community": 1,
+      "community": 131,
       "norm_label": "protected sender must not appear in dry-run affected_gmail_ids."
     },
     {
@@ -3798,7 +3798,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L350",
       "id": "google_gmail_backup_tests_regression_rationale_350",
-      "community": 1,
+      "community": 131,
       "norm_label": "regression: every real rule execution must create a cleanupauditlog entry.     d"
     },
     {
@@ -3870,7 +3870,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L23",
       "id": "google_gmail_backup_tests_gmailmessagemodeltest",
-      "community": 121,
+      "community": 78,
       "norm_label": "gmailmessagemodeltest"
     },
     {
@@ -3879,7 +3879,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L24",
       "id": "google_gmail_backup_tests_gmailmessagemodeltest_setup",
-      "community": 121,
+      "community": 78,
       "norm_label": ".setup()"
     },
     {
@@ -3888,7 +3888,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L37",
       "id": "google_gmail_backup_tests_gmailmessagemodeltest_test_default_state_is_discovered",
-      "community": 121,
+      "community": 78,
       "norm_label": ".test_default_state_is_discovered()"
     },
     {
@@ -3897,7 +3897,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L40",
       "id": "google_gmail_backup_tests_gmailmessagemodeltest_test_str_representation",
-      "community": 121,
+      "community": 78,
       "norm_label": ".test_str_representation()"
     },
     {
@@ -3906,7 +3906,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L43",
       "id": "google_gmail_backup_tests_gmailmessagemodeltest_test_state_transitions",
-      "community": 121,
+      "community": 78,
       "norm_label": ".test_state_transitions()"
     },
     {
@@ -3915,7 +3915,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L52",
       "id": "google_gmail_backup_tests_gmailmessagemodeltest_test_unique_gmail_id",
-      "community": 121,
+      "community": 78,
       "norm_label": ".test_unique_gmail_id()"
     },
     {
@@ -3960,7 +3960,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L90",
       "id": "google_gmail_backup_tests_gmailapitest",
-      "community": 78,
+      "community": 132,
       "norm_label": "gmailapitest"
     },
     {
@@ -3969,7 +3969,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L91",
       "id": "google_gmail_backup_tests_gmailapitest_setup",
-      "community": 78,
+      "community": 132,
       "norm_label": ".setup()"
     },
     {
@@ -3978,7 +3978,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L112",
       "id": "google_gmail_backup_tests_gmailapitest_test_list_messages_all",
-      "community": 78,
+      "community": 132,
       "norm_label": ".test_list_messages_all()"
     },
     {
@@ -3987,7 +3987,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L117",
       "id": "google_gmail_backup_tests_gmailapitest_test_list_messages_filter_state",
-      "community": 78,
+      "community": 132,
       "norm_label": ".test_list_messages_filter_state()"
     },
     {
@@ -3996,7 +3996,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L124",
       "id": "google_gmail_backup_tests_gmailapitest_test_list_messages_filter_q",
-      "community": 78,
+      "community": 132,
       "norm_label": ".test_list_messages_filter_q()"
     },
     {
@@ -4005,7 +4005,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L131",
       "id": "google_gmail_backup_tests_gmailapitest_test_gmail_swagger_loads",
-      "community": 78,
+      "community": 132,
       "norm_label": ".test_gmail_swagger_loads()"
     },
     {
@@ -4023,7 +4023,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L141",
       "id": "google_gmail_backup_tests_gmailapitest_test_trash_dry_run",
-      "community": 78,
+      "community": 132,
       "norm_label": ".test_trash_dry_run()"
     },
     {
@@ -4032,7 +4032,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L153",
       "id": "google_gmail_backup_tests_cleanuprulesenginetest",
-      "community": 1,
+      "community": 69,
       "norm_label": "cleanuprulesenginetest"
     },
     {
@@ -4041,7 +4041,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L156",
       "id": "google_gmail_backup_tests_cleanuprulesenginetest_setup",
-      "community": 1,
+      "community": 69,
       "norm_label": ".setup()"
     },
     {
@@ -4050,7 +4050,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L192",
       "id": "google_gmail_backup_tests_cleanuprulesenginetest_test_dry_run_counts_candidates",
-      "community": 1,
+      "community": 69,
       "norm_label": ".test_dry_run_counts_candidates()"
     },
     {
@@ -4059,7 +4059,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L201",
       "id": "google_gmail_backup_tests_cleanuprulesenginetest_test_dry_run_excludes_recent_messages",
-      "community": 1,
+      "community": 69,
       "norm_label": ".test_dry_run_excludes_recent_messages()"
     },
     {
@@ -4068,7 +4068,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L206",
       "id": "google_gmail_backup_tests_cleanuprulesenginetest_test_dry_run_excludes_protected_senders",
-      "community": 1,
+      "community": 69,
       "norm_label": ".test_dry_run_excludes_protected_senders()"
     },
     {
@@ -4077,7 +4077,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L211",
       "id": "google_gmail_backup_tests_cleanuprulesenginetest_test_dry_run_does_not_change_state",
-      "community": 1,
+      "community": 69,
       "norm_label": ".test_dry_run_does_not_change_state()"
     },
     {
@@ -4086,7 +4086,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L218",
       "id": "google_gmail_backup_tests_cleanuprulesenginetest_test_audit_log_truncation_flag",
-      "community": 1,
+      "community": 69,
       "norm_label": ".test_audit_log_truncation_flag()"
     },
     {
@@ -4095,7 +4095,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L224",
       "id": "google_gmail_backup_tests_cleanuprulesenginetest_test_normalize_email_extracts_from_angle_brackets",
-      "community": 1,
+      "community": 84,
       "norm_label": ".test_normalize_email_extracts_from_angle_brackets()"
     },
     {
@@ -4104,7 +4104,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L230",
       "id": "google_gmail_backup_tests_cleanuprulesenginetest_test_rule_min_age_days_cutoff",
-      "community": 1,
+      "community": 69,
       "norm_label": ".test_rule_min_age_days_cutoff()"
     },
     {
@@ -4122,7 +4122,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L154",
       "id": "google_gmail_backup_tests_rationale_154",
-      "community": 1,
+      "community": 69,
       "norm_label": "tests for services_rules.py \u2014 the core cleanup engine."
     },
     {
@@ -4131,7 +4131,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L231",
       "id": "google_gmail_backup_tests_rationale_231",
-      "community": 1,
+      "community": 69,
       "norm_label": "rule with min_age_days=7 should include recent message but exclude nothing old."
     },
     {
@@ -4428,7 +4428,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L235",
       "id": "google_gmail_backup_tests_reconciliation_purgeexpiredtest_test_expired_record_purged_to_deleted",
-      "community": 118,
+      "community": 130,
       "norm_label": ".test_expired_record_purged_to_deleted()"
     },
     {
@@ -4455,7 +4455,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L258",
       "id": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest_test_young_record_stays_soft_deleted",
-      "community": 118,
+      "community": 130,
       "norm_label": ".test_young_record_stays_soft_deleted()"
     },
     {
@@ -4653,7 +4653,7 @@
       "source_file": "backend_django/google_gmail_backup/tasks.py",
       "source_location": "L128",
       "id": "google_gmail_backup_tasks_task_run_cleanup_rules",
-      "community": 1,
+      "community": 121,
       "norm_label": "task_run_cleanup_rules()"
     },
     {
@@ -4680,7 +4680,7 @@
       "source_file": "backend_django/google_gmail_backup/tasks.py",
       "source_location": "L239",
       "id": "google_gmail_backup_tasks_task_purge_expired_soft_deletes",
-      "community": 118,
+      "community": 130,
       "norm_label": "task_purge_expired_soft_deletes()"
     },
     {
@@ -4716,7 +4716,7 @@
       "source_file": "backend_django/google_gmail_backup/tasks.py",
       "source_location": "L129",
       "id": "google_gmail_backup_tasks_rationale_129",
-      "community": 1,
+      "community": 121,
       "norm_label": "run all enabled cleanup rules."
     },
     {
@@ -4743,7 +4743,7 @@
       "source_file": "backend_django/google_gmail_backup/tasks.py",
       "source_location": "L240",
       "id": "google_gmail_backup_tasks_rationale_240",
-      "community": 118,
+      "community": 130,
       "norm_label": "purge soft_deleted records older than 90 days \u2014 set state to deleted, keep .eml"
     },
     {
@@ -5148,7 +5148,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/gmail_pipeline.py",
       "source_location": "L73",
       "id": "commands_gmail_pipeline_command_download",
-      "community": 90,
+      "community": 64,
       "norm_label": "._download()"
     },
     {
@@ -5344,7 +5344,7 @@
       "label": "_load_creds()",
       "file_type": "code",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L34",
+      "source_location": "L33",
       "id": "google_media_backup_services_google_load_creds",
       "community": 0,
       "norm_label": "_load_creds()"
@@ -5353,7 +5353,7 @@
       "label": "_save_creds()",
       "file_type": "code",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L46",
+      "source_location": "L45",
       "id": "google_media_backup_services_google_save_creds",
       "community": 0,
       "norm_label": "_save_creds()"
@@ -5362,16 +5362,16 @@
       "label": "start_oauth_local()",
       "file_type": "code",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L72",
+      "source_location": "L71",
       "id": "google_media_backup_services_google_start_oauth_local",
-      "community": 0,
+      "community": 127,
       "norm_label": "start_oauth_local()"
     },
     {
       "label": "drive_service()",
       "file_type": "code",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L118",
+      "source_location": "L117",
       "id": "google_media_backup_services_google_drive_service",
       "community": 0,
       "norm_label": "drive_service()"
@@ -5380,7 +5380,7 @@
       "label": "list_media_files()",
       "file_type": "code",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L128",
+      "source_location": "L127",
       "id": "google_media_backup_services_google_list_media_files",
       "community": 124,
       "norm_label": "list_media_files()"
@@ -5389,16 +5389,16 @@
       "label": "photos_service()",
       "file_type": "code",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L146",
+      "source_location": "L145",
       "id": "google_media_backup_services_google_photos_service",
-      "community": 0,
+      "community": 122,
       "norm_label": "photos_service()"
     },
     {
       "label": "list_photos_items()",
       "file_type": "code",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L157",
+      "source_location": "L156",
       "id": "google_media_backup_services_google_list_photos_items",
       "community": 114,
       "norm_label": "list_photos_items()"
@@ -5407,7 +5407,7 @@
       "label": "list_common_files()",
       "file_type": "code",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L188",
+      "source_location": "L196",
       "id": "google_media_backup_services_google_list_common_files",
       "community": 117,
       "norm_label": "list_common_files()"
@@ -5416,16 +5416,43 @@
       "label": "download_file()",
       "file_type": "code",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L210",
+      "source_location": "L219",
       "id": "google_media_backup_services_google_download_file",
       "community": 0,
       "norm_label": "download_file()"
     },
     {
+      "label": "download_or_export_file()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L241",
+      "id": "google_media_backup_services_google_download_or_export_file",
+      "community": 0,
+      "norm_label": "download_or_export_file()"
+    },
+    {
+      "label": "list_drive_files()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L268",
+      "id": "google_media_backup_services_google_list_drive_files",
+      "community": 124,
+      "norm_label": "list_drive_files()"
+    },
+    {
+      "label": "download_photos_item()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L276",
+      "id": "google_media_backup_services_google_download_photos_item",
+      "community": 122,
+      "norm_label": "download_photos_item()"
+    },
+    {
       "label": "trash_or_delete()",
       "file_type": "code",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L232",
+      "source_location": "L305",
       "id": "google_media_backup_services_google_trash_or_delete",
       "community": 0,
       "norm_label": "trash_or_delete()"
@@ -5434,8 +5461,8 @@
       "label": "Atomically write the encrypted token file.     Uses write-to-temp-then-rename to",
       "file_type": "rationale",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L47",
-      "id": "google_media_backup_services_google_rationale_47",
+      "source_location": "L46",
+      "id": "google_media_backup_services_google_rationale_46",
       "community": 0,
       "norm_label": "atomically write the encrypted token file.     uses write-to-temp-then-rename to"
     },
@@ -5443,35 +5470,35 @@
       "label": "Headless OAuth for Desktop App (installed) client type.      On a server with no",
       "file_type": "rationale",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L73",
-      "id": "google_media_backup_services_google_rationale_73",
-      "community": 0,
+      "source_location": "L72",
+      "id": "google_media_backup_services_google_rationale_72",
+      "community": 127,
       "norm_label": "headless oauth for desktop app (installed) client type.      on a server with no"
     },
     {
       "label": "Return one page of media files (images/videos) from Drive.",
       "file_type": "rationale",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L129",
-      "id": "google_media_backup_services_google_rationale_129",
-      "community": 124,
+      "source_location": "L128",
+      "id": "google_media_backup_services_google_rationale_128",
+      "community": 122,
       "norm_label": "return one page of media files (images/videos) from drive."
     },
     {
       "label": "Google Photos Library API client.",
       "file_type": "rationale",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L147",
-      "id": "google_media_backup_services_google_rationale_147",
-      "community": 0,
+      "source_location": "L146",
+      "id": "google_media_backup_services_google_rationale_146",
+      "community": 122,
       "norm_label": "google photos library api client."
     },
     {
       "label": "Return mediaItems from Google Photos Library.",
       "file_type": "rationale",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L158",
-      "id": "google_media_backup_services_google_rationale_158",
+      "source_location": "L157",
+      "id": "google_media_backup_services_google_rationale_157",
       "community": 114,
       "norm_label": "return mediaitems from google photos library."
     },
@@ -5479,10 +5506,37 @@
       "label": "Return one page of document-type files from Drive.",
       "file_type": "rationale",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L189",
-      "id": "google_media_backup_services_google_rationale_189",
+      "source_location": "L197",
+      "id": "google_media_backup_services_google_rationale_197",
       "community": 117,
       "norm_label": "return one page of document-type files from drive."
+    },
+    {
+      "label": "Download a file, or export it if it's a Google native format (Docs/Sheets/Slides",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L242",
+      "id": "google_media_backup_services_google_rationale_242",
+      "community": 0,
+      "norm_label": "download a file, or export it if it's a google native format (docs/sheets/slides"
+    },
+    {
+      "label": "Unified Drive file lister \u2014 media_only=True for images/videos, False for documen",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L269",
+      "id": "google_media_backup_services_google_rationale_269",
+      "community": 124,
+      "norm_label": "unified drive file lister \u2014 media_only=true for images/videos, false for documen"
+    },
+    {
+      "label": "Download a Google Photos item via its baseUrl (NOT Drive files().get_media()).",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L277",
+      "id": "google_media_backup_services_google_rationale_277",
+      "community": 122,
+      "norm_label": "download a google photos item via its baseurl (not drive files().get_media())."
     },
     {
       "label": "api.py",
@@ -5499,7 +5553,7 @@
       "source_file": "backend_django/google_media_backup/api.py",
       "source_location": "L31",
       "id": "google_media_backup_api_assetout",
-      "community": 102,
+      "community": 2,
       "norm_label": "assetout"
     },
     {
@@ -5508,7 +5562,7 @@
       "source_file": "backend_django/google_media_backup/api.py",
       "source_location": "L37",
       "id": "google_media_backup_api_filterin",
-      "community": 102,
+      "community": 2,
       "norm_label": "filterin"
     },
     {
@@ -5526,7 +5580,7 @@
       "source_file": "backend_django/google_media_backup/api.py",
       "source_location": "L51",
       "id": "google_media_backup_api_auth_connect",
-      "community": 0,
+      "community": 127,
       "norm_label": "auth_connect()"
     },
     {
@@ -5562,7 +5616,7 @@
       "source_file": "backend_django/google_media_backup/api.py",
       "source_location": "L167",
       "id": "google_media_backup_api_sync_download",
-      "community": 95,
+      "community": 102,
       "norm_label": "sync_download()"
     },
     {
@@ -5571,7 +5625,7 @@
       "source_file": "backend_django/google_media_backup/api.py",
       "source_location": "L184",
       "id": "google_media_backup_api_sync_import",
-      "community": 95,
+      "community": 102,
       "norm_label": "sync_import()"
     },
     {
@@ -5643,7 +5697,7 @@
       "source_file": "backend_django/google_media_backup/admin_views.py",
       "source_location": "L1",
       "id": "backend_django_google_media_backup_admin_views_py",
-      "community": 131,
+      "community": 2,
       "norm_label": "admin_views.py"
     },
     {
@@ -5652,7 +5706,7 @@
       "source_file": "backend_django/google_media_backup/admin_views.py",
       "source_location": "L8",
       "id": "google_media_backup_admin_views_reports_view",
-      "community": 131,
+      "community": 2,
       "norm_label": "reports_view()"
     },
     {
@@ -5661,7 +5715,7 @@
       "source_file": "backend_django/google_media_backup/admin_views.py",
       "source_location": "L37",
       "id": "google_media_backup_admin_views_ops_console",
-      "community": 131,
+      "community": 2,
       "norm_label": "ops_console()"
     },
     {
@@ -5670,7 +5724,7 @@
       "source_file": "backend_django/google_media_backup/admin_views.py",
       "source_location": "L38",
       "id": "google_media_backup_admin_views_rationale_38",
-      "community": 131,
+      "community": 2,
       "norm_label": "minimal admin 'operations console' that calls your /api/* endpoints     with a s"
     },
     {
@@ -5814,7 +5868,7 @@
       "source_file": "backend_django/google_media_backup/utils.py",
       "source_location": "L1",
       "id": "backend_django_google_media_backup_utils_py",
-      "community": 95,
+      "community": 102,
       "norm_label": "utils.py"
     },
     {
@@ -5823,7 +5877,7 @@
       "source_file": "backend_django/google_media_backup/utils.py",
       "source_location": "L15",
       "id": "google_media_backup_utils_sha256_file",
-      "community": 95,
+      "community": 102,
       "norm_label": "sha256_file()"
     },
     {
@@ -5841,7 +5895,7 @@
       "source_file": "backend_django/google_media_backup/utils.py",
       "source_location": "L32",
       "id": "google_media_backup_utils_copy_into_media",
-      "community": 95,
+      "community": 102,
       "norm_label": "copy_into_media()"
     },
     {
@@ -5940,7 +5994,7 @@
       "source_file": "backend_django/google_media_backup/tests.py",
       "source_location": "L1",
       "id": "backend_django_google_media_backup_tests_py",
-      "community": 99,
+      "community": 2,
       "norm_label": "tests.py"
     },
     {
@@ -5949,7 +6003,7 @@
       "source_file": "backend_django/google_media_backup/tests.py",
       "source_location": "L9",
       "id": "google_media_backup_tests_driveassetmodeltest",
-      "community": 99,
+      "community": 2,
       "norm_label": "driveassetmodeltest"
     },
     {
@@ -5958,7 +6012,7 @@
       "source_file": "backend_django/google_media_backup/tests.py",
       "source_location": "L10",
       "id": "google_media_backup_tests_driveassetmodeltest_test_create_asset",
-      "community": 99,
+      "community": 2,
       "norm_label": ".test_create_asset()"
     },
     {
@@ -5967,7 +6021,7 @@
       "source_file": "backend_django/google_media_backup/tests.py",
       "source_location": "L19",
       "id": "google_media_backup_tests_driveassetmodeltest_test_state_choices",
-      "community": 99,
+      "community": 2,
       "norm_label": ".test_state_choices()"
     },
     {
@@ -5976,7 +6030,7 @@
       "source_file": "backend_django/google_media_backup/tests.py",
       "source_location": "L24",
       "id": "google_media_backup_tests_driveassetmodeltest_test_media_item_dedup",
-      "community": 99,
+      "community": 2,
       "norm_label": ".test_media_item_dedup()"
     },
     {
@@ -5985,7 +6039,7 @@
       "source_file": "backend_django/google_media_backup/tests.py",
       "source_location": "L35",
       "id": "google_media_backup_tests_driveassetmodeltest_test_runlog_create",
-      "community": 99,
+      "community": 2,
       "norm_label": ".test_runlog_create()"
     },
     {
@@ -5994,7 +6048,7 @@
       "source_file": "backend_django/google_media_backup/tests.py",
       "source_location": "L45",
       "id": "google_media_backup_tests_driveapitest",
-      "community": 99,
+      "community": 2,
       "norm_label": "driveapitest"
     },
     {
@@ -6003,7 +6057,7 @@
       "source_file": "backend_django/google_media_backup/tests.py",
       "source_location": "L46",
       "id": "google_media_backup_tests_driveapitest_setup",
-      "community": 99,
+      "community": 2,
       "norm_label": ".setup()"
     },
     {
@@ -6012,7 +6066,7 @@
       "source_file": "backend_django/google_media_backup/tests.py",
       "source_location": "L65",
       "id": "google_media_backup_tests_driveapitest_test_list_assets_all",
-      "community": 99,
+      "community": 2,
       "norm_label": ".test_list_assets_all()"
     },
     {
@@ -6021,7 +6075,7 @@
       "source_file": "backend_django/google_media_backup/tests.py",
       "source_location": "L70",
       "id": "google_media_backup_tests_driveapitest_test_list_assets_filter_state",
-      "community": 99,
+      "community": 2,
       "norm_label": ".test_list_assets_filter_state()"
     },
     {
@@ -6030,7 +6084,7 @@
       "source_file": "backend_django/google_media_backup/tests.py",
       "source_location": "L77",
       "id": "google_media_backup_tests_driveapitest_test_list_assets_filter_q",
-      "community": 99,
+      "community": 2,
       "norm_label": ".test_list_assets_filter_q()"
     },
     {
@@ -6039,7 +6093,7 @@
       "source_file": "backend_django/google_media_backup/tests.py",
       "source_location": "L84",
       "id": "google_media_backup_tests_driveapitest_test_swagger_ui_loads",
-      "community": 99,
+      "community": 2,
       "norm_label": ".test_swagger_ui_loads()"
     },
     {
@@ -6048,7 +6102,7 @@
       "source_file": "backend_django/google_media_backup/tests.py",
       "source_location": "L88",
       "id": "google_media_backup_tests_driveapitest_test_sync_mark_delete_only_verified",
-      "community": 99,
+      "community": 2,
       "norm_label": ".test_sync_mark_delete_only_verified()"
     },
     {
@@ -6059,6 +6113,132 @@
       "id": "backend_django_google_media_backup_init_py",
       "community": 19,
       "norm_label": "__init__.py"
+    },
+    {
+      "label": "tasks.py",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L1",
+      "id": "backend_django_google_media_backup_tasks_py",
+      "community": 99,
+      "norm_label": "tasks.py"
+    },
+    {
+      "label": "task_photos_discover()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L14",
+      "id": "google_media_backup_tasks_task_photos_discover",
+      "community": 99,
+      "norm_label": "task_photos_discover()"
+    },
+    {
+      "label": "task_photos_download_batch()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L55",
+      "id": "google_media_backup_tasks_task_photos_download_batch",
+      "community": 122,
+      "norm_label": "task_photos_download_batch()"
+    },
+    {
+      "label": "task_drive_commit_delete()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L107",
+      "id": "google_media_backup_tasks_task_drive_commit_delete",
+      "community": 99,
+      "norm_label": "task_drive_commit_delete()"
+    },
+    {
+      "label": "task_docs_discover()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L142",
+      "id": "google_media_backup_tasks_task_docs_discover",
+      "community": 124,
+      "norm_label": "task_docs_discover()"
+    },
+    {
+      "label": "task_docs_download_batch()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L184",
+      "id": "google_media_backup_tasks_task_docs_download_batch",
+      "community": 99,
+      "norm_label": "task_docs_download_batch()"
+    },
+    {
+      "label": "task_docs_import_vault()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L244",
+      "id": "google_media_backup_tasks_task_docs_import_vault",
+      "community": 99,
+      "norm_label": "task_docs_import_vault()"
+    },
+    {
+      "label": "Celery tasks for Drive/Photos pipeline. Scheduled via django_celery_beat \u2014 edita",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L1",
+      "id": "google_media_backup_tasks_rationale_1",
+      "community": 99,
+      "norm_label": "celery tasks for drive/photos pipeline. scheduled via django_celery_beat \u2014 edita"
+    },
+    {
+      "label": "Discover new Google Photos items.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L15",
+      "id": "google_media_backup_tasks_rationale_15",
+      "community": 99,
+      "norm_label": "discover new google photos items."
+    },
+    {
+      "label": "Download a batch of DISCOVERED photos.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L56",
+      "id": "google_media_backup_tasks_rationale_56",
+      "community": 122,
+      "norm_label": "download a batch of discovered photos."
+    },
+    {
+      "label": "Commit pending deletions \u2014 trash verified assets from Google.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L108",
+      "id": "google_media_backup_tasks_rationale_108",
+      "community": 99,
+      "norm_label": "commit pending deletions \u2014 trash verified assets from google."
+    },
+    {
+      "label": "Discover Drive documents (PDF, Office, Google native formats).",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L143",
+      "id": "google_media_backup_tasks_rationale_143",
+      "community": 124,
+      "norm_label": "discover drive documents (pdf, office, google native formats)."
+    },
+    {
+      "label": "Download a batch of DISCOVERED documents (exports Google native formats).",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L185",
+      "id": "google_media_backup_tasks_rationale_185",
+      "community": 99,
+      "norm_label": "download a batch of discovered documents (exports google native formats)."
+    },
+    {
+      "label": "Import VERIFIED document DriveAssets into Wagtail VaultDocument.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L245",
+      "id": "google_media_backup_tasks_rationale_245",
+      "community": 99,
+      "norm_label": "import verified document driveassets into wagtail vaultdocument."
     },
     {
       "label": "views.py",
@@ -6172,7 +6352,7 @@
       "label": ".handle()",
       "file_type": "code",
       "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
-      "source_location": "L26",
+      "source_location": "L30",
       "id": "commands_drive_pipeline_command_handle",
       "community": 95,
       "norm_label": ".handle()"
@@ -6181,7 +6361,7 @@
       "label": "._discover()",
       "file_type": "code",
       "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
-      "source_location": "L39",
+      "source_location": "L51",
       "id": "commands_drive_pipeline_command_discover",
       "community": 95,
       "norm_label": "._discover()"
@@ -6190,16 +6370,52 @@
       "label": "._discover_photos()",
       "file_type": "code",
       "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
-      "source_location": "L83",
+      "source_location": "L95",
       "id": "commands_drive_pipeline_command_discover_photos",
       "community": 95,
       "norm_label": "._discover_photos()"
     },
     {
+      "label": "._download_photos()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L138",
+      "id": "commands_drive_pipeline_command_download_photos",
+      "community": 95,
+      "norm_label": "._download_photos()"
+    },
+    {
+      "label": "._download_docs()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L197",
+      "id": "commands_drive_pipeline_command_download_docs",
+      "community": 95,
+      "norm_label": "._download_docs()"
+    },
+    {
+      "label": "._mark_delete()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L266",
+      "id": "commands_drive_pipeline_command_mark_delete",
+      "community": 95,
+      "norm_label": "._mark_delete()"
+    },
+    {
+      "label": "._commit_delete()",
+      "file_type": "code",
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L279",
+      "id": "commands_drive_pipeline_command_commit_delete",
+      "community": 95,
+      "norm_label": "._commit_delete()"
+    },
+    {
       "label": "._download()",
       "file_type": "code",
       "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
-      "source_location": "L95",
+      "source_location": "L320",
       "id": "commands_drive_pipeline_command_download",
       "community": 95,
       "norm_label": "._download()"
@@ -6208,9 +6424,9 @@
       "label": "._verify()",
       "file_type": "code",
       "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
-      "source_location": "L154",
+      "source_location": "L379",
       "id": "commands_drive_pipeline_command_verify",
-      "community": 95,
+      "community": 102,
       "norm_label": "._verify()"
     },
     {
@@ -6952,19 +7168,19 @@
       "norm_label": "live reconciliation results (first run)"
     },
     {
-      "label": "Phase 3 -- Gmail cleanup",
+      "label": "Phase 3 -- Gmail cleanup (DONE 2026-06-02)",
       "file_type": "document",
       "source_file": "TODO.md",
       "source_location": "L77",
-      "id": "backdeezup_todo_phase_3_gmail_cleanup",
+      "id": "backdeezup_todo_phase_3_gmail_cleanup_done_2026_06_02",
       "community": 91,
-      "norm_label": "phase 3 -- gmail cleanup"
+      "norm_label": "phase 3 -- gmail cleanup (done 2026-06-02)"
     },
     {
       "label": "Phase 4 -- Unblock Photos",
       "file_type": "document",
       "source_file": "TODO.md",
-      "source_location": "L88",
+      "source_location": "L91",
       "id": "backdeezup_todo_phase_4_unblock_photos",
       "community": 91,
       "norm_label": "phase 4 -- unblock photos"
@@ -6973,7 +7189,7 @@
       "label": "Phase 5 -- Merge CI/CD branch",
       "file_type": "document",
       "source_file": "TODO.md",
-      "source_location": "L99",
+      "source_location": "L102",
       "id": "backdeezup_todo_phase_5_merge_ci_cd_branch",
       "community": 91,
       "norm_label": "phase 5 -- merge ci/cd branch"
@@ -6982,7 +7198,7 @@
       "label": "Phase 6 -- Populate vault",
       "file_type": "document",
       "source_file": "TODO.md",
-      "source_location": "L112",
+      "source_location": "L115",
       "id": "backdeezup_todo_phase_6_populate_vault",
       "community": 91,
       "norm_label": "phase 6 -- populate vault"
@@ -6991,7 +7207,7 @@
       "label": "Phase 7 -- Wrap-up (run after each session)",
       "file_type": "document",
       "source_file": "TODO.md",
-      "source_location": "L122",
+      "source_location": "L125",
       "id": "backdeezup_todo_phase_7_wrap_up_run_after_each_session",
       "community": 91,
       "norm_label": "phase 7 -- wrap-up (run after each session)"
@@ -7000,7 +7216,7 @@
       "label": "Phase 8 -- Human-operable FOSS release (FINAL)",
       "file_type": "document",
       "source_file": "TODO.md",
-      "source_location": "L132",
+      "source_location": "L135",
       "id": "backdeezup_todo_phase_8_human_operable_foss_release_final",
       "community": 91,
       "norm_label": "phase 8 -- human-operable foss release (final)"
@@ -7009,7 +7225,7 @@
       "label": "Docs a human needs to operate it",
       "file_type": "document",
       "source_file": "TODO.md",
-      "source_location": "L137",
+      "source_location": "L140",
       "id": "backdeezup_todo_docs_a_human_needs_to_operate_it",
       "community": 91,
       "norm_label": "docs a human needs to operate it"
@@ -7018,7 +7234,7 @@
       "label": "Scheduled operation (no human needed after setup)",
       "file_type": "document",
       "source_file": "TODO.md",
-      "source_location": "L145",
+      "source_location": "L148",
       "id": "backdeezup_todo_scheduled_operation_no_human_needed_after_setup",
       "community": 91,
       "norm_label": "scheduled operation (no human needed after setup)"
@@ -7027,7 +7243,7 @@
       "label": "Manual operation (human runs it when they want)",
       "file_type": "document",
       "source_file": "TODO.md",
-      "source_location": "L154",
+      "source_location": "L157",
       "id": "backdeezup_todo_manual_operation_human_runs_it_when_they_want",
       "community": 91,
       "norm_label": "manual operation (human runs it when they want)"
@@ -7036,7 +7252,7 @@
       "label": "Handoff checklist (Claude steps back)",
       "file_type": "document",
       "source_file": "TODO.md",
-      "source_location": "L159",
+      "source_location": "L162",
       "id": "backdeezup_todo_handoff_checklist_claude_steps_back",
       "community": 91,
       "norm_label": "handoff checklist (claude steps back)"
@@ -7045,7 +7261,7 @@
       "label": "Bugs fixed this session (2026-06-02)",
       "file_type": "document",
       "source_file": "TODO.md",
-      "source_location": "L171",
+      "source_location": "L174",
       "id": "backdeezup_todo_bugs_fixed_this_session_2026_06_02",
       "community": 91,
       "norm_label": "bugs fixed this session (2026-06-02)"
@@ -7054,7 +7270,7 @@
       "label": "Known blockers",
       "file_type": "document",
       "source_file": "TODO.md",
-      "source_location": "L179",
+      "source_location": "L182",
       "id": "backdeezup_todo_known_blockers",
       "community": 91,
       "norm_label": "known blockers"
@@ -7063,7 +7279,7 @@
       "label": "Standing open items",
       "file_type": "document",
       "source_file": "TODO.md",
-      "source_location": "L184",
+      "source_location": "L187",
       "id": "backdeezup_todo_standing_open_items",
       "community": 91,
       "norm_label": "standing open items"
@@ -7263,7 +7479,7 @@
       "source_file": "README.md",
       "source_location": "L112",
       "id": "backdeezup_readme_codeblock_6",
-      "community": 109,
+      "community": 123,
       "norm_label": "code:bash (# generate django secret key)"
     },
     {
@@ -7344,7 +7560,7 @@
       "source_file": "README.md",
       "source_location": "L156",
       "id": "backdeezup_readme_6_authenticate_with_google",
-      "community": 12,
+      "community": 113,
       "norm_label": "6 \u2014 authenticate with google"
     },
     {
@@ -7353,7 +7569,7 @@
       "source_file": "README.md",
       "source_location": "L158",
       "id": "backdeezup_readme_codeblock_11",
-      "community": 12,
+      "community": 123,
       "norm_label": "code:bash (make auth)"
     },
     {
@@ -7479,7 +7695,7 @@
       "source_file": "README.md",
       "source_location": "L280",
       "id": "backdeezup_readme_media_vault",
-      "community": 12,
+      "community": 113,
       "norm_label": "media vault"
     },
     {
@@ -7488,7 +7704,7 @@
       "source_file": "README.md",
       "source_location": "L282",
       "id": "backdeezup_readme_codeblock_17",
-      "community": 12,
+      "community": 113,
       "norm_label": "code:bash (# import drive + gmail media into wagtail vault)"
     },
     {
@@ -7515,7 +7731,7 @@
       "source_file": "README.md",
       "source_location": "L308",
       "id": "backdeezup_readme_autostart_on_vm_boot",
-      "community": 111,
+      "community": 12,
       "norm_label": "autostart on vm boot"
     },
     {
@@ -7533,7 +7749,7 @@
       "source_file": "README.md",
       "source_location": "L312",
       "id": "backdeezup_readme_codeblock_19",
-      "community": 113,
+      "community": 111,
       "norm_label": "code:block19 (winweb01 boots)"
     },
     {
@@ -7569,7 +7785,7 @@
       "source_file": "README.md",
       "source_location": "L339",
       "id": "backdeezup_readme_ci_cd_pipeline_github_actions",
-      "community": 12,
+      "community": 113,
       "norm_label": "ci/cd pipeline (github actions)"
     },
     {
@@ -7578,7 +7794,7 @@
       "source_file": "README.md",
       "source_location": "L343",
       "id": "backdeezup_readme_codeblock_22",
-      "community": 12,
+      "community": 113,
       "norm_label": "code:mermaid (flowchart lr)"
     },
     {
@@ -10597,6 +10813,69 @@
       "norm_label": "added"
     },
     {
+      "label": "Atomically write the encrypted token file.     Uses write-to-temp-then-rename to",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L47",
+      "community": 0,
+      "norm_label": "atomically write the encrypted token file.     uses write-to-temp-then-rename to",
+      "id": "google_media_backup_services_google_rationale_47"
+    },
+    {
+      "label": "Headless OAuth for Desktop App (installed) client type.      On a server with no",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L73",
+      "community": 127,
+      "norm_label": "headless oauth for desktop app (installed) client type.      on a server with no",
+      "id": "google_media_backup_services_google_rationale_73"
+    },
+    {
+      "label": "Return one page of media files (images/videos) from Drive.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L129",
+      "community": 124,
+      "norm_label": "return one page of media files (images/videos) from drive.",
+      "id": "google_media_backup_services_google_rationale_129"
+    },
+    {
+      "label": "Google Photos Library API client.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L147",
+      "community": 122,
+      "norm_label": "google photos library api client.",
+      "id": "google_media_backup_services_google_rationale_147"
+    },
+    {
+      "label": "Return mediaItems from Google Photos Library.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L158",
+      "community": 114,
+      "norm_label": "return mediaitems from google photos library.",
+      "id": "google_media_backup_services_google_rationale_158"
+    },
+    {
+      "label": "Return one page of document-type files from Drive.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L189",
+      "community": 117,
+      "norm_label": "return one page of document-type files from drive.",
+      "id": "google_media_backup_services_google_rationale_189"
+    },
+    {
+      "label": "Phase 3 -- Gmail cleanup",
+      "file_type": "document",
+      "source_file": "TODO.md",
+      "source_location": "L77",
+      "community": 91,
+      "norm_label": "phase 3 -- gmail cleanup",
+      "id": "backdeezup_todo_phase_3_gmail_cleanup"
+    },
+    {
       "label": "POST body: {\"conditions\": [...], \"action\": \"trash\", \"min_age_days\": 30}     Retu",
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
@@ -10610,7 +10889,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L488",
-      "community": 126,
+      "community": 101,
       "norm_label": "post body: {\"conditions\": [...], \"action\": \"trash\", \"min_age_days\": 30, \"name\":",
       "id": "google_gmail_backup_api_rationale_488"
     },
@@ -10628,7 +10907,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L577",
-      "community": 127,
+      "community": 66,
       "norm_label": "return field/operator/logic choices for the frontend builder.",
       "id": "google_gmail_backup_api_rationale_577"
     },
@@ -10637,7 +10916,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L591",
-      "community": 135,
+      "community": 66,
       "norm_label": "permanently delete all messages in gmail trash.     dry_run=true (default): coun",
       "id": "google_gmail_backup_api_rationale_591"
     },
@@ -10691,7 +10970,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L259",
-      "community": 1,
+      "community": 121,
       "norm_label": "run all enabled cleanuprules. returns list of audit log records.",
       "id": "google_gmail_backup_services_rules_rationale_259"
     },
@@ -10709,7 +10988,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/tasks.py",
       "source_location": "L75",
-      "community": 1,
+      "community": 121,
       "norm_label": "run all enabled cleanup rules.",
       "id": "google_gmail_backup_tasks_rationale_75"
     },
@@ -10799,7 +11078,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L139",
-      "community": 109,
+      "community": 123,
       "norm_label": "running pipelines",
       "id": "backdeezup_readme_running_pipelines"
     },
@@ -10925,7 +11204,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/models.py",
       "source_location": "L7",
-      "community": 84,
+      "community": 78,
       "norm_label": "one row per synced account \u2014 tracks historyid for incremental sync.",
       "id": "google_gmail_backup_models_rationale_7"
     },
@@ -10970,7 +11249,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L238",
-      "community": 1,
+      "community": 121,
       "norm_label": "run all enabled cleanuprules. returns list of audit log records.",
       "id": "google_gmail_backup_services_rules_rationale_238"
     },
@@ -10997,7 +11276,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L85",
-      "community": 76,
+      "community": 98,
       "norm_label": "bug: except exception: errors += len(chunk) with no logging.     user got delete",
       "id": "google_gmail_backup_tests_regression_rationale_85"
     },
@@ -11015,7 +11294,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L107",
-      "community": 63,
+      "community": 126,
       "norm_label": "bug: gmail_pipeline discover had no --q flag.     make gmail-discover --q \"in:tr",
       "id": "google_gmail_backup_tests_regression_rationale_107"
     },
@@ -11024,7 +11303,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L141",
-      "community": 84,
+      "community": 63,
       "norm_label": "bug: make gmail-loop called gmail_pipeline all on every iteration,     re-runnin",
       "id": "google_gmail_backup_tests_regression_rationale_141"
     },
@@ -11078,7 +11357,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L359",
-      "community": 1,
+      "community": 76,
       "norm_label": "regression: every real rule execution must create a cleanupauditlog entry.     d",
       "id": "google_gmail_backup_tests_regression_rationale_359"
     },
@@ -11132,7 +11411,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_media_backup/services_google.py",
       "source_location": "L54",
-      "community": 0,
+      "community": 127,
       "norm_label": "headless oauth for desktop app (installed) client type.      on a server with no",
       "id": "google_media_backup_services_google_rationale_54"
     },
@@ -11144,15 +11423,6 @@
       "community": 124,
       "norm_label": "return one page of media files (images/videos) from drive.",
       "id": "google_media_backup_services_google_rationale_110"
-    },
-    {
-      "label": "Google Photos Library API client.",
-      "file_type": "rationale",
-      "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L128",
-      "community": 0,
-      "norm_label": "google photos library api client.",
-      "id": "google_media_backup_services_google_rationale_128"
     },
     {
       "label": "Return mediaItems from Google Photos Library.",
@@ -11222,7 +11492,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L177",
-      "community": 109,
+      "community": 123,
       "norm_label": "running the backup pipeline",
       "id": "backdeezup_readme_running_the_backup_pipeline"
     },
@@ -11267,7 +11537,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L264",
-      "community": 12,
+      "community": 123,
       "norm_label": "development commands",
       "id": "backdeezup_readme_development_commands"
     },
@@ -11285,7 +11555,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L286",
-      "community": 12,
+      "community": 113,
       "norm_label": "production deployment",
       "id": "backdeezup_readme_production_deployment"
     },
@@ -11303,7 +11573,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L343",
-      "community": 12,
+      "community": 123,
       "norm_label": "2. place google oauth credentials",
       "id": "backdeezup_readme_2_place_google_oauth_credentials"
     },
@@ -11312,7 +11582,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L352",
-      "community": 12,
+      "community": 113,
       "norm_label": "3. build and start",
       "id": "backdeezup_readme_3_build_and_start"
     },
@@ -11348,7 +11618,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L411",
-      "community": 12,
+      "community": 113,
       "norm_label": "ongoing operations",
       "id": "backdeezup_readme_ongoing_operations"
     },
@@ -11438,7 +11708,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L143",
-      "community": 65,
+      "community": 115,
       "norm_label": "trash multiple messages using gmail batchmodify. returns count of successful tra",
       "id": "google_gmail_backup_services_gmail_rationale_143"
     },
@@ -11447,7 +11717,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L164",
-      "community": 130,
+      "community": 115,
       "norm_label": "permanently delete a message. requires https://mail.google.com/ scope.",
       "id": "google_gmail_backup_services_gmail_rationale_164"
     },
@@ -11510,7 +11780,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L152",
-      "community": 1,
+      "community": 69,
       "norm_label": "tests for services_rules.py \u2014 the core cleanup engine.",
       "id": "google_gmail_backup_tests_rationale_152"
     },
@@ -11519,7 +11789,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L229",
-      "community": 1,
+      "community": 69,
       "norm_label": "rule with min_age_days=7 should include recent message but exclude nothing old.",
       "id": "google_gmail_backup_tests_rationale_229"
     },
@@ -11528,7 +11798,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_media_backup/services_google.py",
       "source_location": "L52",
-      "community": 0,
+      "community": 127,
       "norm_label": "headless oauth for desktop app (installed) client type.      on a server with no",
       "id": "google_media_backup_services_google_rationale_52"
     },
@@ -11546,7 +11816,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_media_backup/services_google.py",
       "source_location": "L126",
-      "community": 0,
+      "community": 122,
       "norm_label": "google photos library api client.",
       "id": "google_media_backup_services_google_rationale_126"
     },
@@ -11753,7 +12023,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L282",
-      "community": 123,
+      "community": 66,
       "norm_label": "verify .eml file exists on disk for downloaded messages.",
       "id": "google_gmail_backup_api_rationale_282"
     },
@@ -11762,7 +12032,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L309",
-      "community": 122,
+      "community": 68,
       "norm_label": "trash messages in gmail. dry-run by default \u2014 pass dry_run=false to execute.",
       "id": "google_gmail_backup_api_rationale_309"
     },
@@ -11780,7 +12050,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L481",
-      "community": 126,
+      "community": 101,
       "norm_label": "post body: {\"conditions\": [...], \"action\": \"trash\", \"min_age_days\": 30, \"name\":",
       "id": "google_gmail_backup_api_rationale_481"
     },
@@ -11798,7 +12068,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L570",
-      "community": 127,
+      "community": 66,
       "norm_label": "return field/operator/logic choices for the frontend builder.",
       "id": "google_gmail_backup_api_rationale_570"
     },
@@ -11807,7 +12077,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L27",
-      "community": 1,
+      "community": 84,
       "norm_label": "extract bare email from 'name <email>' format.",
       "id": "google_gmail_backup_services_rules_rationale_27"
     },
@@ -11816,7 +12086,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L39",
-      "community": 1,
+      "community": 84,
       "norm_label": "get gmail label id by name, creating it if needed.",
       "id": "google_gmail_backup_services_rules_rationale_39"
     },
@@ -11843,7 +12113,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L221",
-      "community": 1,
+      "community": 121,
       "norm_label": "run all enabled cleanuprules. returns list of audit log records.",
       "id": "google_gmail_backup_services_rules_rationale_221"
     },
@@ -11888,7 +12158,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L131",
-      "community": 130,
+      "community": 115,
       "norm_label": "requires https://mail.google.com/ scope.",
       "id": "google_gmail_backup_services_gmail_rationale_131"
     },
@@ -11915,7 +12185,7 @@
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L130",
-      "community": 78,
+      "community": 132,
       "norm_label": ".test_gmail_profile_unauthenticated()",
       "id": "google_gmail_backup_tests_gmailapitest_test_gmail_profile_unauthenticated"
     },
@@ -11951,7 +12221,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L220",
-      "community": 1,
+      "community": 121,
       "norm_label": "run all enabled cleanuprules. returns list of audit log records.",
       "id": "google_gmail_backup_services_rules_rationale_220"
     },
@@ -12122,7 +12392,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/models.py",
       "source_location": "L6",
-      "community": 84,
+      "community": 78,
       "norm_label": "one row per synced account \u2014 tracks historyid for incremental sync.",
       "id": "google_gmail_backup_models_rationale_6"
     },
@@ -12320,7 +12590,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L284",
-      "community": 123,
+      "community": 66,
       "norm_label": "verify .eml file exists on disk for downloaded messages.",
       "id": "google_gmail_backup_api_rationale_284"
     },
@@ -12329,7 +12599,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L311",
-      "community": 122,
+      "community": 68,
       "norm_label": "trash messages in gmail. dry-run by default \u2014 pass dry_run=false to execute.",
       "id": "google_gmail_backup_api_rationale_311"
     },
@@ -12473,7 +12743,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_media_backup/services_google.py",
       "source_location": "L90",
-      "community": 0,
+      "community": 122,
       "norm_label": "google photos library api client.",
       "id": "google_media_backup_services_google_rationale_90"
     },
@@ -14293,6 +14563,49 @@
       "confidence_score": 0.5,
       "source": "media_vault_models_vaultdocument",
       "target": "media_vault_pages_videoreviewpage"
+    },
+    {
+      "relation": "uses",
+      "confidence": "INFERRED",
+      "source_file": "backend_django/media_vault/management/commands/import_media.py",
+      "source_location": "L265",
+      "weight": 0.8,
+      "source": "commands_import_media_command",
+      "target": "media_vault_models_vaultdocument",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/media_vault/management/commands/import_media.py",
+      "source_location": "L176",
+      "weight": 1.0,
+      "source": "commands_import_media_command_import_drive",
+      "target": "media_vault_models_vaultdocument"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/media_vault/management/commands/import_media.py",
+      "source_location": "L276",
+      "weight": 1.0,
+      "source": "commands_import_media_command_import_gmail",
+      "target": "media_vault_models_vaultdocument"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L280",
+      "weight": 1.0,
+      "source": "google_media_backup_tasks_task_docs_import_vault",
+      "target": "media_vault_models_vaultdocument"
     },
     {
       "relation": "inherits",
@@ -16813,9 +17126,9 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L478",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_api_rationale_478",
-      "target": "google_gmail_backup_api_rule_builder_preview",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_api_rule_builder_preview"
     },
     {
       "relation": "calls",
@@ -16854,9 +17167,9 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L495",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_api_rationale_495",
-      "target": "google_gmail_backup_api_rule_builder_dry_run",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_api_rule_builder_dry_run"
     },
     {
       "relation": "calls",
@@ -16895,9 +17208,9 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L525",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_api_rationale_525",
-      "target": "google_gmail_backup_api_rule_builder_save",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_api_rule_builder_save"
     },
     {
       "relation": "calls",
@@ -16936,9 +17249,9 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L584",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_api_rationale_584",
-      "target": "google_gmail_backup_api_rule_builder_fields",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_api_rule_builder_fields"
     },
     {
       "relation": "rationale_for",
@@ -16966,9 +17279,9 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L598",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_api_rationale_598",
-      "target": "google_gmail_backup_api_gmail_empty_trash",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_api_gmail_empty_trash"
     },
     {
       "relation": "calls",
@@ -24357,6 +24670,36 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L241",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_services_google_py",
+      "target": "google_media_backup_services_google_download_or_export_file",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L268",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_services_google_py",
+      "target": "google_media_backup_services_google_list_drive_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L276",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_services_google_py",
+      "target": "google_media_backup_services_google_download_photos_item",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
       "source_location": "L180",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -24444,11 +24787,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L47",
+      "source_location": "L46",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "google_media_backup_services_google_rationale_47",
-      "target": "google_media_backup_services_google_save_creds"
+      "source": "google_media_backup_services_google_rationale_46",
+      "target": "google_media_backup_services_google_save_creds",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -24465,11 +24808,21 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L73",
+      "source_location": "L47",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "google_media_backup_services_google_rationale_73",
-      "target": "google_media_backup_services_google_start_oauth_local"
+      "source": "google_media_backup_services_google_rationale_47",
+      "target": "google_media_backup_services_google_save_creds"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_rationale_72",
+      "target": "google_media_backup_services_google_start_oauth_local",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -24480,6 +24833,16 @@
       "source_location": "L39",
       "weight": 1.0,
       "source": "google_media_backup_api_auth_connect",
+      "target": "google_media_backup_services_google_start_oauth_local"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L73",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "google_media_backup_services_google_rationale_73",
       "target": "google_media_backup_services_google_start_oauth_local"
     },
     {
@@ -24540,6 +24903,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L245",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_download_or_export_file",
+      "target": "google_media_backup_services_google_drive_service",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
       "source_location": "L181",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -24547,14 +24921,25 @@
       "target": "google_media_backup_services_google_drive_service"
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L271",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_list_drive_files",
+      "target": "google_media_backup_services_google_list_media_files",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L129",
+      "source_location": "L128",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "google_media_backup_services_google_rationale_129",
-      "target": "google_media_backup_services_google_list_media_files"
+      "source": "google_media_backup_services_google_rationale_128",
+      "target": "google_media_backup_services_google_list_media_files",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -24565,6 +24950,16 @@
       "source_location": "L48",
       "weight": 1.0,
       "source": "google_media_backup_api_sync_discover",
+      "target": "google_media_backup_services_google_list_media_files"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L129",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "google_media_backup_services_google_rationale_129",
       "target": "google_media_backup_services_google_list_media_files"
     },
     {
@@ -24607,6 +25002,27 @@
       "confidence_score": 1.0,
       "source": "google_media_backup_services_google_list_photos_items",
       "target": "google_media_backup_services_google_photos_service"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L279",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_download_photos_item",
+      "target": "google_media_backup_services_google_photos_service",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L146",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_rationale_146",
+      "target": "google_media_backup_services_google_photos_service",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -24652,11 +25068,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L158",
+      "source_location": "L157",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "google_media_backup_services_google_rationale_158",
-      "target": "google_media_backup_services_google_list_photos_items"
+      "source": "google_media_backup_services_google_rationale_157",
+      "target": "google_media_backup_services_google_list_photos_items",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -24667,6 +25083,38 @@
       "source_location": "L124",
       "weight": 1.0,
       "source": "google_media_backup_api_sync_discover_photos",
+      "target": "google_media_backup_services_google_list_photos_items"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "google_media_backup_tasks_task_photos_discover",
+      "target": "google_media_backup_services_google_list_photos_items"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L108",
+      "weight": 1.0,
+      "source": "commands_drive_pipeline_command_discover_photos",
+      "target": "google_media_backup_services_google_list_photos_items"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L158",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "google_media_backup_services_google_rationale_158",
       "target": "google_media_backup_services_google_list_photos_items"
     },
     {
@@ -24700,14 +25148,25 @@
       "target": "google_media_backup_services_google_list_photos_items"
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L273",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_list_drive_files",
+      "target": "google_media_backup_services_google_list_common_files",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_media_backup/services_google.py",
-      "source_location": "L189",
+      "source_location": "L197",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "google_media_backup_services_google_rationale_189",
-      "target": "google_media_backup_services_google_list_common_files"
+      "source": "google_media_backup_services_google_rationale_197",
+      "target": "google_media_backup_services_google_list_common_files",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -24718,6 +25177,16 @@
       "source_location": "L89",
       "weight": 1.0,
       "source": "google_media_backup_api_sync_discover_files",
+      "target": "google_media_backup_services_google_list_common_files"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L189",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "google_media_backup_services_google_rationale_189",
       "target": "google_media_backup_services_google_list_common_files"
     },
     {
@@ -24754,6 +25223,17 @@
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L265",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_download_or_export_file",
+      "target": "google_media_backup_services_google_download_file",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "backend_django/google_media_backup/api.py",
       "source_location": "L162",
@@ -24773,6 +25253,102 @@
       "target": "google_media_backup_services_google_download_file"
     },
     {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L242",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_rationale_242",
+      "target": "google_media_backup_services_google_download_or_export_file",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L217",
+      "weight": 1.0,
+      "source": "google_media_backup_tasks_task_docs_download_batch",
+      "target": "google_media_backup_services_google_download_or_export_file"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L235",
+      "weight": 1.0,
+      "source": "commands_drive_pipeline_command_download_docs",
+      "target": "google_media_backup_services_google_download_or_export_file"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L269",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_rationale_269",
+      "target": "google_media_backup_services_google_list_drive_files",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L153",
+      "weight": 1.0,
+      "source": "google_media_backup_tasks_task_docs_discover",
+      "target": "google_media_backup_services_google_list_drive_files"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L65",
+      "weight": 1.0,
+      "source": "commands_drive_pipeline_command_discover",
+      "target": "google_media_backup_services_google_list_drive_files"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/services_google.py",
+      "source_location": "L277",
+      "weight": 1.0,
+      "source": "google_media_backup_services_google_rationale_277",
+      "target": "google_media_backup_services_google_download_photos_item",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "google_media_backup_tasks_task_photos_download_batch",
+      "target": "google_media_backup_services_google_download_photos_item"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L166",
+      "weight": 1.0,
+      "source": "commands_drive_pipeline_command_download_photos",
+      "target": "google_media_backup_services_google_download_photos_item"
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
@@ -24781,6 +25357,28 @@
       "source_location": "L210",
       "weight": 1.0,
       "source": "google_media_backup_api_sync_commit_delete",
+      "target": "google_media_backup_services_google_trash_or_delete"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L129",
+      "weight": 1.0,
+      "source": "google_media_backup_tasks_task_drive_commit_delete",
+      "target": "google_media_backup_services_google_trash_or_delete"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L307",
+      "weight": 1.0,
+      "source": "commands_drive_pipeline_command_commit_delete",
       "target": "google_media_backup_services_google_trash_or_delete"
     },
     {
@@ -25538,6 +26136,50 @@
       "context": "call",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "google_media_backup_tasks_task_photos_download_batch",
+      "target": "google_media_backup_utils_deterministic_path"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L211",
+      "weight": 1.0,
+      "source": "google_media_backup_tasks_task_docs_download_batch",
+      "target": "google_media_backup_utils_deterministic_path"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L163",
+      "weight": 1.0,
+      "source": "commands_drive_pipeline_command_download_photos",
+      "target": "google_media_backup_utils_deterministic_path"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L228",
+      "weight": 1.0,
+      "source": "commands_drive_pipeline_command_download_docs",
+      "target": "google_media_backup_utils_deterministic_path"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
       "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
       "source_location": "L115",
       "weight": 1.0,
@@ -25768,6 +26410,136 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_tasks_py",
+      "target": "google_media_backup_tasks_task_photos_discover",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_tasks_py",
+      "target": "google_media_backup_tasks_task_photos_download_batch",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L107",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_tasks_py",
+      "target": "google_media_backup_tasks_task_drive_commit_delete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L142",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_tasks_py",
+      "target": "google_media_backup_tasks_task_docs_discover",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L184",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_tasks_py",
+      "target": "google_media_backup_tasks_task_docs_download_batch",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L244",
+      "weight": 1.0,
+      "source": "backend_django_google_media_backup_tasks_py",
+      "target": "google_media_backup_tasks_task_docs_import_vault",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "google_media_backup_tasks_rationale_1",
+      "target": "backend_django_google_media_backup_tasks_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "google_media_backup_tasks_rationale_15",
+      "target": "google_media_backup_tasks_task_photos_discover",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "google_media_backup_tasks_rationale_56",
+      "target": "google_media_backup_tasks_task_photos_download_batch",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L108",
+      "weight": 1.0,
+      "source": "google_media_backup_tasks_rationale_108",
+      "target": "google_media_backup_tasks_task_drive_commit_delete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L143",
+      "weight": 1.0,
+      "source": "google_media_backup_tasks_rationale_143",
+      "target": "google_media_backup_tasks_task_docs_discover",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L185",
+      "weight": 1.0,
+      "source": "google_media_backup_tasks_rationale_185",
+      "target": "google_media_backup_tasks_task_docs_download_batch",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/tasks.py",
+      "source_location": "L245",
+      "weight": 1.0,
+      "source": "google_media_backup_tasks_rationale_245",
+      "target": "google_media_backup_tasks_task_docs_import_vault",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "backend_django/google_media_backup/views.py",
       "source_location": "L2",
       "weight": 1.0,
@@ -25859,6 +26631,46 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L138",
+      "weight": 1.0,
+      "source": "commands_drive_pipeline_command",
+      "target": "commands_drive_pipeline_command_download_photos",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L197",
+      "weight": 1.0,
+      "source": "commands_drive_pipeline_command",
+      "target": "commands_drive_pipeline_command_download_docs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L266",
+      "weight": 1.0,
+      "source": "commands_drive_pipeline_command",
+      "target": "commands_drive_pipeline_command_mark_delete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L279",
+      "weight": 1.0,
+      "source": "commands_drive_pipeline_command",
+      "target": "commands_drive_pipeline_command_commit_delete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
       "source_location": "L95",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -25913,11 +26725,55 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "commands_drive_pipeline_command_handle",
+      "target": "commands_drive_pipeline_command_download_photos",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "commands_drive_pipeline_command_handle",
+      "target": "commands_drive_pipeline_command_download_docs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
       "source_location": "L37",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "commands_drive_pipeline_command_handle",
       "target": "commands_drive_pipeline_command_verify"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L47",
+      "weight": 1.0,
+      "source": "commands_drive_pipeline_command_handle",
+      "target": "commands_drive_pipeline_command_mark_delete",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_media_backup/management/commands/drive_pipeline.py",
+      "source_location": "L49",
+      "weight": 1.0,
+      "source": "commands_drive_pipeline_command_handle",
+      "target": "commands_drive_pipeline_command_commit_delete",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -27145,9 +28001,9 @@
       "source_file": "TODO.md",
       "source_location": "L77",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "backdeezup_todo_backdeezup_todo",
-      "target": "backdeezup_todo_phase_3_gmail_cleanup"
+      "target": "backdeezup_todo_phase_3_gmail_cleanup_done_2026_06_02",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -27228,6 +28084,16 @@
       "confidence_score": 1.0,
       "source": "backdeezup_todo_backdeezup_todo",
       "target": "backdeezup_todo_standing_open_items"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "TODO.md",
+      "source_location": "L77",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "backdeezup_todo_backdeezup_todo",
+      "target": "backdeezup_todo_phase_3_gmail_cleanup"
     },
     {
       "relation": "contains",
@@ -32292,5 +33158,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "237ed0c793582c3f338ebf5036d49277e6fc3631"
+  "built_at_commit": "be48cd08465d01731ddff6bbb0aba4fee6b9e147"
 }

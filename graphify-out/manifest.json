@@ -150,8 +150,8 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/media_vault/management/commands/import_media.py": {
-    "mtime": 1778928269.3176632,
-    "ast_hash": "f0c2113e18a00e78ecd1121daeccc7d2",
+    "mtime": 1780454516.580348,
+    "ast_hash": "1b6333475aeb4ba86c1a0aa6af6875c4",
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/api.py": {
@@ -345,8 +345,8 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/services_google.py": {
-    "mtime": 1779189556.0884798,
-    "ast_hash": "24e41b10d1d38f6b49a8072f191d172c",
+    "mtime": 1780451730.612292,
+    "ast_hash": "f7c48a897cbac8ed8124e1a31a725f22",
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/api.py": {
@@ -394,6 +394,11 @@
     "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
     "semantic_hash": ""
   },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/tasks.py": {
+    "mtime": 1780451770.232292,
+    "ast_hash": "d5a74e681c81eab624709098f98e51cf",
+    "semantic_hash": ""
+  },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/views.py": {
     "mtime": 1778735855.4701078,
     "ast_hash": "0f111d35a3b2ddf4ceaec3699aee0c52",
@@ -425,8 +430,8 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/management/commands/drive_pipeline.py": {
-    "mtime": 1779015780.829591,
-    "ast_hash": "0e54d03bb4589d579b1ce51bc7ceb6fe",
+    "mtime": 1780452060.4083052,
+    "ast_hash": "3ad2da79308f7994b4d75c17397142c5",
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_media_backup/management/commands/__init__.py": {
@@ -450,7 +455,7 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/secrets/google_token.json": {
-    "mtime": 1780444424.8166883,
+    "mtime": 1780451578.4603465,
     "ast_hash": "",
     "semantic_hash": ""
   },
@@ -480,13 +485,13 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/TODO.md": {
-    "mtime": 1780439597.6482499,
-    "ast_hash": "61c0881e20239130bc31dfd2b1c00bd8",
+    "mtime": 1780446400.7884145,
+    "ast_hash": "af774c3b1aa73502f49a798d26f9ddf0",
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/GOALS_TODOS.md": {
-    "mtime": 1780429128.9763045,
-    "ast_hash": "eed7f654bfad003fb0ee8d7047374306",
+    "mtime": 1780451287.432371,
+    "ast_hash": "333978461052ff741562f002c4ee2287",
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/requirements.txt": {
@@ -495,8 +500,8 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/GOALS.md": {
-    "mtime": 1780429048.772351,
-    "ast_hash": "c4303dbeba9f819cec0fa6ec30ee9efc",
+    "mtime": 1780447793.4323554,
+    "ast_hash": "14a4419c4330715143979b6c1de0853b",
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/README.md": {
@@ -590,8 +595,8 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/templates/admin/gmail/ops.html": {
-    "mtime": 1779201580.008071,
-    "ast_hash": "cadc5d2e2b68b979833054fa98cd55a1",
+    "mtime": 1780446083.9595888,
+    "ast_hash": "235d743037f6f820ece7a5cef6828f99",
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/templates/admin/gmail/dashboard.html": {
@@ -645,8 +650,8 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/templates/admin/base_site.html": {
-    "mtime": 1779189556.0924797,
-    "ast_hash": "566d6dcbc696ea5007daacec97815fa6",
+    "mtime": 1780446203.8360617,
+    "ast_hash": "0cccf581448699857387ee71f12d9c13",
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/core/templates/core/landing.html": {
