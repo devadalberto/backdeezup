@@ -15,11 +15,10 @@ from .utils import get_fernet
 SCOPES = [
     "https://www.googleapis.com/auth/drive.readonly",
     "https://www.googleapis.com/auth/drive",
-    # photoslibrary.readonly intentionally excluded — blocked project-wide by old web client
-    # Fix: delete client ending in 1ql0o9aj from Google Auth Platform → Clients, then re-auth
+    "https://www.googleapis.com/auth/photoslibrary.readonly",
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.modify",
-    "https://mail.google.com/",  # required for batchDelete and permanent deletion
+    "https://mail.google.com/",
 ]
 
 CLIENT_SECRETS = config("GOOGLE_CLIENT_SECRETS", default="secrets/google_client.json")
@@ -227,6 +226,43 @@ def download_file(file_id: str, out_path: str) -> bool:
             except Exception:
                 pass
             return False
+
+
+def list_drive_files(page_size: int = 200, page_token: str | None = None, media_only: bool = True):
+    """Unified Drive file lister — media_only=True for images/videos, False for documents."""
+    if media_only:
+        return list_media_files(page_size=page_size, page_token=page_token)
+    else:
+        return list_common_files(page_size=page_size, page_token=page_token)
+
+
+def download_photos_item(media_item_id: str, out_path: str) -> bool:
+    """Download a Google Photos item via its baseUrl (NOT Drive files().get_media())."""
+    import requests
+    svc = photos_service()
+    if not svc:
+        return False
+    try:
+        item = svc.mediaItems().get(mediaItemId=media_item_id).execute()
+        base_url = item.get("baseUrl")
+        if not base_url:
+            return False
+        mime = item.get("mimeType", "")
+        suffix = "=dv" if mime.startswith("video/") else "=d"
+        resp = requests.get(base_url + suffix, stream=True, timeout=120)
+        resp.raise_for_status()
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+        with open(out_path, "wb") as f:
+            for chunk in resp.iter_content(chunk_size=65536):
+                f.write(chunk)
+        return True
+    except Exception:
+        try:
+            if os.path.exists(out_path):
+                os.remove(out_path)
+        except OSError:
+            pass
+        return False
 
 
 def trash_or_delete(file_id: str, mode: str = "trash") -> bool:

@@ -17,11 +17,15 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument(
             "step",
-            choices=["discover", "discover-files", "discover-photos", "download", "verify"],
+            choices=["discover", "discover-files", "discover-photos",
+                     "download", "download-photos", "verify",
+                     "mark-delete", "commit-delete"],
         )
         parser.add_argument("--limit", type=int, default=100)
         parser.add_argument("--max-pages", type=int, default=20)
         parser.add_argument("--page-size", type=int, default=200)
+        parser.add_argument("--source", type=str, default="all",
+                            help="Filter by source: all, photos, drive")
 
     def handle(self, *args, **options):
         step = options["step"]
@@ -33,8 +37,14 @@ class Command(BaseCommand):
             self._discover_photos(options["max_pages"], options["page_size"])
         elif step == "download":
             self._download(options["limit"])
+        elif step == "download-photos":
+            self._download_photos(options["limit"])
         elif step == "verify":
             self._verify(options["limit"])
+        elif step == "mark-delete":
+            self._mark_delete(options["limit"], options["source"])
+        elif step == "commit-delete":
+            self._commit_delete(options["limit"], options["source"])
 
     def _discover(self, max_pages, page_size, media_only=True):
         import uuid
@@ -81,15 +91,159 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Discovered {discovered} new Drive {label}."))
 
     def _discover_photos(self, max_pages, page_size):
-        self.stdout.write(self.style.WARNING(
-            "BLOCKED: Google Photos discovery is disabled.\n"
-            "The old web OAuth client (1ql0o9aj) in this Google Cloud project blocks\n"
-            "the photoslibrary.readonly scope project-wide.\n\n"
-            "To unblock:\n"
-            "  1. Go to Google Auth Platform → Clients\n"
-            "  2. Delete the web client ending in '1ql0o9aj'\n"
-            "  3. Run: make auth\n"
-            "  4. Run: make discover-photos"
+        import uuid
+        from django.utils import timezone
+        from google_media_backup.models import DriveAsset, RunLog
+        from google_media_backup.services_google import list_photos_items
+
+        run = RunLog.objects.create(run_id=str(uuid.uuid4()), totals={"discovered": 0})
+        discovered = 0
+        token = None
+        pages = 0
+        self.stdout.write("Discovering Google Photos items...")
+
+        while pages < max_pages:
+            items, token = list_photos_items(page_size=page_size, page_token=token)
+            if not items:
+                break
+            for it in items:
+                pid = it.get("id")
+                if not pid:
+                    continue
+                drive_id = f"photos:{pid}"
+                _, created = DriveAsset.objects.get_or_create(
+                    drive_id=drive_id,
+                    defaults=dict(
+                        name=it.get("filename", ""),
+                        mime_type=it.get("mimeType", ""),
+                        size_bytes=0,
+                    ),
+                )
+                if created:
+                    discovered += 1
+            pages += 1
+            if pages % 5 == 0:
+                self.stdout.write(f"  page {pages}: {discovered} new so far...")
+            if not token:
+                break
+
+        run.totals["discovered"] = discovered
+        run.status = "OK"
+        run.finished_at = timezone.now()
+        run.save()
+        self.stdout.write(self.style.SUCCESS(f"Discovered {discovered} new Photos items."))
+
+    def _download_photos(self, limit):
+        import os
+        import time
+        from django.utils import timezone
+        from google_media_backup.models import DriveAsset
+        from google_media_backup.services_google import download_photos_item
+        from google_media_backup.utils import deterministic_path
+
+        qs = list(
+            DriveAsset.objects.filter(
+                state="DISCOVERED", drive_id__startswith="photos:"
+            ).order_by("discovered_at")[:limit]
+        )
+        if not qs:
+            self.stdout.write("No photos to download.")
+            return
+
+        total = len(qs)
+        downloaded = errors = 0
+        start = time.time()
+
+        for i, asset in enumerate(qs, 1):
+            raw_id = asset.drive_id.removeprefix("photos:")
+            kind = "video" if asset.mime_type.startswith("video/") else "image"
+            hint = raw_id[:32]
+            final = deterministic_path(asset.name, hint, kind=kind)
+            tmp = final + ".part"
+            try:
+                if download_photos_item(raw_id, tmp) and os.path.exists(tmp):
+                    os.replace(tmp, final)
+                    asset.download_path = final
+                    asset.downloaded_at = timezone.now()
+                    asset.state = "DOWNLOADED"
+                    asset.error = ""
+                    asset.save(update_fields=["download_path", "downloaded_at", "state", "error"])
+                    downloaded += 1
+                else:
+                    asset.error = "Download failed"
+                    asset.last_attempt_at = timezone.now()
+                    asset.save(update_fields=["error", "last_attempt_at"])
+                    errors += 1
+            except Exception as exc:
+                asset.error = str(exc)[:500]
+                asset.last_attempt_at = timezone.now()
+                asset.save(update_fields=["error", "last_attempt_at"])
+                errors += 1
+
+            if i % max(1, total // 20) == 0 or i == total:
+                elapsed = time.time() - start
+                rate = i / elapsed if elapsed > 0 else 0
+                self.stdout.write(
+                    f"  {i}/{total} ({i*100//total}%) ok={downloaded} err={errors} "
+                    f"{rate:.1f}/s"
+                )
+
+        self.stdout.write(self.style.SUCCESS(
+            f"Photos download: {downloaded} ok, {errors} errors"
+        ))
+
+    def _mark_delete(self, limit, source):
+        from django.utils import timezone
+        from google_media_backup.models import DriveAsset
+
+        qs = DriveAsset.objects.filter(state="VERIFIED")
+        if source == "photos":
+            qs = qs.filter(drive_id__startswith="photos:")
+        elif source == "drive":
+            qs = qs.exclude(drive_id__startswith="photos:")
+        qs = qs.order_by("discovered_at")[:limit]
+        count = qs.update(state="DELETE_PENDING")
+        self.stdout.write(self.style.SUCCESS(f"Marked {count} assets for deletion."))
+
+    def _commit_delete(self, limit, source):
+        import os
+        from datetime import timedelta
+        from decouple import config
+        from django.utils import timezone
+        from google_media_backup.models import DriveAsset
+        from google_media_backup.services_google import trash_or_delete
+
+        min_days = int(config("MIN_RETENTION_DAYS", default="3"))
+        mode = config("DRIVE_DELETE_MODE", default="trash")
+        cutoff = timezone.now() - timedelta(days=min_days)
+
+        qs = DriveAsset.objects.filter(state="DELETE_PENDING")
+        if source == "photos":
+            qs = qs.filter(drive_id__startswith="photos:")
+        elif source == "drive":
+            qs = qs.exclude(drive_id__startswith="photos:")
+
+        assets = list(qs.filter(discovered_at__lte=cutoff)[:limit])
+        if not assets:
+            self.stdout.write("No assets past retention period.")
+            return
+
+        deleted = errors = 0
+        for asset in assets:
+            file_id = asset.drive_id
+            if file_id.startswith("photos:"):
+                file_id = file_id.removeprefix("photos:")
+            if trash_or_delete(file_id, mode=mode):
+                asset.state = "DELETED"
+                asset.save(update_fields=["state"])
+                deleted += 1
+            else:
+                asset.error = f"Delete failed (mode={mode})"
+                asset.save(update_fields=["error"])
+                errors += 1
+
+        self.stdout.write(self.style.SUCCESS(
+            f"Deleted {deleted} assets (mode={mode}), {errors} errors"
         ))
 
     def _download(self, limit):

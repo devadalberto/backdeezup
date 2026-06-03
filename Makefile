@@ -10,6 +10,7 @@ DJ    := backend_django/manage.py
         deploy redeploy celery-logs celery-status celery-purge \
         run docs \
         discover discover-files discover-photos \
+        photos-discover photos-download photos-run photos-delete photos-progress \
         gmail-discover gmail-incremental gmail-download gmail-verify gmail-run gmail-loop gmail-progress gmail-reconcile gmail-purge-expired \
         pipeline pipeline-gmail pipeline-all \
         progress \
@@ -188,7 +189,27 @@ discover-files:
 	docker compose exec web python manage.py drive_pipeline discover-files --max-pages 20 --page-size 200
 
 discover-photos:
-	docker compose exec web python manage.py drive_pipeline discover-photos --max-pages 20 --page-size 200 || true
+	docker compose exec web python manage.py drive_pipeline discover-photos --max-pages 50 --page-size 100
+
+# ── Photos pipeline ──────────────────────────────────────────────────────────
+photos-discover:
+	docker compose exec web python manage.py drive_pipeline discover-photos --max-pages 50 --page-size 100
+
+photos-download:
+	docker compose exec web python manage.py drive_pipeline download-photos --limit $(LIMIT)
+
+photos-run:
+	@echo "Photos pipeline: discover → download → verify → import"
+	docker compose exec web python manage.py drive_pipeline discover-photos --max-pages 50 --page-size 100
+	docker compose exec web python manage.py drive_pipeline download-photos --limit $(LIMIT)
+	docker compose exec web python manage.py drive_pipeline verify --limit $(LIMIT)
+
+photos-delete:
+	docker compose exec web python manage.py drive_pipeline mark-delete --source photos --limit $(LIMIT)
+	docker compose exec web python manage.py drive_pipeline commit-delete --source photos --limit $(LIMIT)
+
+photos-progress:
+	@docker compose exec -T web python manage.py shell --verbosity 0 -c "from google_media_backup.models import DriveAsset; from django.db.models import Count; qs=DriveAsset.objects.filter(drive_id__startswith='photos:'); total=qs.count(); states=dict(qs.values_list('state').annotate(n=Count('id'))); print(f'Photos: {total} total | {states}')"
 
 pipeline:
 	uv run python run_pipeline.py drive --limit $(LIMIT)
