@@ -359,7 +359,11 @@ def gmail_progress(request):
     verified = counts.get(GmailMessage.STATE_VERIFIED, 0)
     downloaded = counts.get(GmailMessage.STATE_DOWNLOADED, 0)
     discovered = counts.get(GmailMessage.STATE_DISCOVERED, 0)
-    pct = round(verified / sync_total * 100, 1) if sync_total else 0
+    trashed = counts.get(GmailMessage.STATE_TRASHED, 0)
+    soft_deleted = counts.get(GmailMessage.STATE_SOFT_DELETED, 0)
+    deleted = counts.get(GmailMessage.STATE_DELETED, 0)
+    accounted = verified + trashed + soft_deleted + deleted
+    pct = round(accounted / sync_total * 100, 1) if sync_total else 0
     filled = int(pct / 5)
     bar = "=" * filled + "-" * (20 - filled)
     return {
@@ -367,8 +371,11 @@ def gmail_progress(request):
         "discovered": discovered,
         "downloaded": downloaded,
         "verified": verified,
+        "trashed": trashed,
+        "soft_deleted": soft_deleted,
+        "accounted": accounted,
         "pct": pct,
-        "bar": f"[{bar}] {pct}% ({verified}/{sync_total} verified)",
+        "bar": f"[{bar}] {pct}% ({accounted}/{sync_total} accounted for)",
     }
 
 
@@ -603,14 +610,21 @@ def gmail_empty_trash(request, skip_backup_check: bool = False, dry_run: bool = 
 
     if not skip_backup_check:
         sync_total = GmailSyncState.objects.aggregate(t=Sum("total_messages"))["t"] or 0
-        verified = GmailMessage.objects.filter(state=GmailMessage.STATE_VERIFIED).count()
-        pct = round(verified / max(sync_total, 1) * 100, 1)
+        accounted = GmailMessage.objects.filter(
+            state__in=[
+                GmailMessage.STATE_VERIFIED,
+                GmailMessage.STATE_TRASHED,
+                GmailMessage.STATE_SOFT_DELETED,
+                GmailMessage.STATE_DELETED,
+            ]
+        ).count()
+        pct = round(accounted / max(sync_total, 1) * 100, 1)
         if pct < 90:
             return {
                 "blocked": True,
-                "reason": f"Backup only {pct}% complete ({verified}/{sync_total}). Need ≥90%.",
+                "reason": f"Backup only {pct}% complete ({accounted}/{sync_total}). Need ≥90%.",
                 "pct": pct,
-                "verified": verified,
+                "accounted": accounted,
                 "sync_total": sync_total,
             }
 

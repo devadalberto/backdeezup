@@ -52,7 +52,15 @@ def htmx_gmail_progress(request):
     sync_total = GmailSyncState.objects.aggregate(t=Sum("total_messages"))["t"] or 0
     verified = GmailMessage.objects.filter(state=GmailMessage.STATE_VERIFIED).count()
     discovered = GmailMessage.objects.filter(state=GmailMessage.STATE_DISCOVERED).count()
-    pct = round(verified / max(sync_total, 1) * 100, 1)
+    accounted = GmailMessage.objects.filter(
+        state__in=[
+            GmailMessage.STATE_VERIFIED,
+            GmailMessage.STATE_TRASHED,
+            GmailMessage.STATE_SOFT_DELETED,
+            GmailMessage.STATE_DELETED,
+        ]
+    ).count()
+    pct = round(accounted / max(sync_total, 1) * 100, 1)
     filled = int(pct / 5)
     bar = "=" * filled + "-" * (20 - filled)
 

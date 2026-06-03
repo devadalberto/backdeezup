@@ -49,19 +49,26 @@ class Command(BaseCommand):
         # ── Safety check: verify backup is sufficiently complete ──────────────
         if not skip_check:
             sync_total = GmailSyncState.objects.aggregate(t=Sum("total_messages"))["t"] or 0
-            verified = GmailMessage.objects.filter(state=GmailMessage.STATE_VERIFIED).count()
-            pct = round(verified / max(sync_total, 1) * 100, 1)
+            accounted = GmailMessage.objects.filter(
+                state__in=[
+                    GmailMessage.STATE_VERIFIED,
+                    GmailMessage.STATE_TRASHED,
+                    GmailMessage.STATE_SOFT_DELETED,
+                    GmailMessage.STATE_DELETED,
+                ]
+            ).count()
+            pct = round(accounted / max(sync_total, 1) * 100, 1)
 
             if pct < 90:
                 self.stdout.write(self.style.ERROR(
-                    f"BLOCKED: Gmail backup is only {pct}% complete ({verified}/{sync_total}).\n"
-                    "Run 'make pipeline-gmail' until >= 90% before emptying trash.\n"
+                    f"BLOCKED: Gmail backup is only {pct}% complete ({accounted}/{sync_total}).\n"
+                    "Run 'make gmail-loop' until >= 90% before emptying trash.\n"
                     "Use --skip-backup-check to override (dangerous)."
                 ))
                 return
 
             self.stdout.write(self.style.SUCCESS(
-                f"Backup check passed: {verified}/{sync_total} messages backed up ({pct}%)"
+                f"Backup check passed: {accounted}/{sync_total} messages accounted for ({pct}%)"
             ))
 
         # ── Count messages currently in Gmail trash ───────────────────────────
