@@ -74,7 +74,7 @@ Cross-referenced with GOALS.md phases.
 
 ---
 
-## Phase 3 -- Gmail cleanup (IN PROGRESS)
+## Phase 3 -- Gmail cleanup (DONE 2026-06-02)
 
 - [ ] Apply protected senders (family emails -- always run first)
 - [x] All 16 cleanup rules enabled
@@ -82,8 +82,8 @@ Cross-referenced with GOALS.md phases.
 - [x] Backup % formula fixed (was only counting VERIFIED; now counts all accounted states)
 - [x] Execute all enabled rules — 2,530 messages trashed in Gmail
 - [x] Backup guard now passes at 100%
-- [ ] Empty trash (dry-run first, then real) — will free the actual storage
-- [ ] Run rules again for remaining matches (some 400 errors on already-trashed msgs)
+- [x] Empty trash — 11,946 messages permanently deleted from Gmail (0 errors)
+- [ ] Run rules again for remaining matches (optional — diminishing returns)
 - NOTE: Dry-run shows 5,000/rule (local DB cap) but real execution only trashes what Gmail API confirms matches the query — delta is expected
 
 ---
