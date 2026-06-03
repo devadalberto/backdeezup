@@ -27,13 +27,9 @@ PHASE 4 -- Google Photos backup + delete
   Make targets: photos-discover, photos-download, photos-run, photos-delete.
   Celery Beat: nightly download at 02:00 UTC.
 
-PHASE 5 -- Drive documents backup + Wagtail library
-  Discover all documents (PDF, Office, Google native).
-  Export Google Docs→PDF, Sheets→XLSX. Download everything.
-  Import to VaultDocument. Build DocumentLibraryPage (local SharePoint).
-  Browseable, searchable, PDFs open inline, Office files download.
-  Make targets: docs-discover, docs-download, docs-run, docs-progress.
-  Celery Beat: weekly discovery + nightly download.
+PHASE 5 -- Drive documents backup + Wagtail library (DONE)
+  480 docs discovered, 469 imported to VaultDocument.
+  Google native exports (Docs→PDF, Sheets→XLSX). Served at /documents/<id>/.
 
 PHASE 6 -- Testing suite overhaul
   pytest + strict markers (unit/integration/api/smoke).
@@ -41,17 +37,23 @@ PHASE 6 -- Testing suite overhaul
   Coverage ≥60%. GitHub Actions CI on every push/PR.
   Make targets: test (fast), test-full, test-cov.
 
-PHASE 7 -- Merge CI/CD + tag release
-  Merge feat/ci-cd-autostart into main after test-full passes.
-  Tag v0.12.0. Update CHANGELOG.
+PHASE 7 -- Security hardening + optimization
+  /security-review on full codebase. Fix any HIGH/CRITICAL.
+  Remove DEBUG=True from .env. Enforce HTTPS-only cookies.
+  Audit: no secrets in git history, .env hardened, CORS locked down.
+  Performance: DB indexes verified, N+1 queries fixed, static files cached.
 
-PHASE 8 -- Wrap-up
-  Update shared_context.md + memory files.
-  Run graphify update. Commit everything.
+PHASE 8 -- AI removal + merge + release
+  Remove/move CLAUDE.md, AGENTS.md, GEMINI.md to docs/ai-dev/.
+  Remove GOALS.md/GOALS_TODOS.md from repo root (move to docs/dev/).
+  Merge feat/ci-cd-autostart into main. Tag v1.0.0.
+  Verify: make test-full passes, CI green, autostart works.
 
 PHASE 9 -- Human-operable FOSS release (FINAL)
-  The project must run forever without Claude. A stranger on GitHub
-  should be able to clone, configure, and operate it from the README alone.
+  README: quickstart, day-to-day ops, troubleshooting (5 failure modes).
+  make help lists every target. No Django/Python knowledge required.
+  Celery Beat schedule documented. All scheduled tasks verified running.
+  GitHub: description, topics, issues enabled, starter template.
   Claude exits. Cron and the human take over.
 
 ================================================================
