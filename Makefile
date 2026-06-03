@@ -16,7 +16,7 @@ DJ    := backend_django/manage.py
         pipeline pipeline-gmail pipeline-all \
         progress \
         sync-download sync-import sync-verify sync-mark-delete sync-commit-delete sync-run \
-        lint test test-full \
+        lint test test-integration test-full test-cov \
         wsl-proxy
 
 # ── Pre-flight checks ─────────────────────────────────────────────────────────
@@ -343,9 +343,15 @@ lint:
 	uv run ruff check backend_django/ --select E,F,W --ignore E501,E701,E702
 
 test:
-	DATABASE_URL="" uv run python $(DJ) test google_media_backup google_gmail_backup --verbosity=2
+	cd backend_django && DATABASE_URL="" uv run pytest -m "unit or smoke" --tb=short -q
 
-test-full: lint test
+test-integration:
+	cd backend_django && DATABASE_URL="" uv run pytest -m "integration" --tb=short
+
+test-full: lint test test-integration
+
+test-cov:
+	cd backend_django && DATABASE_URL="" uv run pytest --cov --cov-report=html --cov-report=term-missing
 
 # ── WSL2 / Windows (run in PowerShell as admin) ───────────────────────────────
 wsl-proxy:

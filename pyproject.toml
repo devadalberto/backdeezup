@@ -43,6 +43,12 @@ docs = [
 dev = [
     "pre-commit>=4.0",
 ]
+test = [
+    "pytest>=8.0",
+    "pytest-django>=4.8",
+    "pytest-cov>=5.0",
+    "pytest-mock>=3.14",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -64,5 +70,32 @@ exclude = ["backend_django/*/migrations/*"]
 [tool.ruff.lint]
 select = ["E", "F", "W"]
 ignore = ["E501", "E701", "E702"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+pythonpath = ["backend_django"]
+testpaths = ["backend_django"]
+python_files = ["tests.py", "tests_*.py", "test_*.py"]
+markers = [
+    "unit: Pure logic tests — no DB, no network",
+    "integration: Tests that hit the database",
+    "api: HTTP endpoint tests",
+    "smoke: Quick sanity checks for CI",
+]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "-ra",
+    "--tb=short",
+]
+
+[tool.coverage.run]
+source = ["backend_django"]
+omit = ["*/migrations/*", "*/tests*", "*/.venv/*"]
+
+[tool.coverage.report]
+fail_under = 40
+show_missing = true
+skip_covered = true
 
 [tool.uv.sources]
