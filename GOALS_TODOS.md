@@ -329,35 +329,143 @@ NOTES:
   - NEVER use web client type for OAuth in this project.
 
 ----------------------------------------------------------------
-PHASE 5 -- Merge CI/CD branch
+PHASE 5 -- Drive documents backup + Wagtail library
+----------------------------------------------------------------
+
+Same pipeline as email/photos: discover → download → verify → import → serve.
+3.87 GB of documents. End state: all docs viewable from Wagtail at /documents/<id>/.
+
+WHAT ALREADY EXISTS (don't reinvent):
+  - list_common_files() in services_google.py — 15 MIME types
+  - POST /api/sync/discover-files endpoint
+  - manage.py drive_pipeline discover-files command
+  - download_file() — works for binary files (PDF, Office, text)
+  - VaultDocument model (source_type, source_id, keep fields)
+  - /documents/<id>/ URL route (Wagtail built-in, wired in urls.py:89)
+  - VaultDocumentViewSet in wagtail_hooks.py
+  - deterministic_path(name, digest, kind="document")
+  - copy_into_media(src, digest, ext) for SHA-256 dedup
+
+WHAT'S MISSING (the actual work):
+
+Step 1. Add Google native format export:
+  File: backend_django/google_media_backup/services_google.py
+
+  Add GOOGLE_EXPORT_MAP dict:
+    "application/vnd.google-apps.document" → ("application/pdf", ".pdf")
+    "application/vnd.google-apps.spreadsheet" → (".xlsx MIME", ".xlsx")
+    "application/vnd.google-apps.presentation" → ("application/pdf", ".pdf")
+    "application/vnd.google-apps.drawing" → ("application/pdf", ".pdf")
+
+  Add _GOOGLE_NATIVE_MIMES = list(GOOGLE_EXPORT_MAP.keys())
+
+  Add download_or_export_file(file_id, mime_type, out_path):
+    if mime_type in GOOGLE_EXPORT_MAP → svc.files().export_media(fileId, mimeType=export_mime)
+    else → existing download_file()
+
+  Extend list_common_files() query to also include _GOOGLE_NATIVE_MIMES.
+
+Step 2. Add download-docs step to drive_pipeline.py:
+  File: backend_django/google_media_backup/management/commands/drive_pipeline.py
+
+  Add "download-docs" to step choices.
+  Add _download_docs(limit) method:
+    qs = DriveAsset.objects.filter(state="DISCOVERED")
+         .exclude(drive_id__startswith="photos:")
+         .exclude(mime_type__startswith="image/")
+         .exclude(mime_type__startswith="video/")
+    For each: download_or_export_file(drive_id, mime_type, deterministic_path(..., kind="document"))
+    State: DISCOVERED → DOWNLOADED
+
+Step 3. Add document import to import_media.py:
+  File: backend_django/media_vault/management/commands/import_media.py
+
+  Currently skips all non-image/video (line 148: else: skipped += 1).
+  Add DOC_MIMES set (same 15 from _COMMON_MIME_LIST + exported Google native extensions).
+  For each VERIFIED DriveAsset with mime in DOC_MIMES:
+    VaultDocument.objects.get_or_create(source_id=asset.drive_id,
+      defaults={title=asset.name, file=copy_to_wagtail_docs(path), source_type="drive"})
+
+Step 4. Celery tasks:
+  File: backend_django/google_media_backup/tasks.py
+
+  task_docs_discover(max_pages=50, page_size=200)
+  task_docs_download_batch(limit=100)
+  task_docs_import_vault(limit=200)
+
+Step 5. Make targets:
+  docs-discover       ## Discover Drive documents (PDF, Office, Google native)
+  docs-download       ## Download documents (exports Google native → PDF/XLSX)
+  docs-import         ## Import downloaded docs into Wagtail VaultDocument
+  docs-run            ## Full pipeline: discover → download → verify → import
+  docs-progress       ## Show document pipeline state counts
+
+Step 6. Celery Beat schedule:
+  task_docs_discover: weekly Monday 03:00 UTC
+  task_docs_download_batch: nightly 02:30 UTC
+
+VERIFICATION:
+  make docs-run LIMIT=10           # test with small batch
+  make docs-progress               # state counts
+  # Visit /admin/wagtaildocs/ — docs browseable
+  # Visit /documents/<id>/ — PDF opens inline
+
+----------------------------------------------------------------
+PHASE 6 -- Testing suite overhaul
+----------------------------------------------------------------
+
+Quality gate before FOSS release. Follows citrix-platform patterns.
+
+Step 1. pytest config in pyproject.toml:
+  [tool.pytest.ini_options] — strict-markers, strict-config
+  markers: unit, integration, api, smoke
+
+Step 2. conftest.py shared fixtures:
+  mock_drive_service, mock_photos_service, mock_gmail_service
+  sample_drive_asset factory, sample_gmail_message factory
+
+Step 3. Tests:
+  Unit (no DB): deterministic_path, sha256_file, MIME classification, state machine
+  Integration (DB + mocked API): pipeline transitions, import dedup, reconciliation
+  API: HTTP endpoints with Django test client
+  Smoke: Django system check, URL resolution, Celery task registration
+
+Step 4. Coverage: fail_under=60, show_missing
+
+Step 5. GitHub Actions CI: lint + test + security on every push/PR
+
+Step 6. Make targets:
+  test            ## Fast: unit + smoke (<10s, no DB)
+  test-full       ## Everything: lint + unit + integration + API
+  test-cov        ## Coverage HTML report
+
+----------------------------------------------------------------
+PHASE 7 -- Merge CI/CD branch + tag release
 ----------------------------------------------------------------
 
 Step 1. Run full test suite on feat/ci-cd-autostart:
   make test-full
-  Must pass lint + all 59 tests. Fix any failure before merging.
+  Must pass all tests. Fix any failure before merging.
 
 Step 2. Security scan:
   /security-review
-  Block on any HIGH/CRITICAL finding. Document LOW/INFO and continue.
+  Block on any HIGH/CRITICAL finding.
 
 Step 3. Merge to main:
   git checkout main
   git merge feat/ci-cd-autostart
   git push git@github-dev:devadalberto/backdeezup.git main
 
-Step 4. Confirm autostart still active post-merge:
-  systemctl is-enabled backdeezup.service
-  Must return: enabled
-  If disabled: sudo bash scripts/autostart.sh
+Step 4. Confirm autostart:
+  systemctl is-enabled backdeezup.service → enabled
 
-Step 5. Verify CI/CD pipeline triggered on GitHub:
-  Visit https://github.com/devadalberto/backdeezup/actions
-  All 7 stages must pass (lint, test, sast-bandit, sast-safety, trivy, compose-smoke, playwright).
+Step 5. Verify CI/CD on GitHub:
+  https://github.com/devadalberto/backdeezup/actions — all green
 
 Step 6. Tag release:
-  git tag v0.11.0
-  git push git@github-dev:devadalberto/backdeezup.git v0.11.0
-  Update CHANGELOG.md -- move [Unreleased] items to [0.11.0] with today's date.
+  git tag v0.12.0
+  git push git@github-dev:devadalberto/backdeezup.git v0.12.0
+  Update CHANGELOG.md
 
 ----------------------------------------------------------------
 PHASE 6 -- Populate vault
