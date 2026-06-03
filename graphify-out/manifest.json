@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/api.py": {
-    "mtime": 1779010143.0057545,
-    "ast_hash": "4961fa3b5508277491b83f6ede652564",
+    "mtime": 1780441260.3323753,
+    "ast_hash": "cdb9e93011c548da5bdefd596d383538",
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/exports.py": {
@@ -165,8 +165,8 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/htmx_views.py": {
-    "mtime": 1779175486.600037,
-    "ast_hash": "ca2b3282736bf95753b35e3245ec5099",
+    "mtime": 1780441243.4363713,
+    "ast_hash": "649c0710bca958684099f95223baac92",
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/admin_views.py": {
@@ -295,8 +295,8 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/management/commands/empty_gmail_trash.py": {
-    "mtime": 1778973809.9016871,
-    "ast_hash": "4bb7582e18a7aaeb608b91fa54e7f896",
+    "mtime": 1780441228.200368,
+    "ast_hash": "b512c8dc8713ee31ed37e27a30ec9f6b",
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/management/commands/gmail_pipeline.py": {
@@ -450,7 +450,7 @@
     "semantic_hash": ""
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/secrets/google_token.json": {
-    "mtime": 1780430278.4643466,
+    "mtime": 1780444424.8166883,
     "ast_hash": "",
     "semantic_hash": ""
   },

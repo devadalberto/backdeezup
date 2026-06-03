@@ -1665,7 +1665,7 @@
       "source_file": "",
       "source_location": "",
       "id": "basecommand",
-      "community": 122,
+      "community": 108,
       "norm_label": "basecommand"
     },
     {
@@ -1764,7 +1764,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L64",
       "id": "google_gmail_backup_api_gmail_profile",
-      "community": 70,
+      "community": 66,
       "norm_label": "gmail_profile()"
     },
     {
@@ -1800,7 +1800,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L286",
       "id": "google_gmail_backup_api_gmail_verify",
-      "community": 66,
+      "community": 123,
       "norm_label": "gmail_verify()"
     },
     {
@@ -1809,7 +1809,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L313",
       "id": "google_gmail_backup_api_gmail_trash",
-      "community": 68,
+      "community": 122,
       "norm_label": "gmail_trash()"
     },
     {
@@ -1818,7 +1818,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L336",
       "id": "google_gmail_backup_api_gmail_label",
-      "community": 115,
+      "community": 66,
       "norm_label": "gmail_label()"
     },
     {
@@ -1834,7 +1834,7 @@
       "label": "list_messages()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L378",
+      "source_location": "L385",
       "id": "google_gmail_backup_api_list_messages",
       "community": 66,
       "norm_label": "list_messages()"
@@ -1843,7 +1843,7 @@
       "label": "list_rules()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L392",
+      "source_location": "L399",
       "id": "google_gmail_backup_api_list_rules",
       "community": 66,
       "norm_label": "list_rules()"
@@ -1852,7 +1852,7 @@
       "label": "rule_dry_run()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L408",
+      "source_location": "L415",
       "id": "google_gmail_backup_api_rule_dry_run",
       "community": 66,
       "norm_label": "rule_dry_run()"
@@ -1861,7 +1861,7 @@
       "label": "rule_execute()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L422",
+      "source_location": "L429",
       "id": "google_gmail_backup_api_rule_execute",
       "community": 66,
       "norm_label": "rule_execute()"
@@ -1870,7 +1870,7 @@
       "label": "rules_run_all()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L436",
+      "source_location": "L443",
       "id": "google_gmail_backup_api_rules_run_all",
       "community": 1,
       "norm_label": "rules_run_all()"
@@ -1879,7 +1879,7 @@
       "label": "apply_protected_senders()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L446",
+      "source_location": "L453",
       "id": "google_gmail_backup_api_apply_protected_senders",
       "community": 65,
       "norm_label": "apply_protected_senders()"
@@ -1888,7 +1888,7 @@
       "label": "get_audit_log()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L453",
+      "source_location": "L460",
       "id": "google_gmail_backup_api_get_audit_log",
       "community": 66,
       "norm_label": "get_audit_log()"
@@ -1897,7 +1897,7 @@
       "label": "rule_builder_preview()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L470",
+      "source_location": "L477",
       "id": "google_gmail_backup_api_rule_builder_preview",
       "community": 101,
       "norm_label": "rule_builder_preview()"
@@ -1906,16 +1906,16 @@
       "label": "rule_builder_dry_run()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L487",
+      "source_location": "L494",
       "id": "google_gmail_backup_api_rule_builder_dry_run",
-      "community": 101,
+      "community": 126,
       "norm_label": "rule_builder_dry_run()"
     },
     {
       "label": "rule_builder_save()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L517",
+      "source_location": "L524",
       "id": "google_gmail_backup_api_rule_builder_save",
       "community": 101,
       "norm_label": "rule_builder_save()"
@@ -1924,25 +1924,25 @@
       "label": "rule_builder_fields()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L576",
+      "source_location": "L583",
       "id": "google_gmail_backup_api_rule_builder_fields",
-      "community": 66,
+      "community": 127,
       "norm_label": "rule_builder_fields()"
     },
     {
       "label": "gmail_empty_trash()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L590",
+      "source_location": "L597",
       "id": "google_gmail_backup_api_gmail_empty_trash",
-      "community": 66,
+      "community": 135,
       "norm_label": "gmail_empty_trash()"
     },
     {
       "label": "export_audit_log()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L684",
+      "source_location": "L698",
       "id": "google_gmail_backup_api_export_audit_log",
       "community": 66,
       "norm_label": "export_audit_log()"
@@ -1951,7 +1951,7 @@
       "label": "export_messages()",
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L699",
+      "source_location": "L713",
       "id": "google_gmail_backup_api_export_messages",
       "community": 66,
       "norm_label": "export_messages()"
@@ -1989,7 +1989,7 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L287",
       "id": "google_gmail_backup_api_rationale_287",
-      "community": 66,
+      "community": 123,
       "norm_label": "verify .eml file exists on disk for downloaded messages."
     },
     {
@@ -1998,15 +1998,15 @@
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L314",
       "id": "google_gmail_backup_api_rationale_314",
-      "community": 68,
+      "community": 122,
       "norm_label": "trash messages in gmail. dry-run by default \u2014 pass dry_run=false to execute."
     },
     {
       "label": "POST body: {\"conditions\": [...], \"action\": \"trash\", \"min_age_days\": 30}     Retu",
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L471",
-      "id": "google_gmail_backup_api_rationale_471",
+      "source_location": "L478",
+      "id": "google_gmail_backup_api_rationale_478",
       "community": 101,
       "norm_label": "post body: {\"conditions\": [...], \"action\": \"trash\", \"min_age_days\": 30}     retu"
     },
@@ -2014,17 +2014,17 @@
       "label": "POST body: {\"conditions\": [...], \"action\": \"trash\", \"min_age_days\": 30, \"name\":",
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L488",
-      "id": "google_gmail_backup_api_rationale_488",
-      "community": 101,
+      "source_location": "L495",
+      "id": "google_gmail_backup_api_rationale_495",
+      "community": 126,
       "norm_label": "post body: {\"conditions\": [...], \"action\": \"trash\", \"min_age_days\": 30, \"name\":"
     },
     {
       "label": "POST body: {         \"name\": \"LinkedIn jobs\", \"description\": \"...\",         \"act",
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L518",
-      "id": "google_gmail_backup_api_rationale_518",
+      "source_location": "L525",
+      "id": "google_gmail_backup_api_rationale_525",
       "community": 101,
       "norm_label": "post body: {         \"name\": \"linkedin jobs\", \"description\": \"...\",         \"act"
     },
@@ -2032,18 +2032,18 @@
       "label": "Return field/operator/logic choices for the frontend builder.",
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L577",
-      "id": "google_gmail_backup_api_rationale_577",
-      "community": 66,
+      "source_location": "L584",
+      "id": "google_gmail_backup_api_rationale_584",
+      "community": 127,
       "norm_label": "return field/operator/logic choices for the frontend builder."
     },
     {
       "label": "Permanently delete all messages in Gmail trash.     dry_run=true (default): coun",
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L591",
-      "id": "google_gmail_backup_api_rationale_591",
-      "community": 66,
+      "source_location": "L598",
+      "id": "google_gmail_backup_api_rationale_598",
+      "community": 135,
       "norm_label": "permanently delete all messages in gmail trash.     dry_run=true (default): coun"
     },
     {
@@ -2268,7 +2268,7 @@
       "source_file": "backend_django/google_gmail_backup/models.py",
       "source_location": "L20",
       "id": "google_gmail_backup_models_gmailsyncstate",
-      "community": 78,
+      "community": 84,
       "norm_label": "gmailsyncstate"
     },
     {
@@ -2277,7 +2277,7 @@
       "source_file": "backend_django/google_gmail_backup/models.py",
       "source_location": "L31",
       "id": "google_gmail_backup_models_gmailsyncstate_str",
-      "community": 78,
+      "community": 84,
       "norm_label": ".__str__()"
     },
     {
@@ -2448,7 +2448,7 @@
       "source_file": "backend_django/google_gmail_backup/models.py",
       "source_location": "L21",
       "id": "google_gmail_backup_models_rationale_21",
-      "community": 78,
+      "community": 84,
       "norm_label": "one row per synced gmail account \u2014 tracks historyid for incremental sync."
     },
     {
@@ -2691,7 +2691,7 @@
       "source_file": "backend_django/google_gmail_backup/admin.py",
       "source_location": "L51",
       "id": "google_gmail_backup_admin_action_reconcile",
-      "community": 115,
+      "community": 65,
       "norm_label": "action_reconcile()"
     },
     {
@@ -2799,7 +2799,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L1",
       "id": "backend_django_google_gmail_backup_services_gmail_py",
-      "community": 115,
+      "community": 77,
       "norm_label": "services_gmail.py"
     },
     {
@@ -2808,7 +2808,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L20",
       "id": "google_gmail_backup_services_gmail_gmail_service",
-      "community": 115,
+      "community": 65,
       "norm_label": "gmail_service()"
     },
     {
@@ -2826,7 +2826,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L44",
       "id": "google_gmail_backup_services_gmail_list_message_ids",
-      "community": 115,
+      "community": 90,
       "norm_label": "list_message_ids()"
     },
     {
@@ -2862,7 +2862,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L94",
       "id": "google_gmail_backup_services_gmail_get_attachment_data",
-      "community": 115,
+      "community": 77,
       "norm_label": "get_attachment_data()"
     },
     {
@@ -2889,7 +2889,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L146",
       "id": "google_gmail_backup_services_gmail_batch_trash_messages",
-      "community": 115,
+      "community": 65,
       "norm_label": "batch_trash_messages()"
     },
     {
@@ -2898,7 +2898,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L167",
       "id": "google_gmail_backup_services_gmail_delete_message_permanent",
-      "community": 115,
+      "community": 130,
       "norm_label": "delete_message_permanent()"
     },
     {
@@ -2907,7 +2907,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L183",
       "id": "google_gmail_backup_services_gmail_modify_labels",
-      "community": 115,
+      "community": 65,
       "norm_label": "modify_labels()"
     },
     {
@@ -2988,7 +2988,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L286",
       "id": "google_gmail_backup_services_gmail_extract_attachment_metadata",
-      "community": 115,
+      "community": 77,
       "norm_label": "extract_attachment_metadata()"
     },
     {
@@ -2997,7 +2997,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L45",
       "id": "google_gmail_backup_services_gmail_rationale_45",
-      "community": 115,
+      "community": 90,
       "norm_label": "returns (list of {id, threadid}, nextpagetoken).     q_filter supports gmail sea"
     },
     {
@@ -3051,7 +3051,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L147",
       "id": "google_gmail_backup_services_gmail_rationale_147",
-      "community": 115,
+      "community": 65,
       "norm_label": "trash multiple messages using gmail batchmodify. returns count of successful tra"
     },
     {
@@ -3060,7 +3060,7 @@
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L168",
       "id": "google_gmail_backup_services_gmail_rationale_168",
-      "community": 115,
+      "community": 130,
       "norm_label": "permanently delete a message. requires https://mail.google.com/ scope."
     },
     {
@@ -3276,7 +3276,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L78",
       "id": "google_gmail_backup_tests_regression_errorresponsetest",
-      "community": 98,
+      "community": 76,
       "norm_label": "errorresponsetest"
     },
     {
@@ -3285,7 +3285,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L84",
       "id": "google_gmail_backup_tests_regression_errorresponsetest_setup",
-      "community": 98,
+      "community": 76,
       "norm_label": ".setup()"
     },
     {
@@ -3303,7 +3303,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L97",
       "id": "google_gmail_backup_tests_regression_gmailpipelinecommandtest",
-      "community": 121,
+      "community": 63,
       "norm_label": "gmailpipelinecommandtest"
     },
     {
@@ -3312,7 +3312,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L103",
       "id": "google_gmail_backup_tests_regression_gmailpipelinecommandtest_test_discover_step_accepts_q_flag",
-      "community": 121,
+      "community": 63,
       "norm_label": ".test_discover_step_accepts_q_flag()"
     },
     {
@@ -3321,7 +3321,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L120",
       "id": "google_gmail_backup_tests_regression_gmailpipelinecommandtest_test_download_step_exists",
-      "community": 121,
+      "community": 63,
       "norm_label": ".test_download_step_exists()"
     },
     {
@@ -3330,7 +3330,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L124",
       "id": "google_gmail_backup_tests_regression_gmailpipelinecommandtest_test_drive_pipeline_command_exists",
-      "community": 121,
+      "community": 63,
       "norm_label": ".test_drive_pipeline_command_exists()"
     },
     {
@@ -3339,7 +3339,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L131",
       "id": "google_gmail_backup_tests_regression_gmaillooplogictest",
-      "community": 63,
+      "community": 84,
       "norm_label": "gmaillooplogictest"
     },
     {
@@ -3348,7 +3348,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L138",
       "id": "google_gmail_backup_tests_regression_gmaillooplogictest_test_gmail_loop_makefile_does_not_call_all",
-      "community": 63,
+      "community": 84,
       "norm_label": ".test_gmail_loop_makefile_does_not_call_all()"
     },
     {
@@ -3708,7 +3708,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L79",
       "id": "google_gmail_backup_tests_regression_rationale_79",
-      "community": 98,
+      "community": 76,
       "norm_label": "bug: except exception: errors += len(chunk) with no logging.     user got delete"
     },
     {
@@ -3726,7 +3726,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L98",
       "id": "google_gmail_backup_tests_regression_rationale_98",
-      "community": 121,
+      "community": 63,
       "norm_label": "bug: gmail_pipeline discover had no --q flag.     make gmail-discover --q \"in:tr"
     },
     {
@@ -3735,7 +3735,7 @@
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L132",
       "id": "google_gmail_backup_tests_regression_rationale_132",
-      "community": 63,
+      "community": 84,
       "norm_label": "bug: make gmail-loop called gmail_pipeline all on every iteration,     re-runnin"
     },
     {
@@ -3870,7 +3870,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L23",
       "id": "google_gmail_backup_tests_gmailmessagemodeltest",
-      "community": 78,
+      "community": 121,
       "norm_label": "gmailmessagemodeltest"
     },
     {
@@ -3879,7 +3879,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L24",
       "id": "google_gmail_backup_tests_gmailmessagemodeltest_setup",
-      "community": 78,
+      "community": 121,
       "norm_label": ".setup()"
     },
     {
@@ -3888,7 +3888,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L37",
       "id": "google_gmail_backup_tests_gmailmessagemodeltest_test_default_state_is_discovered",
-      "community": 78,
+      "community": 121,
       "norm_label": ".test_default_state_is_discovered()"
     },
     {
@@ -3897,7 +3897,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L40",
       "id": "google_gmail_backup_tests_gmailmessagemodeltest_test_str_representation",
-      "community": 78,
+      "community": 121,
       "norm_label": ".test_str_representation()"
     },
     {
@@ -3906,7 +3906,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L43",
       "id": "google_gmail_backup_tests_gmailmessagemodeltest_test_state_transitions",
-      "community": 78,
+      "community": 121,
       "norm_label": ".test_state_transitions()"
     },
     {
@@ -3915,7 +3915,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L52",
       "id": "google_gmail_backup_tests_gmailmessagemodeltest_test_unique_gmail_id",
-      "community": 78,
+      "community": 121,
       "norm_label": ".test_unique_gmail_id()"
     },
     {
@@ -3960,7 +3960,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L90",
       "id": "google_gmail_backup_tests_gmailapitest",
-      "community": 84,
+      "community": 78,
       "norm_label": "gmailapitest"
     },
     {
@@ -3969,7 +3969,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L91",
       "id": "google_gmail_backup_tests_gmailapitest_setup",
-      "community": 84,
+      "community": 78,
       "norm_label": ".setup()"
     },
     {
@@ -3978,7 +3978,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L112",
       "id": "google_gmail_backup_tests_gmailapitest_test_list_messages_all",
-      "community": 84,
+      "community": 78,
       "norm_label": ".test_list_messages_all()"
     },
     {
@@ -3987,7 +3987,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L117",
       "id": "google_gmail_backup_tests_gmailapitest_test_list_messages_filter_state",
-      "community": 84,
+      "community": 78,
       "norm_label": ".test_list_messages_filter_state()"
     },
     {
@@ -3996,7 +3996,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L124",
       "id": "google_gmail_backup_tests_gmailapitest_test_list_messages_filter_q",
-      "community": 84,
+      "community": 78,
       "norm_label": ".test_list_messages_filter_q()"
     },
     {
@@ -4005,7 +4005,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L131",
       "id": "google_gmail_backup_tests_gmailapitest_test_gmail_swagger_loads",
-      "community": 84,
+      "community": 78,
       "norm_label": ".test_gmail_swagger_loads()"
     },
     {
@@ -4023,7 +4023,7 @@
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L141",
       "id": "google_gmail_backup_tests_gmailapitest_test_trash_dry_run",
-      "community": 84,
+      "community": 78,
       "norm_label": ".test_trash_dry_run()"
     },
     {
@@ -4932,7 +4932,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/extract_attachments.py",
       "source_location": "L141",
       "id": "commands_extract_attachments_command",
-      "community": 122,
+      "community": 108,
       "norm_label": "command"
     },
     {
@@ -4941,7 +4941,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/extract_attachments.py",
       "source_location": "L144",
       "id": "commands_extract_attachments_command_add_arguments",
-      "community": 122,
+      "community": 108,
       "norm_label": ".add_arguments()"
     },
     {
@@ -4950,7 +4950,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/extract_attachments.py",
       "source_location": "L156",
       "id": "commands_extract_attachments_command_handle",
-      "community": 122,
+      "community": 108,
       "norm_label": ".handle()"
     },
     {
@@ -5022,7 +5022,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/seed_smart_rules.py",
       "source_location": "L1",
       "id": "backend_django_google_gmail_backup_management_commands_seed_smart_rules_py",
-      "community": 130,
+      "community": 61,
       "norm_label": "seed_smart_rules.py"
     },
     {
@@ -5031,7 +5031,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/seed_smart_rules.py",
       "source_location": "L133",
       "id": "commands_seed_smart_rules_command",
-      "community": 130,
+      "community": 61,
       "norm_label": "command"
     },
     {
@@ -5040,7 +5040,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/seed_smart_rules.py",
       "source_location": "L136",
       "id": "commands_seed_smart_rules_command_handle",
-      "community": 130,
+      "community": 61,
       "norm_label": ".handle()"
     },
     {
@@ -5049,7 +5049,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/seed_smart_rules.py",
       "source_location": "L1",
       "id": "commands_seed_smart_rules_rationale_1",
-      "community": 130,
+      "community": 61,
       "norm_label": "seed v2 smart cleanup rules for linkedin, job boards, recruiters, and marketing"
     },
     {
@@ -5058,7 +5058,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/empty_gmail_trash.py",
       "source_location": "L1",
       "id": "backend_django_google_gmail_backup_management_commands_empty_gmail_trash_py",
-      "community": 126,
+      "community": 108,
       "norm_label": "empty_gmail_trash.py"
     },
     {
@@ -5067,7 +5067,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/empty_gmail_trash.py",
       "source_location": "L26",
       "id": "commands_empty_gmail_trash_command",
-      "community": 126,
+      "community": 108,
       "norm_label": "command"
     },
     {
@@ -5076,7 +5076,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/empty_gmail_trash.py",
       "source_location": "L29",
       "id": "commands_empty_gmail_trash_command_add_arguments",
-      "community": 126,
+      "community": 108,
       "norm_label": ".add_arguments()"
     },
     {
@@ -5085,7 +5085,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/empty_gmail_trash.py",
       "source_location": "L35",
       "id": "commands_empty_gmail_trash_command_handle",
-      "community": 126,
+      "community": 108,
       "norm_label": ".handle()"
     },
     {
@@ -5094,7 +5094,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/empty_gmail_trash.py",
       "source_location": "L1",
       "id": "commands_empty_gmail_trash_rationale_1",
-      "community": 126,
+      "community": 108,
       "norm_label": "permanently delete all messages currently in gmail trash.  warning: this is irre"
     },
     {
@@ -5175,7 +5175,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/seed_inbox_rules.py",
       "source_location": "L1",
       "id": "backend_django_google_gmail_backup_management_commands_seed_inbox_rules_py",
-      "community": 122,
+      "community": 108,
       "norm_label": "seed_inbox_rules.py"
     },
     {
@@ -5184,7 +5184,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/seed_inbox_rules.py",
       "source_location": "L128",
       "id": "commands_seed_inbox_rules_command",
-      "community": 122,
+      "community": 108,
       "norm_label": "command"
     },
     {
@@ -5193,7 +5193,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/seed_inbox_rules.py",
       "source_location": "L131",
       "id": "commands_seed_inbox_rules_command_handle",
-      "community": 122,
+      "community": 108,
       "norm_label": ".handle()"
     },
     {
@@ -5202,7 +5202,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/seed_inbox_rules.py",
       "source_location": "L1",
       "id": "commands_seed_inbox_rules_rationale_1",
-      "community": 122,
+      "community": 108,
       "norm_label": "seed inbox-specific cleanup rules based on observed inbox content. safe to run m"
     },
     {
@@ -5220,7 +5220,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/run_cleanup.py",
       "source_location": "L1",
       "id": "backend_django_google_gmail_backup_management_commands_run_cleanup_py",
-      "community": 127,
+      "community": 108,
       "norm_label": "run_cleanup.py"
     },
     {
@@ -5229,7 +5229,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/run_cleanup.py",
       "source_location": "L18",
       "id": "commands_run_cleanup_command",
-      "community": 127,
+      "community": 108,
       "norm_label": "command"
     },
     {
@@ -5238,7 +5238,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/run_cleanup.py",
       "source_location": "L21",
       "id": "commands_run_cleanup_command_add_arguments",
-      "community": 127,
+      "community": 108,
       "norm_label": ".add_arguments()"
     },
     {
@@ -5247,7 +5247,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/run_cleanup.py",
       "source_location": "L31",
       "id": "commands_run_cleanup_command_handle",
-      "community": 127,
+      "community": 108,
       "norm_label": ".handle()"
     },
     {
@@ -5256,7 +5256,7 @@
       "source_file": "backend_django/google_gmail_backup/management/commands/run_cleanup.py",
       "source_location": "L1",
       "id": "commands_run_cleanup_rationale_1",
-      "community": 127,
+      "community": 108,
       "norm_label": "management command to run cleanup rules with safety checks.  usage:     make cle"
     },
     {
@@ -7263,7 +7263,7 @@
       "source_file": "README.md",
       "source_location": "L112",
       "id": "backdeezup_readme_codeblock_6",
-      "community": 123,
+      "community": 109,
       "norm_label": "code:bash (# generate django secret key)"
     },
     {
@@ -7344,7 +7344,7 @@
       "source_file": "README.md",
       "source_location": "L156",
       "id": "backdeezup_readme_6_authenticate_with_google",
-      "community": 113,
+      "community": 12,
       "norm_label": "6 \u2014 authenticate with google"
     },
     {
@@ -7353,7 +7353,7 @@
       "source_file": "README.md",
       "source_location": "L158",
       "id": "backdeezup_readme_codeblock_11",
-      "community": 123,
+      "community": 12,
       "norm_label": "code:bash (make auth)"
     },
     {
@@ -7479,7 +7479,7 @@
       "source_file": "README.md",
       "source_location": "L280",
       "id": "backdeezup_readme_media_vault",
-      "community": 113,
+      "community": 12,
       "norm_label": "media vault"
     },
     {
@@ -7488,7 +7488,7 @@
       "source_file": "README.md",
       "source_location": "L282",
       "id": "backdeezup_readme_codeblock_17",
-      "community": 113,
+      "community": 12,
       "norm_label": "code:bash (# import drive + gmail media into wagtail vault)"
     },
     {
@@ -7515,7 +7515,7 @@
       "source_file": "README.md",
       "source_location": "L308",
       "id": "backdeezup_readme_autostart_on_vm_boot",
-      "community": 12,
+      "community": 111,
       "norm_label": "autostart on vm boot"
     },
     {
@@ -7533,7 +7533,7 @@
       "source_file": "README.md",
       "source_location": "L312",
       "id": "backdeezup_readme_codeblock_19",
-      "community": 111,
+      "community": 113,
       "norm_label": "code:block19 (winweb01 boots)"
     },
     {
@@ -7569,7 +7569,7 @@
       "source_file": "README.md",
       "source_location": "L339",
       "id": "backdeezup_readme_ci_cd_pipeline_github_actions",
-      "community": 113,
+      "community": 12,
       "norm_label": "ci/cd pipeline (github actions)"
     },
     {
@@ -7578,7 +7578,7 @@
       "source_file": "README.md",
       "source_location": "L343",
       "id": "backdeezup_readme_codeblock_22",
-      "community": 113,
+      "community": 12,
       "norm_label": "code:mermaid (flowchart lr)"
     },
     {
@@ -10597,6 +10597,51 @@
       "norm_label": "added"
     },
     {
+      "label": "POST body: {\"conditions\": [...], \"action\": \"trash\", \"min_age_days\": 30}     Retu",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L471",
+      "community": 101,
+      "norm_label": "post body: {\"conditions\": [...], \"action\": \"trash\", \"min_age_days\": 30}     retu",
+      "id": "google_gmail_backup_api_rationale_471"
+    },
+    {
+      "label": "POST body: {\"conditions\": [...], \"action\": \"trash\", \"min_age_days\": 30, \"name\":",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L488",
+      "community": 126,
+      "norm_label": "post body: {\"conditions\": [...], \"action\": \"trash\", \"min_age_days\": 30, \"name\":",
+      "id": "google_gmail_backup_api_rationale_488"
+    },
+    {
+      "label": "POST body: {         \"name\": \"LinkedIn jobs\", \"description\": \"...\",         \"act",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L518",
+      "community": 101,
+      "norm_label": "post body: {         \"name\": \"linkedin jobs\", \"description\": \"...\",         \"act",
+      "id": "google_gmail_backup_api_rationale_518"
+    },
+    {
+      "label": "Return field/operator/logic choices for the frontend builder.",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L577",
+      "community": 127,
+      "norm_label": "return field/operator/logic choices for the frontend builder.",
+      "id": "google_gmail_backup_api_rationale_577"
+    },
+    {
+      "label": "Permanently delete all messages in Gmail trash.     dry_run=true (default): coun",
+      "file_type": "rationale",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L591",
+      "community": 135,
+      "norm_label": "permanently delete all messages in gmail trash.     dry_run=true (default): coun",
+      "id": "google_gmail_backup_api_rationale_591"
+    },
+    {
       "label": "An extracted attachment from a downloaded .eml file.",
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/models.py",
@@ -10754,7 +10799,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L139",
-      "community": 123,
+      "community": 109,
       "norm_label": "running pipelines",
       "id": "backdeezup_readme_running_pipelines"
     },
@@ -10880,7 +10925,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/models.py",
       "source_location": "L7",
-      "community": 78,
+      "community": 84,
       "norm_label": "one row per synced account \u2014 tracks historyid for incremental sync.",
       "id": "google_gmail_backup_models_rationale_7"
     },
@@ -10952,7 +10997,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L85",
-      "community": 98,
+      "community": 76,
       "norm_label": "bug: except exception: errors += len(chunk) with no logging.     user got delete",
       "id": "google_gmail_backup_tests_regression_rationale_85"
     },
@@ -10970,7 +11015,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L107",
-      "community": 121,
+      "community": 63,
       "norm_label": "bug: gmail_pipeline discover had no --q flag.     make gmail-discover --q \"in:tr",
       "id": "google_gmail_backup_tests_regression_rationale_107"
     },
@@ -10979,7 +11024,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/tests_regression.py",
       "source_location": "L141",
-      "community": 63,
+      "community": 84,
       "norm_label": "bug: make gmail-loop called gmail_pipeline all on every iteration,     re-runnin",
       "id": "google_gmail_backup_tests_regression_rationale_141"
     },
@@ -11177,7 +11222,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L177",
-      "community": 123,
+      "community": 109,
       "norm_label": "running the backup pipeline",
       "id": "backdeezup_readme_running_the_backup_pipeline"
     },
@@ -11222,7 +11267,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L264",
-      "community": 123,
+      "community": 12,
       "norm_label": "development commands",
       "id": "backdeezup_readme_development_commands"
     },
@@ -11240,7 +11285,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L286",
-      "community": 113,
+      "community": 12,
       "norm_label": "production deployment",
       "id": "backdeezup_readme_production_deployment"
     },
@@ -11258,7 +11303,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L343",
-      "community": 123,
+      "community": 12,
       "norm_label": "2. place google oauth credentials",
       "id": "backdeezup_readme_2_place_google_oauth_credentials"
     },
@@ -11267,7 +11312,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L352",
-      "community": 113,
+      "community": 12,
       "norm_label": "3. build and start",
       "id": "backdeezup_readme_3_build_and_start"
     },
@@ -11303,7 +11348,7 @@
       "file_type": "document",
       "source_file": "README.md",
       "source_location": "L411",
-      "community": 113,
+      "community": 12,
       "norm_label": "ongoing operations",
       "id": "backdeezup_readme_ongoing_operations"
     },
@@ -11339,7 +11384,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L41",
-      "community": 115,
+      "community": 90,
       "norm_label": "returns (list of {id, threadid}, nextpagetoken).     q_filter supports gmail sea",
       "id": "google_gmail_backup_services_gmail_rationale_41"
     },
@@ -11393,7 +11438,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L143",
-      "community": 115,
+      "community": 65,
       "norm_label": "trash multiple messages using gmail batchmodify. returns count of successful tra",
       "id": "google_gmail_backup_services_gmail_rationale_143"
     },
@@ -11402,7 +11447,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L164",
-      "community": 115,
+      "community": 130,
       "norm_label": "permanently delete a message. requires https://mail.google.com/ scope.",
       "id": "google_gmail_backup_services_gmail_rationale_164"
     },
@@ -11708,7 +11753,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L282",
-      "community": 66,
+      "community": 123,
       "norm_label": "verify .eml file exists on disk for downloaded messages.",
       "id": "google_gmail_backup_api_rationale_282"
     },
@@ -11717,7 +11762,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L309",
-      "community": 68,
+      "community": 122,
       "norm_label": "trash messages in gmail. dry-run by default \u2014 pass dry_run=false to execute.",
       "id": "google_gmail_backup_api_rationale_309"
     },
@@ -11735,7 +11780,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L481",
-      "community": 101,
+      "community": 126,
       "norm_label": "post body: {\"conditions\": [...], \"action\": \"trash\", \"min_age_days\": 30, \"name\":",
       "id": "google_gmail_backup_api_rationale_481"
     },
@@ -11753,7 +11798,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L570",
-      "community": 66,
+      "community": 127,
       "norm_label": "return field/operator/logic choices for the frontend builder.",
       "id": "google_gmail_backup_api_rationale_570"
     },
@@ -11807,7 +11852,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L37",
-      "community": 115,
+      "community": 90,
       "norm_label": "returns (list of {id, threadid}, nextpagetoken).     q_filter supports gmail sea",
       "id": "google_gmail_backup_services_gmail_rationale_37"
     },
@@ -11843,7 +11888,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/services_gmail.py",
       "source_location": "L131",
-      "community": 115,
+      "community": 130,
       "norm_label": "requires https://mail.google.com/ scope.",
       "id": "google_gmail_backup_services_gmail_rationale_131"
     },
@@ -11870,7 +11915,7 @@
       "file_type": "code",
       "source_file": "backend_django/google_gmail_backup/tests.py",
       "source_location": "L130",
-      "community": 84,
+      "community": 78,
       "norm_label": ".test_gmail_profile_unauthenticated()",
       "id": "google_gmail_backup_tests_gmailapitest_test_gmail_profile_unauthenticated"
     },
@@ -12077,7 +12122,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/models.py",
       "source_location": "L6",
-      "community": 78,
+      "community": 84,
       "norm_label": "one row per synced account \u2014 tracks historyid for incremental sync.",
       "id": "google_gmail_backup_models_rationale_6"
     },
@@ -12275,7 +12320,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L284",
-      "community": 66,
+      "community": 123,
       "norm_label": "verify .eml file exists on disk for downloaded messages.",
       "id": "google_gmail_backup_api_rationale_284"
     },
@@ -12284,7 +12329,7 @@
       "file_type": "rationale",
       "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L311",
-      "community": 68,
+      "community": 122,
       "norm_label": "trash messages in gmail. dry-run by default \u2014 pass dry_run=false to execute.",
       "id": "google_gmail_backup_api_rationale_311"
     },
@@ -15165,9 +15210,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L60",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashaddedtest",
-      "target": "testcase",
-      "confidence_score": 1.0
+      "target": "testcase"
     },
     {
       "relation": "inherits",
@@ -15175,9 +15220,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L98",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashremovedtest",
-      "target": "testcase",
-      "confidence_score": 1.0
+      "target": "testcase"
     },
     {
       "relation": "inherits",
@@ -15185,9 +15230,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L141",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_reconcile404test",
-      "target": "testcase",
-      "confidence_score": 1.0
+      "target": "testcase"
     },
     {
       "relation": "inherits",
@@ -15195,9 +15240,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L168",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_reconciletrashlabeltest",
-      "target": "testcase",
-      "confidence_score": 1.0
+      "target": "testcase"
     },
     {
       "relation": "inherits",
@@ -15205,9 +15250,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L195",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_reconcilemessagealivetest",
-      "target": "testcase",
-      "confidence_score": 1.0
+      "target": "testcase"
     },
     {
       "relation": "inherits",
@@ -15215,9 +15260,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L224",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_purgeexpiredtest",
-      "target": "testcase",
-      "confidence_score": 1.0
+      "target": "testcase"
     },
     {
       "relation": "inherits",
@@ -15225,9 +15270,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L247",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest",
-      "target": "testcase",
-      "confidence_score": 1.0
+      "target": "testcase"
     },
     {
       "relation": "inherits",
@@ -15235,9 +15280,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L271",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_rulesenginemetadatasnapshottest",
-      "target": "testcase",
-      "confidence_score": 1.0
+      "target": "testcase"
     },
     {
       "relation": "inherits",
@@ -15245,9 +15290,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L310",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_protectedsenderreconciletest",
-      "target": "testcase",
-      "confidence_score": 1.0
+      "target": "testcase"
     },
     {
       "relation": "inherits",
@@ -16766,11 +16811,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L471",
+      "source_location": "L478",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "google_gmail_backup_api_rationale_471",
-      "target": "google_gmail_backup_api_rule_builder_preview"
+      "source": "google_gmail_backup_api_rationale_478",
+      "target": "google_gmail_backup_api_rule_builder_preview",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16787,6 +16832,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L471",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "google_gmail_backup_api_rationale_471",
+      "target": "google_gmail_backup_api_rule_builder_preview"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L464",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -16797,11 +16852,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L488",
+      "source_location": "L495",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "google_gmail_backup_api_rationale_488",
-      "target": "google_gmail_backup_api_rule_builder_dry_run"
+      "source": "google_gmail_backup_api_rationale_495",
+      "target": "google_gmail_backup_api_rule_builder_dry_run",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16818,6 +16873,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L488",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "google_gmail_backup_api_rationale_488",
+      "target": "google_gmail_backup_api_rule_builder_dry_run"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L481",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -16828,11 +16893,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L518",
+      "source_location": "L525",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "google_gmail_backup_api_rationale_518",
-      "target": "google_gmail_backup_api_rule_builder_save"
+      "source": "google_gmail_backup_api_rationale_525",
+      "target": "google_gmail_backup_api_rule_builder_save",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16849,11 +16914,31 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L518",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "google_gmail_backup_api_rationale_518",
+      "target": "google_gmail_backup_api_rule_builder_save"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
       "source_location": "L511",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "google_gmail_backup_api_rationale_511",
       "target": "google_gmail_backup_api_rule_builder_save"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L584",
+      "weight": 1.0,
+      "source": "google_gmail_backup_api_rationale_584",
+      "target": "google_gmail_backup_api_rule_builder_fields",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -16879,11 +16964,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "backend_django/google_gmail_backup/api.py",
-      "source_location": "L591",
+      "source_location": "L598",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "google_gmail_backup_api_rationale_591",
-      "target": "google_gmail_backup_api_gmail_empty_trash"
+      "source": "google_gmail_backup_api_rationale_598",
+      "target": "google_gmail_backup_api_gmail_empty_trash",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16895,6 +16980,16 @@
       "weight": 1.0,
       "source": "google_gmail_backup_api_gmail_empty_trash",
       "target": "google_gmail_backup_services_gmail_gmail_service"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend_django/google_gmail_backup/api.py",
+      "source_location": "L591",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "google_gmail_backup_api_rationale_591",
+      "target": "google_gmail_backup_api_gmail_empty_trash"
     },
     {
       "relation": "calls",
@@ -17442,9 +17537,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "backend_django_google_gmail_backup_models_py",
-      "confidence_score": 1.0
+      "target": "backend_django_google_gmail_backup_models_py"
     },
     {
       "relation": "method",
@@ -17712,9 +17807,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashaddedtest",
-      "target": "google_gmail_backup_models_gmailsyncstate",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailsyncstate"
     },
     {
       "relation": "uses",
@@ -17722,9 +17817,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashremovedtest",
-      "target": "google_gmail_backup_models_gmailsyncstate",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailsyncstate"
     },
     {
       "relation": "uses",
@@ -17732,9 +17827,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_reconcile404test",
-      "target": "google_gmail_backup_models_gmailsyncstate",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailsyncstate"
     },
     {
       "relation": "uses",
@@ -17742,9 +17837,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_reconciletrashlabeltest",
-      "target": "google_gmail_backup_models_gmailsyncstate",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailsyncstate"
     },
     {
       "relation": "uses",
@@ -17752,9 +17847,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_reconcilemessagealivetest",
-      "target": "google_gmail_backup_models_gmailsyncstate",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailsyncstate"
     },
     {
       "relation": "uses",
@@ -17762,9 +17857,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_purgeexpiredtest",
-      "target": "google_gmail_backup_models_gmailsyncstate",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailsyncstate"
     },
     {
       "relation": "uses",
@@ -17772,9 +17867,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest",
-      "target": "google_gmail_backup_models_gmailsyncstate",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailsyncstate"
     },
     {
       "relation": "uses",
@@ -17782,9 +17877,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_rulesenginemetadatasnapshottest",
-      "target": "google_gmail_backup_models_gmailsyncstate",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailsyncstate"
     },
     {
       "relation": "uses",
@@ -17792,9 +17887,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_protectedsenderreconciletest",
-      "target": "google_gmail_backup_models_gmailsyncstate",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailsyncstate"
     },
     {
       "relation": "uses",
@@ -18092,9 +18187,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashaddedtest",
-      "target": "google_gmail_backup_models_gmailmessage",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailmessage"
     },
     {
       "relation": "uses",
@@ -18102,9 +18197,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashremovedtest",
-      "target": "google_gmail_backup_models_gmailmessage",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailmessage"
     },
     {
       "relation": "uses",
@@ -18112,9 +18207,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_reconcile404test",
-      "target": "google_gmail_backup_models_gmailmessage",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailmessage"
     },
     {
       "relation": "uses",
@@ -18122,9 +18217,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_reconciletrashlabeltest",
-      "target": "google_gmail_backup_models_gmailmessage",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailmessage"
     },
     {
       "relation": "uses",
@@ -18132,9 +18227,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_reconcilemessagealivetest",
-      "target": "google_gmail_backup_models_gmailmessage",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailmessage"
     },
     {
       "relation": "uses",
@@ -18142,9 +18237,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_purgeexpiredtest",
-      "target": "google_gmail_backup_models_gmailmessage",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailmessage"
     },
     {
       "relation": "uses",
@@ -18152,9 +18247,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest",
-      "target": "google_gmail_backup_models_gmailmessage",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailmessage"
     },
     {
       "relation": "uses",
@@ -18162,9 +18257,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_rulesenginemetadatasnapshottest",
-      "target": "google_gmail_backup_models_gmailmessage",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailmessage"
     },
     {
       "relation": "uses",
@@ -18172,9 +18267,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_protectedsenderreconciletest",
-      "target": "google_gmail_backup_models_gmailmessage",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_gmailmessage"
     },
     {
       "relation": "uses",
@@ -18243,9 +18338,9 @@
       "source_file": "backend_django/google_gmail_backup/models.py",
       "source_location": "L134",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_models_rationale_134",
-      "target": "google_gmail_backup_models_gmailattachment",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_models_gmailattachment"
     },
     {
       "relation": "uses",
@@ -18413,9 +18508,9 @@
       "source_file": "backend_django/google_gmail_backup/models.py",
       "source_location": "L157",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_models_rationale_157",
-      "target": "google_gmail_backup_models_protectedsender",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_models_protectedsender"
     },
     {
       "relation": "uses",
@@ -18663,9 +18758,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashaddedtest",
-      "target": "google_gmail_backup_models_protectedsender",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_protectedsender"
     },
     {
       "relation": "uses",
@@ -18673,9 +18768,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashremovedtest",
-      "target": "google_gmail_backup_models_protectedsender",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_protectedsender"
     },
     {
       "relation": "uses",
@@ -18683,9 +18778,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_reconcile404test",
-      "target": "google_gmail_backup_models_protectedsender",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_protectedsender"
     },
     {
       "relation": "uses",
@@ -18693,9 +18788,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_reconciletrashlabeltest",
-      "target": "google_gmail_backup_models_protectedsender",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_protectedsender"
     },
     {
       "relation": "uses",
@@ -18703,9 +18798,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_reconcilemessagealivetest",
-      "target": "google_gmail_backup_models_protectedsender",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_protectedsender"
     },
     {
       "relation": "uses",
@@ -18713,9 +18808,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_purgeexpiredtest",
-      "target": "google_gmail_backup_models_protectedsender",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_protectedsender"
     },
     {
       "relation": "uses",
@@ -18723,9 +18818,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest",
-      "target": "google_gmail_backup_models_protectedsender",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_protectedsender"
     },
     {
       "relation": "uses",
@@ -18733,9 +18828,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_rulesenginemetadatasnapshottest",
-      "target": "google_gmail_backup_models_protectedsender",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_protectedsender"
     },
     {
       "relation": "uses",
@@ -18743,9 +18838,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_protectedsenderreconciletest",
-      "target": "google_gmail_backup_models_protectedsender",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_protectedsender"
     },
     {
       "relation": "uses",
@@ -19033,9 +19128,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashaddedtest",
-      "target": "google_gmail_backup_models_cleanuprule",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_cleanuprule"
     },
     {
       "relation": "uses",
@@ -19043,9 +19138,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashremovedtest",
-      "target": "google_gmail_backup_models_cleanuprule",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_cleanuprule"
     },
     {
       "relation": "uses",
@@ -19053,9 +19148,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_reconcile404test",
-      "target": "google_gmail_backup_models_cleanuprule",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_cleanuprule"
     },
     {
       "relation": "uses",
@@ -19063,9 +19158,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_reconciletrashlabeltest",
-      "target": "google_gmail_backup_models_cleanuprule",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_cleanuprule"
     },
     {
       "relation": "uses",
@@ -19073,9 +19168,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_reconcilemessagealivetest",
-      "target": "google_gmail_backup_models_cleanuprule",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_cleanuprule"
     },
     {
       "relation": "uses",
@@ -19083,9 +19178,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_purgeexpiredtest",
-      "target": "google_gmail_backup_models_cleanuprule",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_cleanuprule"
     },
     {
       "relation": "uses",
@@ -19093,9 +19188,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest",
-      "target": "google_gmail_backup_models_cleanuprule",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_cleanuprule"
     },
     {
       "relation": "uses",
@@ -19103,9 +19198,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_rulesenginemetadatasnapshottest",
-      "target": "google_gmail_backup_models_cleanuprule",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_cleanuprule"
     },
     {
       "relation": "uses",
@@ -19113,9 +19208,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L16",
       "weight": 0.8,
+      "confidence_score": 0.5,
       "source": "google_gmail_backup_tests_reconciliation_protectedsenderreconciletest",
-      "target": "google_gmail_backup_models_cleanuprule",
-      "confidence_score": 0.5
+      "target": "google_gmail_backup_models_cleanuprule"
     },
     {
       "relation": "uses",
@@ -19173,9 +19268,9 @@
       "source_file": "backend_django/google_gmail_backup/models.py",
       "source_location": "L238",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_models_rationale_238",
-      "target": "google_gmail_backup_models_rulecondition",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_models_rulecondition"
     },
     {
       "relation": "uses",
@@ -19293,9 +19388,9 @@
       "source_file": "backend_django/google_gmail_backup/models.py",
       "source_location": "L319",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_models_rationale_319",
-      "target": "google_gmail_backup_models_cleanupauditlog",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_models_cleanupauditlog"
     },
     {
       "relation": "uses",
@@ -19981,9 +20076,9 @@
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L195",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_services_rules_rationale_195",
-      "target": "google_gmail_backup_services_rules_apply_protected_sender_rules",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_services_rules_apply_protected_sender_rules"
     },
     {
       "relation": "calls",
@@ -20086,9 +20181,9 @@
       "source_file": "backend_django/google_gmail_backup/services_rules.py",
       "source_location": "L271",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_services_rules_rationale_271",
-      "target": "google_gmail_backup_services_rules_run_all_enabled_rules",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_services_rules_run_all_enabled_rules"
     },
     {
       "relation": "calls",
@@ -20229,9 +20324,9 @@
       "source_file": "backend_django/google_gmail_backup/admin.py",
       "source_location": "L51",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_admin_py",
-      "target": "google_gmail_backup_admin_action_reconcile",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_admin_action_reconcile"
     },
     {
       "relation": "contains",
@@ -22890,9 +22985,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_make_message",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_make_message"
     },
     {
       "relation": "contains",
@@ -22900,9 +22995,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L49",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_make_sync_state",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_make_sync_state"
     },
     {
       "relation": "contains",
@@ -22910,9 +23005,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L60",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_incrementalsynctrashaddedtest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_incrementalsynctrashaddedtest"
     },
     {
       "relation": "contains",
@@ -22920,9 +23015,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L69",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_test_trash_label_added_sets_soft_deleted",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_test_trash_label_added_sets_soft_deleted"
     },
     {
       "relation": "contains",
@@ -22930,9 +23025,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L98",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_incrementalsynctrashremovedtest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_incrementalsynctrashremovedtest"
     },
     {
       "relation": "contains",
@@ -22940,9 +23035,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L112",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_test_trash_label_removed_reverts_to_verified",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_test_trash_label_removed_reverts_to_verified"
     },
     {
       "relation": "contains",
@@ -22950,9 +23045,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L141",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_reconcile404test",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_reconcile404test"
     },
     {
       "relation": "contains",
@@ -22960,9 +23055,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L148",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_test_404_marks_soft_deleted",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_test_404_marks_soft_deleted"
     },
     {
       "relation": "contains",
@@ -22970,9 +23065,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L168",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_reconciletrashlabeltest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_reconciletrashlabeltest"
     },
     {
       "relation": "contains",
@@ -22980,9 +23075,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L175",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_test_trash_label_present_marks_soft_deleted",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_test_trash_label_present_marks_soft_deleted"
     },
     {
       "relation": "contains",
@@ -22990,9 +23085,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L195",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_reconcilemessagealivetest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_reconcilemessagealivetest"
     },
     {
       "relation": "contains",
@@ -23000,9 +23095,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L202",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_test_alive_message_stays_verified",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_test_alive_message_stays_verified"
     },
     {
       "relation": "contains",
@@ -23010,9 +23105,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L224",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_purgeexpiredtest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_purgeexpiredtest"
     },
     {
       "relation": "contains",
@@ -23020,9 +23115,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L247",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest"
     },
     {
       "relation": "contains",
@@ -23030,9 +23125,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L271",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_rulesenginemetadatasnapshottest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_rulesenginemetadatasnapshottest"
     },
     {
       "relation": "contains",
@@ -23040,9 +23135,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L287",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_test_metadata_snapshot_populated_after_trash",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_test_metadata_snapshot_populated_after_trash"
     },
     {
       "relation": "contains",
@@ -23050,9 +23145,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L310",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_protectedsenderreconciletest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_protectedsenderreconciletest"
     },
     {
       "relation": "contains",
@@ -23060,9 +23155,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L327",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "target": "google_gmail_backup_tests_reconciliation_test_protected_sender_still_soft_deleted_on_404",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_test_protected_sender_still_soft_deleted_on_404"
     },
     {
       "relation": "rationale_for",
@@ -23070,9 +23165,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_rationale_1",
-      "target": "backend_django_google_gmail_backup_tests_reconciliation_py",
-      "confidence_score": 1.0
+      "target": "backend_django_google_gmail_backup_tests_reconciliation_py"
     },
     {
       "relation": "calls",
@@ -23081,9 +23176,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L64",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashaddedtest_setup",
-      "target": "google_gmail_backup_tests_reconciliation_make_message",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_make_message"
     },
     {
       "relation": "calls",
@@ -23092,9 +23187,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L102",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashremovedtest_setup",
-      "target": "google_gmail_backup_tests_reconciliation_make_message",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_make_message"
     },
     {
       "relation": "calls",
@@ -23103,9 +23198,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L145",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_reconcile404test_setup",
-      "target": "google_gmail_backup_tests_reconciliation_make_message",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_make_message"
     },
     {
       "relation": "calls",
@@ -23114,9 +23209,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L172",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_reconciletrashlabeltest_setup",
-      "target": "google_gmail_backup_tests_reconciliation_make_message",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_make_message"
     },
     {
       "relation": "calls",
@@ -23125,9 +23220,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L199",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_reconcilemessagealivetest_setup",
-      "target": "google_gmail_backup_tests_reconciliation_make_message",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_make_message"
     },
     {
       "relation": "calls",
@@ -23136,9 +23231,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L228",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_purgeexpiredtest_setup",
-      "target": "google_gmail_backup_tests_reconciliation_make_message",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_make_message"
     },
     {
       "relation": "calls",
@@ -23147,9 +23242,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L251",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest_setup",
-      "target": "google_gmail_backup_tests_reconciliation_make_message",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_make_message"
     },
     {
       "relation": "calls",
@@ -23158,9 +23253,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L275",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_rulesenginemetadatasnapshottest_setup",
-      "target": "google_gmail_backup_tests_reconciliation_make_message",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_make_message"
     },
     {
       "relation": "calls",
@@ -23169,9 +23264,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L321",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_protectedsenderreconciletest_setup",
-      "target": "google_gmail_backup_tests_reconciliation_make_message",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_make_message"
     },
     {
       "relation": "rationale_for",
@@ -23179,9 +23274,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L31",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_rationale_31",
-      "target": "google_gmail_backup_tests_reconciliation_make_message",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_make_message"
     },
     {
       "relation": "calls",
@@ -23190,9 +23285,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L65",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashaddedtest_setup",
-      "target": "google_gmail_backup_tests_reconciliation_make_sync_state",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_make_sync_state"
     },
     {
       "relation": "calls",
@@ -23201,9 +23296,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L108",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashremovedtest_setup",
-      "target": "google_gmail_backup_tests_reconciliation_make_sync_state",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_make_sync_state"
     },
     {
       "relation": "rationale_for",
@@ -23211,9 +23306,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L50",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_rationale_50",
-      "target": "google_gmail_backup_tests_reconciliation_make_sync_state",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_make_sync_state"
     },
     {
       "relation": "method",
@@ -23221,9 +23316,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L63",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashaddedtest",
-      "target": "google_gmail_backup_tests_reconciliation_incrementalsynctrashaddedtest_setup",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_incrementalsynctrashaddedtest_setup"
     },
     {
       "relation": "rationale_for",
@@ -23231,9 +23326,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L61",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_rationale_61",
-      "target": "google_gmail_backup_tests_reconciliation_incrementalsynctrashaddedtest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_incrementalsynctrashaddedtest"
     },
     {
       "relation": "calls",
@@ -23252,9 +23347,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L101",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_incrementalsynctrashremovedtest",
-      "target": "google_gmail_backup_tests_reconciliation_incrementalsynctrashremovedtest_setup",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_incrementalsynctrashremovedtest_setup"
     },
     {
       "relation": "rationale_for",
@@ -23262,9 +23357,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L99",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_rationale_99",
-      "target": "google_gmail_backup_tests_reconciliation_incrementalsynctrashremovedtest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_incrementalsynctrashremovedtest"
     },
     {
       "relation": "calls",
@@ -23283,9 +23378,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L144",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_reconcile404test",
-      "target": "google_gmail_backup_tests_reconciliation_reconcile404test_setup",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_reconcile404test_setup"
     },
     {
       "relation": "rationale_for",
@@ -23293,9 +23388,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L142",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_rationale_142",
-      "target": "google_gmail_backup_tests_reconciliation_reconcile404test",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_reconcile404test"
     },
     {
       "relation": "calls",
@@ -23314,9 +23409,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L171",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_reconciletrashlabeltest",
-      "target": "google_gmail_backup_tests_reconciliation_reconciletrashlabeltest_setup",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_reconciletrashlabeltest_setup"
     },
     {
       "relation": "rationale_for",
@@ -23324,9 +23419,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L169",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_rationale_169",
-      "target": "google_gmail_backup_tests_reconciliation_reconciletrashlabeltest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_reconciletrashlabeltest"
     },
     {
       "relation": "calls",
@@ -23345,9 +23440,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L198",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_reconcilemessagealivetest",
-      "target": "google_gmail_backup_tests_reconciliation_reconcilemessagealivetest_setup",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_reconcilemessagealivetest_setup"
     },
     {
       "relation": "rationale_for",
@@ -23355,9 +23450,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L196",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_rationale_196",
-      "target": "google_gmail_backup_tests_reconciliation_reconcilemessagealivetest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_reconcilemessagealivetest"
     },
     {
       "relation": "calls",
@@ -23376,9 +23471,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L227",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_purgeexpiredtest",
-      "target": "google_gmail_backup_tests_reconciliation_purgeexpiredtest_setup",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_purgeexpiredtest_setup"
     },
     {
       "relation": "method",
@@ -23386,9 +23481,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L235",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_purgeexpiredtest",
-      "target": "google_gmail_backup_tests_reconciliation_purgeexpiredtest_test_expired_record_purged_to_deleted",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_purgeexpiredtest_test_expired_record_purged_to_deleted"
     },
     {
       "relation": "rationale_for",
@@ -23396,9 +23491,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L225",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_rationale_225",
-      "target": "google_gmail_backup_tests_reconciliation_purgeexpiredtest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_purgeexpiredtest"
     },
     {
       "relation": "calls",
@@ -23417,9 +23512,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L250",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest",
-      "target": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest_setup",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest_setup"
     },
     {
       "relation": "method",
@@ -23427,9 +23522,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L258",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest",
-      "target": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest_test_young_record_stays_soft_deleted",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest_test_young_record_stays_soft_deleted"
     },
     {
       "relation": "rationale_for",
@@ -23437,9 +23532,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L248",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_rationale_248",
-      "target": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_purgeyoungrecorduntouchedtest"
     },
     {
       "relation": "calls",
@@ -23458,9 +23553,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L274",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_rulesenginemetadatasnapshottest",
-      "target": "google_gmail_backup_tests_reconciliation_rulesenginemetadatasnapshottest_setup",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_rulesenginemetadatasnapshottest_setup"
     },
     {
       "relation": "rationale_for",
@@ -23468,9 +23563,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L272",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_rationale_272",
-      "target": "google_gmail_backup_tests_reconciliation_rulesenginemetadatasnapshottest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_rulesenginemetadatasnapshottest"
     },
     {
       "relation": "method",
@@ -23478,9 +23573,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L317",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_protectedsenderreconciletest",
-      "target": "google_gmail_backup_tests_reconciliation_protectedsenderreconciletest_setup",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_protectedsenderreconciletest_setup"
     },
     {
       "relation": "rationale_for",
@@ -23488,9 +23583,9 @@
       "source_file": "backend_django/google_gmail_backup/tests_reconciliation.py",
       "source_location": "L311",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tests_reconciliation_rationale_311",
-      "target": "google_gmail_backup_tests_reconciliation_protectedsenderreconciletest",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tests_reconciliation_protectedsenderreconciletest"
     },
     {
       "relation": "calls",
@@ -23549,9 +23644,9 @@
       "source_file": "backend_django/google_gmail_backup/tasks.py",
       "source_location": "L156",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tasks_py",
-      "target": "google_gmail_backup_tasks_task_gmail_reconcile",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tasks_task_gmail_reconcile"
     },
     {
       "relation": "contains",
@@ -23559,9 +23654,9 @@
       "source_file": "backend_django/google_gmail_backup/tasks.py",
       "source_location": "L239",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_tasks_py",
-      "target": "google_gmail_backup_tasks_task_purge_expired_soft_deletes",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tasks_task_purge_expired_soft_deletes"
     },
     {
       "relation": "rationale_for",
@@ -23589,9 +23684,9 @@
       "source_file": "backend_django/google_gmail_backup/tasks.py",
       "source_location": "L116",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tasks_rationale_116",
-      "target": "google_gmail_backup_tasks_task_apply_protected_senders",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tasks_task_apply_protected_senders"
     },
     {
       "relation": "rationale_for",
@@ -23609,9 +23704,9 @@
       "source_file": "backend_django/google_gmail_backup/tasks.py",
       "source_location": "L129",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tasks_rationale_129",
-      "target": "google_gmail_backup_tasks_task_run_cleanup_rules",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tasks_task_run_cleanup_rules"
     },
     {
       "relation": "rationale_for",
@@ -23629,9 +23724,9 @@
       "source_file": "backend_django/google_gmail_backup/tasks.py",
       "source_location": "L143",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tasks_rationale_143",
-      "target": "google_gmail_backup_tasks_task_gmail_download_batch",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tasks_task_gmail_download_batch"
     },
     {
       "relation": "rationale_for",
@@ -23649,9 +23744,9 @@
       "source_file": "backend_django/google_gmail_backup/tasks.py",
       "source_location": "L157",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tasks_rationale_157",
-      "target": "google_gmail_backup_tasks_task_gmail_reconcile",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tasks_task_gmail_reconcile"
     },
     {
       "relation": "rationale_for",
@@ -23659,9 +23754,9 @@
       "source_file": "backend_django/google_gmail_backup/tasks.py",
       "source_location": "L240",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "google_gmail_backup_tasks_rationale_240",
-      "target": "google_gmail_backup_tasks_task_purge_expired_soft_deletes",
-      "confidence_score": 1.0
+      "target": "google_gmail_backup_tasks_task_purge_expired_soft_deletes"
     },
     {
       "relation": "contains",
@@ -23669,9 +23764,9 @@
       "source_file": "backend_django/google_gmail_backup/migrations/0007_soft_delete_reconciliation.py",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backend_django_google_gmail_backup_migrations_0007_soft_delete_reconciliation_py",
-      "target": "migrations_0007_soft_delete_reconciliation_migration",
-      "confidence_score": 1.0
+      "target": "migrations_0007_soft_delete_reconciliation_migration"
     },
     {
       "relation": "contains",
@@ -27010,9 +27105,9 @@
       "source_file": "TODO.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "todo_md",
-      "target": "backdeezup_todo_backdeezup_todo",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_backdeezup_todo"
     },
     {
       "relation": "contains",
@@ -27020,9 +27115,9 @@
       "source_file": "TODO.md",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_backdeezup_todo",
-      "target": "backdeezup_todo_phase_0_orient_stack_health",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_phase_0_orient_stack_health"
     },
     {
       "relation": "contains",
@@ -27030,9 +27125,9 @@
       "source_file": "TODO.md",
       "source_location": "L17",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_backdeezup_todo",
-      "target": "backdeezup_todo_phase_1_gmail_backup_effectively_complete",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_phase_1_gmail_backup_effectively_complete"
     },
     {
       "relation": "contains",
@@ -27040,9 +27135,9 @@
       "source_file": "TODO.md",
       "source_location": "L26",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_backdeezup_todo",
-      "target": "backdeezup_todo_phase_2_gmail_sync_reconciliation_done_2026_06_02",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_phase_2_gmail_sync_reconciliation_done_2026_06_02"
     },
     {
       "relation": "contains",
@@ -27050,9 +27145,9 @@
       "source_file": "TODO.md",
       "source_location": "L77",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_backdeezup_todo",
-      "target": "backdeezup_todo_phase_3_gmail_cleanup",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_phase_3_gmail_cleanup"
     },
     {
       "relation": "contains",
@@ -27060,9 +27155,9 @@
       "source_file": "TODO.md",
       "source_location": "L88",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_backdeezup_todo",
-      "target": "backdeezup_todo_phase_4_unblock_photos",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_phase_4_unblock_photos"
     },
     {
       "relation": "contains",
@@ -27070,9 +27165,9 @@
       "source_file": "TODO.md",
       "source_location": "L99",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_backdeezup_todo",
-      "target": "backdeezup_todo_phase_5_merge_ci_cd_branch",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_phase_5_merge_ci_cd_branch"
     },
     {
       "relation": "contains",
@@ -27080,9 +27175,9 @@
       "source_file": "TODO.md",
       "source_location": "L112",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_backdeezup_todo",
-      "target": "backdeezup_todo_phase_6_populate_vault",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_phase_6_populate_vault"
     },
     {
       "relation": "contains",
@@ -27090,9 +27185,9 @@
       "source_file": "TODO.md",
       "source_location": "L122",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_backdeezup_todo",
-      "target": "backdeezup_todo_phase_7_wrap_up_run_after_each_session",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_phase_7_wrap_up_run_after_each_session"
     },
     {
       "relation": "contains",
@@ -27100,9 +27195,9 @@
       "source_file": "TODO.md",
       "source_location": "L132",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_backdeezup_todo",
-      "target": "backdeezup_todo_phase_8_human_operable_foss_release_final",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_phase_8_human_operable_foss_release_final"
     },
     {
       "relation": "contains",
@@ -27110,9 +27205,9 @@
       "source_file": "TODO.md",
       "source_location": "L171",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_backdeezup_todo",
-      "target": "backdeezup_todo_bugs_fixed_this_session_2026_06_02",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_bugs_fixed_this_session_2026_06_02"
     },
     {
       "relation": "contains",
@@ -27120,9 +27215,9 @@
       "source_file": "TODO.md",
       "source_location": "L179",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_backdeezup_todo",
-      "target": "backdeezup_todo_known_blockers",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_known_blockers"
     },
     {
       "relation": "contains",
@@ -27130,9 +27225,9 @@
       "source_file": "TODO.md",
       "source_location": "L184",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_backdeezup_todo",
-      "target": "backdeezup_todo_standing_open_items",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_standing_open_items"
     },
     {
       "relation": "contains",
@@ -27140,9 +27235,9 @@
       "source_file": "TODO.md",
       "source_location": "L28",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_phase_2_gmail_sync_reconciliation_done_2026_06_02",
-      "target": "backdeezup_todo_model_changes",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_model_changes"
     },
     {
       "relation": "contains",
@@ -27150,9 +27245,9 @@
       "source_file": "TODO.md",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_phase_2_gmail_sync_reconciliation_done_2026_06_02",
-      "target": "backdeezup_todo_fix_incremental_sync_task_gmail_incremental_sync",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_fix_incremental_sync_task_gmail_incremental_sync"
     },
     {
       "relation": "contains",
@@ -27160,9 +27255,9 @@
       "source_file": "TODO.md",
       "source_location": "L39",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_phase_2_gmail_sync_reconciliation_done_2026_06_02",
-      "target": "backdeezup_todo_full_reconciliation_task",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_full_reconciliation_task"
     },
     {
       "relation": "contains",
@@ -27170,9 +27265,9 @@
       "source_file": "TODO.md",
       "source_location": "L48",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_phase_2_gmail_sync_reconciliation_done_2026_06_02",
-      "target": "backdeezup_todo_retention_purge_task",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_retention_purge_task"
     },
     {
       "relation": "contains",
@@ -27180,9 +27275,9 @@
       "source_file": "TODO.md",
       "source_location": "L55",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_phase_2_gmail_sync_reconciliation_done_2026_06_02",
-      "target": "backdeezup_todo_rules_engine_update",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_rules_engine_update"
     },
     {
       "relation": "contains",
@@ -27190,9 +27285,9 @@
       "source_file": "TODO.md",
       "source_location": "L59",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_phase_2_gmail_sync_reconciliation_done_2026_06_02",
-      "target": "backdeezup_todo_tests_9_9_passing_full_suite_68_68",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_tests_9_9_passing_full_suite_68_68"
     },
     {
       "relation": "contains",
@@ -27200,9 +27295,9 @@
       "source_file": "TODO.md",
       "source_location": "L70",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_phase_2_gmail_sync_reconciliation_done_2026_06_02",
-      "target": "backdeezup_todo_live_reconciliation_results_first_run",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_live_reconciliation_results_first_run"
     },
     {
       "relation": "contains",
@@ -27210,9 +27305,9 @@
       "source_file": "TODO.md",
       "source_location": "L137",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_phase_8_human_operable_foss_release_final",
-      "target": "backdeezup_todo_docs_a_human_needs_to_operate_it",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_docs_a_human_needs_to_operate_it"
     },
     {
       "relation": "contains",
@@ -27220,9 +27315,9 @@
       "source_file": "TODO.md",
       "source_location": "L145",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_phase_8_human_operable_foss_release_final",
-      "target": "backdeezup_todo_scheduled_operation_no_human_needed_after_setup",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_scheduled_operation_no_human_needed_after_setup"
     },
     {
       "relation": "contains",
@@ -27230,9 +27325,9 @@
       "source_file": "TODO.md",
       "source_location": "L154",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_phase_8_human_operable_foss_release_final",
-      "target": "backdeezup_todo_manual_operation_human_runs_it_when_they_want",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_manual_operation_human_runs_it_when_they_want"
     },
     {
       "relation": "contains",
@@ -27240,9 +27335,9 @@
       "source_file": "TODO.md",
       "source_location": "L159",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "backdeezup_todo_phase_8_human_operable_foss_release_final",
-      "target": "backdeezup_todo_handoff_checklist_claude_steps_back",
-      "confidence_score": 1.0
+      "target": "backdeezup_todo_handoff_checklist_claude_steps_back"
     },
     {
       "relation": "contains",
@@ -27250,9 +27345,9 @@
       "source_file": "GOALS_TODOS.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "goals_todos_md",
-      "target": "backdeezup_goals_todos_goals_todos_md_backdeezup_operations_runbook",
-      "confidence_score": 1.0
+      "target": "backdeezup_goals_todos_goals_todos_md_backdeezup_operations_runbook"
     },
     {
       "relation": "contains",
@@ -27260,9 +27355,9 @@
       "source_file": "GOALS_TODOS.md",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "goals_todos_md",
-      "target": "backdeezup_goals_todos_full_phase_commands_for_goals_md_dispatcher_read_only_reference",
-      "confidence_score": 1.0
+      "target": "backdeezup_goals_todos_full_phase_commands_for_goals_md_dispatcher_read_only_reference"
     },
     {
       "relation": "contains",
@@ -27270,9 +27365,9 @@
       "source_file": "GOALS_TODOS.md",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "goals_todos_md",
-      "target": "backdeezup_goals_todos_live_phase_tracking_is_in_todo_md_update_checkboxes_there_not_here",
-      "confidence_score": 1.0
+      "target": "backdeezup_goals_todos_live_phase_tracking_is_in_todo_md_update_checkboxes_there_not_here"
     },
     {
       "relation": "contains",
@@ -32197,5 +32292,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "331e44b8330b824557244b33f338526befe72d69"
+  "built_at_commit": "237ed0c793582c3f338ebf5036d49277e6fc3631"
 }

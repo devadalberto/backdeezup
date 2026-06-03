@@ -1,16 +1,16 @@
 # Graph Report - backdeezup  (2026-06-02)
 
 ## Corpus Check
-- 120 files · ~61,521 words
+- 120 files · ~61,573 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1390 nodes · 1944 edges · 135 communities (103 shown, 32 thin omitted)
+- 1395 nodes · 1949 edges · 136 communities (107 shown, 29 thin omitted)
 - Extraction: 81% EXTRACTED · 19% INFERRED · 0% AMBIGUOUS · INFERRED: 361 edges (avg confidence: 0.56)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `331e44b8`
+- Built from commit: `237ed0c7`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -123,6 +123,7 @@
 - [[_COMMUNITY_Community 131|Community 131]]
 - [[_COMMUNITY_Community 132|Community 132]]
 - [[_COMMUNITY_Community 133|Community 133]]
+- [[_COMMUNITY_Community 135|Community 135]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `GmailMessage` - 44 edges
@@ -148,7 +149,7 @@
 - `export_assets()` --calls--> `export_queryset()`  [INFERRED]
   backend_django/google_media_backup/api.py → backend_django/google_gmail_backup/exports.py
 
-## Communities (135 total, 32 thin omitted)
+## Communities (136 total, 29 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.16
@@ -167,8 +168,8 @@ Cohesion: 0.1
 Nodes (14): AccountsConfig, AppConfig, CoreConfig, GoogleGmailBackupConfig, get_scheduler(), job_apply_protected_senders(), job_run_cleanup_rules(), APScheduler jobs for periodic Gmail sync and cleanup. All jobs are OFF by defaul (+6 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.29
-Nodes (7): 7. Verify the deployment, Autostart on VM boot, Celery (background jobs), code:bash (make celery-logs      # tail worker + beat logs), code:block20 (scripts/windows-autostart.bat), code:bash (sudo bash scripts/autostart.sh    # re-install if needed), Setup (already installed on WINWEB01)
+Cohesion: 0.15
+Nodes (17): 2. Place Google OAuth credentials, 3. Build and start, 6 — Authenticate with Google, 7. Verify the deployment, Celery (background jobs), CI/CD pipeline (GitHub Actions), code:bash (make auth), code:bash (make celery-logs      # tail worker + beat logs) (+9 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.08
@@ -279,60 +280,60 @@ Cohesion: 0.33
 Nodes (6): [0.1.0] - 2026-05-12, Added, Added, Added, Added, Safety Features
 
 ### Community 61 - "Community 61"
-Cohesion: 0.13
-Nodes (22): BulkMediaDecisionPayload, DriveDiscoverParams, DriveDownloadParams, ErrorDetail, ErrorResponse, GmailDiscoverParams, GmailSyncParams, LooseSchema (+14 more)
+Cohesion: 0.11
+Nodes (24): BulkMediaDecisionPayload, DriveDiscoverParams, DriveDownloadParams, ErrorDetail, ErrorResponse, GmailDiscoverParams, GmailSyncParams, LooseSchema (+16 more)
 
 ### Community 62 - "Community 62"
 Cohesion: 0.09
 Nodes (21): Access, Adding new pages from the CMS, code:bash (docker compose exec web python manage.py createsuperuser), code:block2 (/vault/my-gallery/?keep=keep), code:python (from schemas import MediaDecisionPayload), Create the site and vault homepage, Documents, First-time setup (+13 more)
 
 ### Community 63 - "Community 63"
-Cohesion: 0.15
-Nodes (9): Command, Management command to seed protected senders and default cleanup rules. Safe to, ProtectedSender, Emails from these senders are never trashed or deleted by any cleanup rule., Emails from these senders are never trashed or deleted by any cleanup rule., Emails from these senders are always kept — never trashed, never deleted., GmailLoopLogicTest, BUG: make gmail-loop called gmail_pipeline all on every iteration,     re-runnin (+1 more)
+Cohesion: 0.13
+Nodes (9): Command, Management command to seed protected senders and default cleanup rules. Safe to, ProtectedSender, Emails from these senders are never trashed or deleted by any cleanup rule., Emails from these senders are never trashed or deleted by any cleanup rule., Emails from these senders are always kept — never trashed, never deleted., GmailPipelineCommandTest, BUG: gmail_pipeline discover had no --q flag.     make gmail-discover --q "in:tr (+1 more)
 
 ### Community 64 - "Community 64"
 Cohesion: 0.12
 Nodes (22): gmail_discover(), gmail_download(), gmail_incremental(), Incremental sync using historyId. Falls back to full discover on 404., Incremental sync using historyId. Falls back to full discover on 404., Incremental sync using historyId. Falls back to full discover on 404., Download raw .eml for DISCOVERED messages. Stores to disk, updates state to DOWN, Download raw .eml for DISCOVERED messages. Stores to disk, updates state to DOWN (+14 more)
 
 ### Community 65 - "Community 65"
-Cohesion: 0.2
-Nodes (10): apply_protected_senders(), batch_modify_labels(), Apply label changes to multiple messages in one API call — O(1) instead of O(n)., Apply label changes to multiple messages in one API call — O(1) instead of O(n)., apply_protected_sender_rules(), Special rule: star + label + keep in inbox messages from protected senders., Special rule: star + label + keep in inbox messages from protected senders., Special rule: star + label + keep in inbox messages from protected senders. (+2 more)
+Cohesion: 0.14
+Nodes (16): action_reconcile(), apply_protected_senders(), batch_modify_labels(), batch_trash_messages(), gmail_service(), modify_labels(), Trash multiple messages using Gmail batchModify. Returns count of successful tra, Trash multiple messages using Gmail batchModify. Returns count of successful tra (+8 more)
 
 ### Community 66 - "Community 66"
-Cohesion: 0.11
-Nodes (13): export_audit_log(), export_messages(), gmail_empty_trash(), gmail_verify(), Verify .eml file exists on disk for DOWNLOADED messages., Verify .eml file exists on disk for DOWNLOADED messages., Verify .eml file exists on disk for DOWNLOADED messages., Return field/operator/logic choices for the frontend builder. (+5 more)
+Cohesion: 0.18
+Nodes (6): export_audit_log(), export_messages(), gmail_label(), gmail_profile(), rule_dry_run(), rule_execute()
 
 ### Community 67 - "Community 67"
 Cohesion: 0.42
 Nodes (9): _coerce(), _export_csv(), _export_json(), _export_pdf(), export_queryset(), _export_xlsx(), _export_xml(), Export engine — CSV, XLSX, JSON, XML, PDF. Usage: call export_queryset(request, (+1 more)
 
 ### Community 68 - "Community 68"
-Cohesion: 0.22
-Nodes (9): action_trash(), action_trash_selected(), gmail_trash(), Trash messages in Gmail. Dry-run by default — pass dry_run=false to execute., Trash messages in Gmail. Dry-run by default — pass dry_run=false to execute., Trash messages in Gmail. Dry-run by default — pass dry_run=false to execute., Move a single message to Gmail trash. Logs errors instead of silently returning, Move a single message to Gmail trash. Logs errors instead of silently returning (+1 more)
+Cohesion: 0.4
+Nodes (5): action_trash(), action_trash_selected(), Move a single message to Gmail trash. Logs errors instead of silently returning, Move a single message to Gmail trash. Logs errors instead of silently returning, trash_message()
 
 ### Community 69 - "Community 69"
 Cohesion: 0.29
 Nodes (7): compile_conditions(), conditions_to_dict(), Query compiler: translates RuleCondition rows into a Gmail q= search string.  Gm, Serialize conditions for the frontend builder., Convert a single condition to a Gmail query term. Returns None if not applicable, Takes a queryset/list of RuleCondition ordered by `order`.     Returns a Gmail q, _term()
 
 ### Community 70 - "Community 70"
-Cohesion: 0.18
-Nodes (12): gmail_profile(), job_gmail_incremental_sync(), Incremental Gmail sync — picks up new messages since last historyId., get_authenticated_email(), list_history(), Returns (history_records, new_history_id) or raises Exception on 404.     Caller, Returns (history_records, new_history_id) or raises Exception on 404.     Caller, Returns (history_records, new_history_id) or raises Exception on 404.     Caller (+4 more)
+Cohesion: 0.2
+Nodes (11): job_gmail_incremental_sync(), Incremental Gmail sync — picks up new messages since last historyId., get_authenticated_email(), list_history(), Returns (history_records, new_history_id) or raises Exception on 404.     Caller, Returns (history_records, new_history_id) or raises Exception on 404.     Caller, Returns (history_records, new_history_id) or raises Exception on 404.     Caller, Incremental Gmail sync — picks up new messages since last historyId. (+3 more)
 
 ### Community 75 - "Community 75"
 Cohesion: 0.15
 Nodes (13): [0.4.2] - 2026-05-13, [0.6.0] - 2026-05-15, Added, Added, Added, Added, Added, Added (+5 more)
 
 ### Community 76 - "Community 76"
-Cohesion: 0.08
-Nodes (15): AdminTemplateDuplicateH1Test, CleanupRuleRatelimitTest, GmailProgressAPITest, make_message(), make_user(), ProtectedSenderExclusionTest, Regression tests — each test is named after the bug it prevents.  Every test her, BUG: Gmail dashboard template had its own <h1>Gmail Dashboard</h1>     on top of (+7 more)
+Cohesion: 0.07
+Nodes (18): AdminTemplateDuplicateH1Test, CleanupRuleRatelimitTest, ErrorResponseTest, GmailProgressAPITest, make_message(), make_user(), ProtectedSenderExclusionTest, Regression tests — each test is named after the bug it prevents.  Every test her (+10 more)
 
 ### Community 77 - "Community 77"
-Cohesion: 0.2
-Nodes (10): eml_dir(), eml_path(), ensure_eml_path(), Returns deterministic .eml path: gmail/<account>/<year>/<month>/<gmail_id>.eml, Returns the directory path for .eml storage. Does NOT create the directory., Returns the directory path for .eml storage. Does NOT create the directory., Returns .eml path AND creates the directory. Use when writing files., Returns .eml path AND creates the directory. Use when writing files. (+2 more)
+Cohesion: 0.18
+Nodes (11): eml_dir(), eml_path(), ensure_eml_path(), get_attachment_data(), Returns deterministic .eml path: gmail/<account>/<year>/<month>/<gmail_id>.eml, Returns the directory path for .eml storage. Does NOT create the directory., Returns the directory path for .eml storage. Does NOT create the directory., Returns .eml path AND creates the directory. Use when writing files. (+3 more)
 
 ### Community 78 - "Community 78"
 Cohesion: 0.12
-Nodes (7): GmailSyncState, One row per synced Gmail account — tracks historyId for incremental sync., One row per synced account — tracks historyId for incremental sync., One row per synced account — tracks historyId for incremental sync., GmailAttachmentTest, GmailMessageModelTest, GmailSyncStateTest
+Nodes (3): GmailAPITest, GmailAttachmentTest, GmailSyncStateTest
 
 ### Community 82 - "Community 82"
 Cohesion: 0.06
@@ -341,6 +342,10 @@ Nodes (21): ExifStripTest, _has_exif(), _make_minimal_jpeg(), make_staff(), Medi
 ### Community 83 - "Community 83"
 Cohesion: 0.25
 Nodes (6): Action, Field, Logic, Meta, Operator, State
+
+### Community 84 - "Community 84"
+Cohesion: 0.22
+Nodes (7): GmailSyncState, One row per synced Gmail account — tracks historyId for incremental sync., One row per synced account — tracks historyId for incremental sync., One row per synced account — tracks historyId for incremental sync., GmailLoopLogicTest, BUG: make gmail-loop called gmail_pipeline all on every iteration,     re-runnin, BUG: make gmail-loop called gmail_pipeline all on every iteration,     re-runnin
 
 ### Community 85 - "Community 85"
 Cohesion: 0.22
@@ -362,6 +367,10 @@ Nodes (24): IncrementalSyncTrashAddedTest, IncrementalSyncTrashRemovedTest, make
 Cohesion: 0.25
 Nodes (7): htmx_audit_log(), htmx_cleanup_status(), htmx_gmail_progress(), HTMX partial views for Gmail ops console. Returns HTML fragments for live update, Live cleanup job status — polled by HTMX every 3s when a job is running., Latest audit log entries — polled every 10s., Gmail pipeline progress bar fragment — includes disk usage stats.
 
+### Community 90 - "Community 90"
+Cohesion: 0.21
+Nodes (6): Command, Gmail pipeline management command — bypasses HTTP auth entirely. Calls service f, list_message_ids(), Returns (list of {id, threadId}, nextPageToken).     q_filter supports Gmail sea, Returns (list of {id, threadId}, nextPageToken).     q_filter supports Gmail sea, Returns (list of {id, threadId}, nextPageToken).     q_filter supports Gmail sea
+
 ### Community 91 - "Community 91"
 Cohesion: 0.08
 Nodes (24): backdeezup TODO, Bugs fixed this session (2026-06-02), Docs a human needs to operate it, Fix incremental sync (task_gmail_incremental_sync), Full reconciliation task, Handoff checklist (Claude steps back), Known blockers, Live reconciliation results (first run) (+16 more)
@@ -378,25 +387,21 @@ Nodes (7): Command, Drive/Photos pipeline management command — bypasses HTTP a
 Cohesion: 0.25
 Nodes (5): EmptyTrashGuardTest, BUG: The ≥90% guard on empty-trash required ≥90% backup, but the missing     mes, BUG: The ≥90% guard on empty-trash required ≥90% backup, but the missing     mes, dry_run with skip=true must not be blocked by backup % check., dry_run with skip=true must not be blocked by backup % check.
 
-### Community 98 - "Community 98"
-Cohesion: 0.29
-Nodes (5): ErrorResponseTest, BUG: except Exception: errors += len(chunk) with no logging.     User got delete, BUG: except Exception: errors += len(chunk) with no logging.     User got delete, Response schema must always include last_error (even if null)., Response schema must always include last_error (even if null).
-
 ### Community 101 - "Community 101"
-Cohesion: 0.18
-Nodes (11): POST body: {"conditions": [...], "action": "trash", "min_age_days": 30}     Retu, POST body: {"conditions": [...], "action": "trash", "min_age_days": 30}     Retu, POST body: {"conditions": [...], "action": "trash", "min_age_days": 30, "name":, POST body: {"conditions": [...], "action": "trash", "min_age_days": 30, "name":, POST body: {         "name": "LinkedIn jobs", "description": "...",         "act, POST body: {         "name": "LinkedIn jobs", "description": "...",         "act, rule_builder_dry_run(), rule_builder_preview() (+3 more)
+Cohesion: 0.2
+Nodes (10): POST body: {"conditions": [...], "action": "trash", "min_age_days": 30}     Retu, POST body: {"conditions": [...], "action": "trash", "min_age_days": 30}     Retu, POST body: {"conditions": [...], "action": "trash", "min_age_days": 30}     Retu, POST body: {         "name": "LinkedIn jobs", "description": "...",         "act, POST body: {         "name": "LinkedIn jobs", "description": "...",         "act, POST body: {         "name": "LinkedIn jobs", "description": "...",         "act, rule_builder_preview(), rule_builder_save() (+2 more)
 
 ### Community 102 - "Community 102"
 Cohesion: 0.25
 Nodes (5): AssetOut, export_assets(), FilterIn, list_assets(), sync_commit_delete()
 
 ### Community 108 - "Community 108"
-Cohesion: 0.22
-Nodes (7): _parse_eml(), Extract images and videos from downloaded .eml files into GmailAttachment record, Parse a .eml file and yield (attachment_id, filename, mime_type, data) tuples, Parse a .eml file and yield (attachment_id, filename, mime_type, data) tuples, Sanitise an untrusted attachment filename.     Handles: Windows backslash paths,, Strip path traversal and dangerous chars from attachment filename., _safe_filename()
+Cohesion: 0.07
+Nodes (15): BaseCommand, Command, Permanently delete all messages currently in Gmail trash.  WARNING: This is irre, Command, _parse_eml(), Extract images and videos from downloaded .eml files into GmailAttachment record, Parse a .eml file and yield (attachment_id, filename, mime_type, data) tuples, Parse a .eml file and yield (attachment_id, filename, mime_type, data) tuples (+7 more)
 
 ### Community 109 - "Community 109"
-Cohesion: 0.17
-Nodes (16): 1 — Clone and configure, 2 — Google OAuth credentials, 5 — Build and start, 7 — Seed rules and run initial setup, After first-time deploy — seed rules and apply protected senders, code:bash (make build && make up && make migrate && make superuser), code:bash (make seed-rules        # seed 15 cleanup rules with correct ), code:bash (git clone git@github-dev:devadalberto/backdeezup.git) (+8 more)
+Cohesion: 0.15
+Nodes (19): 1 — Clone and configure, 2 — Google OAuth credentials, 5 — Build and start, 7 — Seed rules and run initial setup, After first-time deploy — seed rules and apply protected senders, code:bash (make build && make up && make migrate && make superuser), code:bash (make seed-rules        # seed 15 cleanup rules with correct ), code:bash (git clone git@github-dev:devadalberto/backdeezup.git) (+11 more)
 
 ### Community 110 - "Community 110"
 Cohesion: 0.18
@@ -404,23 +409,23 @@ Nodes (8): ConcurrentDownloaderTest, Feature: gmail_pipeline download now uses T
 
 ### Community 111 - "Community 111"
 Cohesion: 0.14
-Nodes (18): 6-container Docker stack, Architecture, code:mermaid (flowchart LR), code:block19 (WINWEB01 boots), code:mermaid (stateDiagram-v2), code:mermaid (stateDiagram-v2), code:mermaid (flowchart TD), Data model (+10 more)
+Nodes (18): 6-container Docker stack, Architecture, Autostart on VM boot, code:mermaid (flowchart LR), code:mermaid (stateDiagram-v2), code:mermaid (stateDiagram-v2), code:mermaid (flowchart TD), Data model (+10 more)
 
 ### Community 112 - "Community 112"
 Cohesion: 0.12
 Nodes (17): Access, Acknowledgements, Admin UI, AI agent collaboration, API reference, Apps, BackDeezUp, code:block23 (# Setup) (+9 more)
 
 ### Community 113 - "Community 113"
-Cohesion: 0.13
-Nodes (21): 1. Create `.env`, 3. Build and start, 4. Run migrations, 5. Create superuser, 6 — Authenticate with Google, CI/CD pipeline (GitHub Actions), code:bash (# Full discovery (finds all message IDs)), code:bash (make discover           # discover Drive media (images/video) (+13 more)
+Cohesion: 0.18
+Nodes (14): 1. Create `.env`, 4. Run migrations, 5. Create superuser, code:bash (# Full discovery (finds all message IDs)), code:bash (make discover           # discover Drive media (images/video), code:bash (# Re-seed rules (idempotent — safe to run anytime, updates t), code:bash (make redeploy         # git pull + rebuild + restart + migra), code:block19 (WINWEB01 boots) (+6 more)
 
 ### Community 114 - "Community 114"
 Cohesion: 0.22
 Nodes (9): Discover media items from Google Photos Library.     NOTE: These are NOT Drive f, Discover media items from Google Photos Library.     NOTE: These are NOT Drive f, Discover media items from Google Photos Library.     NOTE: These are NOT Drive f, sync_discover_photos(), list_photos_items(), Return mediaItems from Google Photos Library.     Note: these are NOT Drive file, Return mediaItems from Google Photos Library., Return mediaItems from Google Photos Library. (+1 more)
 
 ### Community 115 - "Community 115"
-Cohesion: 0.11
-Nodes (23): action_reconcile(), gmail_label(), batch_trash_messages(), delete_message_permanent(), get_attachment_data(), get_message_full(), get_message_raw(), gmail_service() (+15 more)
+Cohesion: 0.29
+Nodes (7): get_message_full(), get_message_raw(), Fetch full message including body., Fetch full message including body., Fetch full message including body., Fetch raw RFC822 bytes (.eml format)., Fetch raw RFC822 bytes (.eml format).
 
 ### Community 116 - "Community 116"
 Cohesion: 0.22
@@ -434,40 +439,52 @@ Nodes (9): Discover commonly-used document types in Drive (pdf, office, csv, arc
 Cohesion: 0.11
 Nodes (15): Celery tasks for Gmail pipeline and cleanup. These are the direct replacements f, Star + label messages from protected senders., Trigger a download batch — useful for on-demand pipeline from web UI., Compare local VERIFIED messages against live Gmail — mark missing as SOFT_DELETE, Purge SOFT_DELETED records older than 90 days — set state to DELETED, keep .eml, Star + label messages from protected senders., Trigger a download batch — useful for on-demand pipeline from web UI., task_apply_protected_senders() (+7 more)
 
-### Community 121 - "Community 121"
-Cohesion: 0.33
-Nodes (3): GmailPipelineCommandTest, BUG: gmail_pipeline discover had no --q flag.     make gmail-discover --q "in:tr, BUG: gmail_pipeline discover had no --q flag.     make gmail-discover --q "in:tr
-
 ### Community 122 - "Community 122"
-Cohesion: 0.25
-Nodes (4): BaseCommand, Command, Command, Seed inbox-specific cleanup rules based on observed inbox content. Safe to run m
+Cohesion: 0.5
+Nodes (4): gmail_trash(), Trash messages in Gmail. Dry-run by default — pass dry_run=false to execute., Trash messages in Gmail. Dry-run by default — pass dry_run=false to execute., Trash messages in Gmail. Dry-run by default — pass dry_run=false to execute.
 
 ### Community 123 - "Community 123"
-Cohesion: 0.33
-Nodes (6): 2. Place Google OAuth credentials, code:bash (make auth), code:bash (# Generate Django secret key), Development commands, Running pipelines, Running the backup pipeline
+Cohesion: 0.5
+Nodes (4): gmail_verify(), Verify .eml file exists on disk for DOWNLOADED messages., Verify .eml file exists on disk for DOWNLOADED messages., Verify .eml file exists on disk for DOWNLOADED messages.
 
 ### Community 124 - "Community 124"
 Cohesion: 0.33
 Nodes (6): sync_discover(), list_media_files(), Return one page of media files (images/videos) from Drive., Return one page of media files (images/videos) from Drive., Return one page of media files (images/videos) from Drive., Return one page of media-like files (images/videos or shortcuts to them).     Lo
 
+### Community 126 - "Community 126"
+Cohesion: 0.5
+Nodes (4): POST body: {"conditions": [...], "action": "trash", "min_age_days": 30, "name":, POST body: {"conditions": [...], "action": "trash", "min_age_days": 30, "name":, POST body: {"conditions": [...], "action": "trash", "min_age_days": 30, "name":, rule_builder_dry_run()
+
+### Community 127 - "Community 127"
+Cohesion: 0.5
+Nodes (4): Return field/operator/logic choices for the frontend builder., Return field/operator/logic choices for the frontend builder., Return field/operator/logic choices for the frontend builder., rule_builder_fields()
+
 ### Community 128 - "Community 128"
 Cohesion: 0.5
 Nodes (3): Full phase commands for GOALS.md dispatcher. Read-only reference., GOALS_TODOS.md -- backdeezup operations runbook, Live phase tracking is in TODO.md -- update checkboxes there, not here.
 
+### Community 130 - "Community 130"
+Cohesion: 0.5
+Nodes (4): delete_message_permanent(), Requires https://mail.google.com/ scope., Permanently delete a message. Requires https://mail.google.com/ scope., Permanently delete a message. Requires https://mail.google.com/ scope.
+
+### Community 135 - "Community 135"
+Cohesion: 0.67
+Nodes (3): gmail_empty_trash(), Permanently delete all messages in Gmail trash.     dry_run=true (default): coun, Permanently delete all messages in Gmail trash.     dry_run=true (default): coun
+
 ## Knowledge Gaps
-- **594 isolated node(s):** `PreToolUse`, `BeforeTool`, `Project-wide Pydantic v2 schemas. Use these for input validation in ALL Django v`, `Base schema — forbids extra fields, strips whitespace from strings.`, `Base schema — ignores extra fields (safe for external API responses).` (+589 more)
+- **599 isolated node(s):** `PreToolUse`, `BeforeTool`, `Project-wide Pydantic v2 schemas. Use these for input validation in ALL Django v`, `Base schema — forbids extra fields, strips whitespace from strings.`, `Base schema — ignores extra fields (safe for external API responses).` (+594 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **32 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **29 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `GmailMessage` connect `Community 18` to `Community 96`, `Community 1`, `Community 98`, `Community 126`, `Community 64`, `Community 90`, `Community 76`, `Community 110`, `Community 78`, `Community 83`, `Community 84`, `Community 88`, `Community 121`, `Community 122`, `Community 94`, `Community 63`?**
-  _High betweenness centrality (0.048) - this node is a cross-community bridge._
-- **Why does `Command` connect `Community 49` to `Community 18`, `Community 122`, `Community 2`?**
+- **Why does `GmailMessage` connect `Community 18` to `Community 96`, `Community 1`, `Community 64`, `Community 76`, `Community 108`, `Community 110`, `Community 78`, `Community 83`, `Community 84`, `Community 88`, `Community 121`, `Community 90`, `Community 94`, `Community 63`?**
+  _High betweenness centrality (0.046) - this node is a cross-community bridge._
+- **Why does `gmail_service()` connect `Community 65` to `Community 64`, `Community 1`, `Community 130`, `Community 0`, `Community 68`, `Community 70`, `Community 135`, `Community 108`, `Community 77`, `Community 115`, `Community 118`, `Community 90`?**
   _High betweenness centrality (0.036) - this node is a cross-community bridge._
-- **Why does `gmail_service()` connect `Community 115` to `Community 64`, `Community 65`, `Community 66`, `Community 1`, `Community 68`, `Community 0`, `Community 70`, `Community 118`, `Community 126`?**
-  _High betweenness centrality (0.034) - this node is a cross-community bridge._
+- **Why does `Command` connect `Community 49` to `Community 2`, `Community 18`, `Community 108`?**
+  _High betweenness centrality (0.035) - this node is a cross-community bridge._
 - **Are the 40 inferred relationships involving `GmailMessage` (e.g. with `GmailMessageOut` and `GmailFilterIn`) actually correct?**
   _`GmailMessage` has 40 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 38 inferred relationships involving `GmailSyncState` (e.g. with `GmailMessageOut` and `GmailFilterIn`) actually correct?**
