@@ -448,11 +448,12 @@ async function loadKPIs() {
     const prog = await fetch('/api/gmail/progress').then(r=>r.json());
     const total    = prog.total || 0;
     const verified = prog.verified || 0;
-    const pct      = total ? Math.round(verified/total*100) : 0;
+    const accounted = prog.accounted || verified;
+    const pct      = total ? Math.round(accounted/total*100) : 0;
     document.getElementById('kpiTotal').textContent    = total.toLocaleString();
     document.getElementById('kpiVerified').textContent = verified.toLocaleString() + ' (' + pct + '%)';
     document.getElementById('kpiVerifiedBar').style.width = pct + '%';
-    document.getElementById('kpiTrashed').textContent  = (prog.discovered||0).toLocaleString();
+    document.getElementById('kpiTrashed').textContent  = (prog.trashed||prog.discovered||0).toLocaleString();
     const dl = prog.downloaded || 0;
     if (dl) document.getElementById('kpiDownloaded').textContent = dl.toLocaleString() + ' downloaded';
   } catch(e) {}
