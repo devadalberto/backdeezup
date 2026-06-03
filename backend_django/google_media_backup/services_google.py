@@ -183,6 +183,15 @@ _COMMON_MIME_LIST = [
     "application/vnd.apple.keynote",
 ]
 
+GOOGLE_EXPORT_MAP = {
+    "application/vnd.google-apps.document": ("application/pdf", ".pdf"),
+    "application/vnd.google-apps.spreadsheet": ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", ".xlsx"),
+    "application/vnd.google-apps.presentation": ("application/pdf", ".pdf"),
+    "application/vnd.google-apps.drawing": ("application/pdf", ".pdf"),
+}
+
+_GOOGLE_NATIVE_MIMES = list(GOOGLE_EXPORT_MAP.keys())
+
 
 def list_common_files(page_size: int = 200, page_token: str | None = None):
     """Return one page of document-type files from Drive."""
@@ -190,7 +199,8 @@ def list_common_files(page_size: int = 200, page_token: str | None = None):
     if not svc:
         return ([], None)
 
-    q_types = " or ".join([f"mimeType='{m}'" for m in _COMMON_MIME_LIST])
+    all_doc_mimes = _COMMON_MIME_LIST + _GOOGLE_NATIVE_MIMES
+    q_types = " or ".join([f"mimeType='{m}'" for m in all_doc_mimes])
     q = f"({q_types}) and trashed=false"
 
     res = svc.files().list(
@@ -226,6 +236,33 @@ def download_file(file_id: str, out_path: str) -> bool:
             except Exception:
                 pass
             return False
+
+
+def download_or_export_file(file_id: str, mime_type: str, out_path: str) -> bool:
+    """Download a file, or export it if it's a Google native format (Docs/Sheets/Slides)."""
+    if mime_type in GOOGLE_EXPORT_MAP:
+        export_mime, _ = GOOGLE_EXPORT_MAP[mime_type]
+        svc = drive_service()
+        if not svc:
+            return False
+        try:
+            req = svc.files().export_media(fileId=file_id, mimeType=export_mime)
+            os.makedirs(os.path.dirname(out_path), exist_ok=True)
+            with io.FileIO(out_path, "wb") as fh:
+                dl = MediaIoBaseDownload(fh, req)
+                done = False
+                while not done:
+                    _, done = dl.next_chunk()
+            return True
+        except Exception:
+            try:
+                if os.path.exists(out_path):
+                    os.remove(out_path)
+            except OSError:
+                pass
+            return False
+    else:
+        return download_file(file_id, out_path)
 
 
 def list_drive_files(page_size: int = 200, page_token: str | None = None, media_only: bool = True):

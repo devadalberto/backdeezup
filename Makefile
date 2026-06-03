@@ -11,6 +11,7 @@ DJ    := backend_django/manage.py
         run docs \
         discover discover-files discover-photos \
         photos-discover photos-download photos-run photos-delete photos-progress \
+        docs-discover docs-download docs-import docs-run docs-progress \
         gmail-discover gmail-incremental gmail-download gmail-verify gmail-run gmail-loop gmail-progress gmail-reconcile gmail-purge-expired \
         pipeline pipeline-gmail pipeline-all \
         progress \
@@ -210,6 +211,26 @@ photos-delete:
 
 photos-progress:
 	@docker compose exec -T web python manage.py shell --verbosity 0 -c "from google_media_backup.models import DriveAsset; from django.db.models import Count; qs=DriveAsset.objects.filter(drive_id__startswith='photos:'); total=qs.count(); states=dict(qs.values_list('state').annotate(n=Count('id'))); print(f'Photos: {total} total | {states}')"
+
+# ── Documents pipeline ───────────────────────────────────────────────────────
+docs-discover:
+	docker compose exec web python manage.py drive_pipeline discover-files --max-pages 50 --page-size 200
+
+docs-download:
+	docker compose exec web python manage.py drive_pipeline download-docs --limit $(LIMIT)
+
+docs-import:
+	docker compose exec web python manage.py import_media --source drive --limit $(LIMIT)
+
+docs-run:
+	@echo "Documents pipeline: discover → download → verify → import"
+	docker compose exec web python manage.py drive_pipeline discover-files --max-pages 50 --page-size 200
+	docker compose exec web python manage.py drive_pipeline download-docs --limit $(LIMIT)
+	docker compose exec web python manage.py drive_pipeline verify --limit $(LIMIT)
+	docker compose exec web python manage.py import_media --source drive --limit $(LIMIT)
+
+docs-progress:
+	@docker compose exec -T web python manage.py shell --verbosity 0 -c "from google_media_backup.models import DriveAsset; from django.db.models import Count; qs=DriveAsset.objects.exclude(drive_id__startswith='photos:').exclude(mime_type__startswith='image/').exclude(mime_type__startswith='video/'); total=qs.count(); states=dict(qs.values_list('state').annotate(n=Count('id'))); print(f'Documents: {total} total | {states}')"
 
 pipeline:
 	uv run python run_pipeline.py drive --limit $(LIMIT)

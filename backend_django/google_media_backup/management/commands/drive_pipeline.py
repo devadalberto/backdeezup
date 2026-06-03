@@ -18,8 +18,8 @@ class Command(BaseCommand):
         parser.add_argument(
             "step",
             choices=["discover", "discover-files", "discover-photos",
-                     "download", "download-photos", "verify",
-                     "mark-delete", "commit-delete"],
+                     "download", "download-photos", "download-docs",
+                     "verify", "mark-delete", "commit-delete"],
         )
         parser.add_argument("--limit", type=int, default=100)
         parser.add_argument("--max-pages", type=int, default=20)
@@ -39,6 +39,8 @@ class Command(BaseCommand):
             self._download(options["limit"])
         elif step == "download-photos":
             self._download_photos(options["limit"])
+        elif step == "download-docs":
+            self._download_docs(options["limit"])
         elif step == "verify":
             self._verify(options["limit"])
         elif step == "mark-delete":
@@ -192,6 +194,75 @@ class Command(BaseCommand):
             f"Photos download: {downloaded} ok, {errors} errors"
         ))
 
+    def _download_docs(self, limit):
+        import os
+        import time
+        from django.utils import timezone
+        from google_media_backup.models import DriveAsset
+        from google_media_backup.services_google import download_or_export_file, GOOGLE_EXPORT_MAP
+        from google_media_backup.utils import deterministic_path
+
+        qs = list(
+            DriveAsset.objects.filter(state="DISCOVERED")
+            .exclude(drive_id__startswith="photos:")
+            .exclude(mime_type__startswith="image/")
+            .exclude(mime_type__startswith="video/")
+            .order_by("discovered_at")[:limit]
+        )
+        if not qs:
+            self.stdout.write("No documents to download.")
+            return
+
+        total = len(qs)
+        downloaded = errors = 0
+        start = time.time()
+
+        for i, asset in enumerate(qs, 1):
+            # Determine output extension
+            if asset.mime_type in GOOGLE_EXPORT_MAP:
+                _, ext = GOOGLE_EXPORT_MAP[asset.mime_type]
+            else:
+                ext = os.path.splitext(asset.name)[1] or ".bin"
+
+            hint = asset.drive_id[:32]
+            final = deterministic_path(asset.name, hint, kind="document")
+            # Override extension for Google native exports
+            if asset.mime_type in GOOGLE_EXPORT_MAP:
+                base = os.path.splitext(final)[0]
+                final = base + ext
+            tmp = final + ".part"
+            try:
+                if download_or_export_file(asset.drive_id, asset.mime_type, tmp) and os.path.exists(tmp):
+                    os.replace(tmp, final)
+                    asset.download_path = final
+                    asset.downloaded_at = timezone.now()
+                    asset.state = "DOWNLOADED"
+                    asset.error = ""
+                    asset.save(update_fields=["download_path", "downloaded_at", "state", "error"])
+                    downloaded += 1
+                else:
+                    asset.error = "Download/export failed"
+                    asset.last_attempt_at = timezone.now()
+                    asset.save(update_fields=["error", "last_attempt_at"])
+                    errors += 1
+            except Exception as exc:
+                asset.error = str(exc)[:500]
+                asset.last_attempt_at = timezone.now()
+                asset.save(update_fields=["error", "last_attempt_at"])
+                errors += 1
+
+            if i % max(1, total // 20) == 0 or i == total:
+                elapsed = time.time() - start
+                rate = i / elapsed if elapsed > 0 else 0
+                self.stdout.write(
+                    f"  {i}/{total} ({i*100//total}%) ok={downloaded} err={errors} "
+                    f"{rate:.1f}/s"
+                )
+
+        self.stdout.write(self.style.SUCCESS(
+            f"Docs download: {downloaded} ok, {errors} errors"
+        ))
+
     def _mark_delete(self, limit, source):
         from django.utils import timezone
         from google_media_backup.models import DriveAsset
@@ -326,7 +397,7 @@ class Command(BaseCommand):
                     )
                     asset.media_item = item
                 asset.state = "VERIFIED"
-                asset.error = None
+                asset.error = ""
                 asset.save(update_fields=["media_item", "state", "error"])
                 verified += 1
             else:

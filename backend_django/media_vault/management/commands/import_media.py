@@ -35,6 +35,21 @@ AUDIO_MIMES = {
     "audio/mpeg", "audio/mp4", "audio/wav", "audio/ogg",
     "audio/flac", "audio/aac", "audio/x-m4a",
 }
+DOC_MIMES = {
+    "application/pdf", "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "text/plain", "text/csv",
+    "application/zip", "application/x-7z-compressed", "application/x-rar-compressed",
+    "application/vnd.apple.pages", "application/vnd.apple.numbers", "application/vnd.apple.keynote",
+    "application/vnd.google-apps.document",
+    "application/vnd.google-apps.spreadsheet",
+    "application/vnd.google-apps.presentation",
+    "application/vnd.google-apps.drawing",
+}
 
 
 def _guess_mime(path: str, fallback: str = "") -> str:
@@ -58,19 +73,19 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(self.style.WARNING("DRY RUN — no files will be written"))
 
-        imported_images = imported_media = skipped = errors = 0
+        imported_images = imported_media = imported_documents = skipped = errors = 0
 
         if source in ("drive", "all"):
-            i, m, s, e = self._import_drive(limit, dry_run)
-            imported_images += i; imported_media += m; skipped += s; errors += e
+            i, m, d, s, e = self._import_drive(limit, dry_run)
+            imported_images += i; imported_media += m; imported_documents += d; skipped += s; errors += e
 
         if source in ("gmail", "all"):
-            i, m, s, e = self._import_gmail(limit, dry_run)
-            imported_images += i; imported_media += m; skipped += s; errors += e
+            i, m, d, s, e = self._import_gmail(limit, dry_run)
+            imported_images += i; imported_media += m; imported_documents += d; skipped += s; errors += e
 
         self.stdout.write(self.style.SUCCESS(
             f"\nDone. images={imported_images} videos/audio={imported_media} "
-            f"skipped={skipped} errors={errors}"
+            f"documents={imported_documents} skipped={skipped} errors={errors}"
         ))
 
     def _import_drive(self, limit, dry_run):
@@ -85,7 +100,7 @@ class Command(BaseCommand):
         if limit:
             qs = qs[:limit]
 
-        images = media_items = skipped = errors = 0
+        images = media_items = documents = skipped = errors = 0
 
         for asset in qs:
             if not asset.download_path or not os.path.exists(asset.download_path):
@@ -145,10 +160,35 @@ class Command(BaseCommand):
                 except Exception as exc:
                     self.stdout.write(self.style.ERROR(f"  ERROR media {asset.name}: {exc}"))
                     errors += 1
+
+            elif mime in DOC_MIMES:
+                from media_vault.models import VaultDocument
+                if VaultDocument.objects.filter(source_id=asset.drive_id, source_type="drive").exists():
+                    skipped += 1
+                    continue
+                if dry_run:
+                    self.stdout.write(f"  [DRY] document: {asset.name} ({mime})")
+                    documents += 1
+                    continue
+                try:
+                    with transaction.atomic():
+                        with open(asset.download_path, "rb") as f:
+                            doc = VaultDocument(
+                                title=asset.name[:255],
+                                source_type="drive",
+                                source_id=asset.drive_id,
+                            )
+                            doc.file.save(os.path.basename(asset.download_path), File(f), save=False)
+                            doc.save()
+                    documents += 1
+                    self.stdout.write(f"  document: {asset.name}")
+                except Exception as exc:
+                    self.stdout.write(self.style.ERROR(f"  ERROR document {asset.name}: {exc}"))
+                    errors += 1
             else:
                 skipped += 1
 
-        return images, media_items, skipped, errors
+        return images, media_items, documents, skipped, errors
 
     def _import_gmail(self, limit, dry_run):
         from google_gmail_backup.models import GmailAttachment
@@ -161,7 +201,7 @@ class Command(BaseCommand):
         if limit:
             qs = qs[:limit]
 
-        images = media_items = skipped = errors = 0
+        images = media_items = documents = skipped = errors = 0
 
         for att in qs:
             if not att.local_path or not os.path.exists(att.local_path):
@@ -220,7 +260,32 @@ class Command(BaseCommand):
                 except Exception as exc:
                     self.stdout.write(self.style.ERROR(f"  ERROR gmail media {att.filename}: {exc}"))
                     errors += 1
+
+            elif mime in DOC_MIMES:
+                from media_vault.models import VaultDocument
+                if VaultDocument.objects.filter(source_id=source_id, source_type="gmail").exists():
+                    skipped += 1
+                    continue
+                if dry_run:
+                    self.stdout.write(f"  [DRY] gmail document: {att.filename} ({mime})")
+                    documents += 1
+                    continue
+                try:
+                    with transaction.atomic():
+                        with open(att.local_path, "rb") as f:
+                            doc = VaultDocument(
+                                title=att.filename[:255] or f"Gmail document {att.id}",
+                                source_type="gmail",
+                                source_id=source_id,
+                            )
+                            doc.file.save(os.path.basename(att.local_path), File(f), save=False)
+                            doc.save()
+                    documents += 1
+                    self.stdout.write(f"  gmail document: {att.filename}")
+                except Exception as exc:
+                    self.stdout.write(self.style.ERROR(f"  ERROR gmail document {att.filename}: {exc}"))
+                    errors += 1
             else:
                 skipped += 1
 
-        return images, media_items, skipped, errors
+        return images, media_items, documents, skipped, errors
