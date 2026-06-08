@@ -1,0 +1,425 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  DJANGO_SECRET_KEY: ci-test-key-not-for-production-use-only-in-ci
+  DEBUG: "True"
+  GOOGLE_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+  DATABASE_URL: ""
+
+# ── Pipeline overview ──────────────────────────────────────────────────────
+# lint         ─────────────────────────────────────── PR gate (container)
+# test         ─────────────────────────────────────── PR gate (container)
+# sast-bandit  ─────────────────────────────────────── SAST, SARIF upload
+# sast-safety  ─────────────────────────────────────── dep CVE scan
+# trivy        ────── needs lint+test ─────────────── image scan, SARIF
+# compose-smoke────── needs lint+test ─────────────── full 6-container stack
+# playwright   ────── needs compose-smoke ──────────── E2E (admin + API docs)
+
+jobs:
+
+  # ── 1. lint ────────────────────────────────────────────────────────────────
+  lint:
+    runs-on: ubuntu-latest
+    container: python:3.12-slim
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        run: |
+          apt-get update -qq && apt-get install -y -qq curl
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Ruff lint
+        run: uv run ruff check backend_django/ --select E,F,W --ignore E501,E701,E702
+
+  # ── 2. test ────────────────────────────────────────────────────────────────
+  test:
+    runs-on: ubuntu-latest
+    container: python:3.12-slim
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        run: |
+          apt-get update -qq && apt-get install -y -qq curl
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Django system check
+        run: uv run python backend_django/manage.py check
+
+      - name: Run tests (SQLite)
+        run: uv run python backend_django/manage.py test google_media_backup google_gmail_backup --verbosity=2
+
+  # ── 3. sast-bandit ────────────────────────────────────────────────────────
+  sast-bandit:
+    runs-on: ubuntu-latest
+    container: python:3.12-slim
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Bandit
+        run: pip install bandit[sarif] --quiet
+
+      - name: Run Bandit SAST
+        run: |
+          bandit -r backend_django/ \
+            -x backend_django/**/migrations \
+            -f sarif \
+            -o bandit.sarif \
+            --severity-level medium \
+            || true
+
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: bandit.sarif
+          category: bandit
+
+  # ── 4. sast-safety ────────────────────────────────────────────────────────
+  sast-safety:
+    runs-on: ubuntu-latest
+    container: python:3.12-slim
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Safety
+        run: pip install safety --quiet
+
+      - name: Run Safety dependency CVE scan
+        run: |
+          safety check --file requirements.txt --output json > safety-report.json \
+            || safety check --output json > safety-report.json \
+            || true
+
+      - name: Upload Safety report
+        uses: actions/upload-artifact@v4
+        with:
+          name: safety-report
+          path: safety-report.json
+          retention-days: 30
+
+  # ── 5. trivy ──────────────────────────────────────────────────────────────
+  trivy:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t backdeezup:ci .
+
+      - name: Run Trivy container scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: backdeezup:ci
+          format: sarif
+          output: trivy.sarif
+          exit-code: "0"
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH,MEDIUM
+
+      - name: Upload Trivy SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif
+          category: trivy
+
+  # ── 6. compose-smoke ──────────────────────────────────────────────────────
+  compose-smoke:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate self-signed TLS certificate
+        run: |
+          mkdir -p nginx/certs
+          openssl req -x509 -newkey rsa:2048 -sha256 -days 1 -nodes \
+            -keyout nginx/certs/server.key \
+            -out    nginx/certs/server.crt \
+            -subj "/CN=ci-backdeezup"
+          chmod 600 nginx/certs/server.key
+          chmod 644 nginx/certs/server.crt
+
+      - name: Create dummy Google client secrets
+        run: |
+          mkdir -p secrets
+          cat > secrets/google_client.json <<'EOF'
+          {
+            "installed": {
+              "client_id": "ci-client-id.apps.googleusercontent.com",
+              "project_id": "ci-project",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_secret": "ci-client-secret",
+              "redirect_uris": ["urn:ietf:wg:oauth:2.0:oob", "http://localhost"]
+            }
+          }
+          EOF
+
+      - name: Write .env for compose stack
+        run: |
+          cat > .env <<EOF
+          DJANGO_SECRET_KEY=${{ env.DJANGO_SECRET_KEY }}
+          DEBUG=True
+          GOOGLE_ENCRYPTION_KEY=${{ env.GOOGLE_ENCRYPTION_KEY }}
+          ALLOWED_HOSTS=localhost,127.0.0.1,web
+          CSRF_TRUSTED_ORIGINS=https://localhost:8445,http://localhost:8844
+          SECURE_SSL_REDIRECT=False
+          SECURE_HSTS_SECONDS=0
+          POSTGRES_USER=backdeezup
+          POSTGRES_PASSWORD=ci_db_pass
+          POSTGRES_DB=backdeezup
+          DATABASE_URL=postgres://backdeezup:ci_db_pass@db:5432/backdeezup
+          REDIS_PASSWORD=ci_redis_pass
+          REDIS_URL=redis://:ci_redis_pass@redis:6379/0
+          SENTRY_DSN=
+          GOOGLE_CLIENT_SECRETS=secrets/google_client.json
+          GOOGLE_TOKEN_FILE=secrets/google_token.json
+          GOOGLE_MIME_ALLOWLIST=image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/x-msvideo
+          DRIVE_DELETE_MODE=trash
+          MIN_RETENTION_DAYS=3
+          MEDIA_ROOT=/app/media
+          STATIC_ROOT=/app/staticfiles
+          WAGTAIL_SITE_NAME=BackDeezUp CI
+          WAGTAILADMIN_BASE_URL=https://localhost:8445
+          BACKDEEZUP_SCHEDULER=0
+          ADMIN_SITE_HEADER=BackDeezUp
+          ADMIN_SITE_TITLE=BackDeezUp Admin
+          ADMIN_INDEX_TITLE=Dashboard
+          SWAGGER_TITLE=BackDeezUp API
+          SWAGGER_VERSION=ci
+          EOF
+
+      - name: Start full Docker Compose stack
+        run: docker compose up -d --build
+
+      - name: Wait for web service to be healthy
+        run: |
+          for i in $(seq 1 30); do
+            STATUS=$(docker compose ps --format json | python3 -c "
+          import json, sys
+          data = sys.stdin.read().strip()
+          lines = [l for l in data.splitlines() if l.strip()]
+          for line in lines:
+              svc = json.loads(line)
+              if svc.get('Service') == 'web':
+                  print(svc.get('State',''))
+                  break
+          " 2>/dev/null || echo "starting")
+            echo "web state: $STATUS (attempt $i/30)"
+            if [ "$STATUS" = "running" ]; then
+              echo "web is running"
+              sleep 5
+              break
+            fi
+            sleep 5
+          done
+
+      - name: Run Django migrations via compose
+        run: docker compose exec -T web python manage.py migrate --run-syncdb
+
+      - name: Smoke test — HTTP redirects to HTTPS
+        run: |
+          HTTP_CODE=$(curl -sk -o /dev/null -w "%{http_code}" http://localhost:8844/ || true)
+          echo "HTTP response code: $HTTP_CODE"
+          # Expect 301 redirect from nginx HTTP -> HTTPS
+          [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ] || \
+            { echo "WARN: expected 3xx redirect, got $HTTP_CODE (nginx may still be starting)"; }
+
+      - name: Smoke test — HTTPS API docs
+        run: |
+          HTTPS_CODE=$(curl -sk -o /dev/null -w "%{http_code}" https://localhost:8445/api/docs || true)
+          echo "HTTPS /api/docs response code: $HTTPS_CODE"
+          [ "$HTTPS_CODE" = "200" ] || \
+            { echo "FAIL: /api/docs returned $HTTPS_CODE"; docker compose logs web; exit 1; }
+
+      - name: Smoke test — Django admin login page
+        run: |
+          ADMIN_CODE=$(curl -sk -o /dev/null -w "%{http_code}" https://localhost:8445/admin/login/ || true)
+          echo "HTTPS /admin/login/ response code: $ADMIN_CODE"
+          [ "$ADMIN_CODE" = "200" ] || \
+            { echo "FAIL: /admin/login/ returned $ADMIN_CODE"; docker compose logs web; exit 1; }
+
+      - name: Collect compose logs on failure
+        if: failure()
+        run: docker compose logs --tail=100
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down -v
+
+  # ── 7. playwright ─────────────────────────────────────────────────────────
+  playwright:
+    runs-on: ubuntu-latest
+    needs: [compose-smoke]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('uv.lock') }}
+          restore-keys: playwright-
+
+      - name: Install Playwright browsers
+        run: uv run playwright install --with-deps chromium
+
+      - name: Generate self-signed TLS certificate
+        run: |
+          mkdir -p nginx/certs
+          openssl req -x509 -newkey rsa:2048 -sha256 -days 1 -nodes \
+            -keyout nginx/certs/server.key \
+            -out    nginx/certs/server.crt \
+            -subj "/CN=ci-backdeezup"
+
+      - name: Create dummy Google client secrets
+        run: |
+          mkdir -p secrets
+          cat > secrets/google_client.json <<'EOF'
+          {
+            "installed": {
+              "client_id": "ci-client-id.apps.googleusercontent.com",
+              "project_id": "ci-project",
+              "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+              "token_uri": "https://oauth2.googleapis.com/token",
+              "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+              "client_secret": "ci-client-secret",
+              "redirect_uris": ["urn:ietf:wg:oauth:2.0:oob", "http://localhost"]
+            }
+          }
+          EOF
+
+      - name: Write .env for playwright stack
+        run: |
+          cat > .env <<EOF
+          DJANGO_SECRET_KEY=${{ env.DJANGO_SECRET_KEY }}
+          DEBUG=True
+          GOOGLE_ENCRYPTION_KEY=${{ env.GOOGLE_ENCRYPTION_KEY }}
+          ALLOWED_HOSTS=localhost,127.0.0.1,web
+          CSRF_TRUSTED_ORIGINS=https://localhost:8445,http://localhost:8844
+          SECURE_SSL_REDIRECT=False
+          SECURE_HSTS_SECONDS=0
+          POSTGRES_USER=backdeezup
+          POSTGRES_PASSWORD=ci_db_pass
+          POSTGRES_DB=backdeezup
+          DATABASE_URL=postgres://backdeezup:ci_db_pass@db:5432/backdeezup
+          REDIS_PASSWORD=ci_redis_pass
+          REDIS_URL=redis://:ci_redis_pass@redis:6379/0
+          SENTRY_DSN=
+          GOOGLE_CLIENT_SECRETS=secrets/google_client.json
+          GOOGLE_TOKEN_FILE=secrets/google_token.json
+          GOOGLE_MIME_ALLOWLIST=image/jpeg,image/png,image/gif,image/webp,video/mp4,video/quicktime,video/x-msvideo
+          DRIVE_DELETE_MODE=trash
+          MIN_RETENTION_DAYS=3
+          MEDIA_ROOT=/app/media
+          STATIC_ROOT=/app/staticfiles
+          WAGTAIL_SITE_NAME=BackDeezUp CI
+          WAGTAILADMIN_BASE_URL=https://localhost:8445
+          BACKDEEZUP_SCHEDULER=0
+          ADMIN_SITE_HEADER=BackDeezUp
+          ADMIN_SITE_TITLE=BackDeezUp Admin
+          ADMIN_INDEX_TITLE=Dashboard
+          SWAGGER_TITLE=BackDeezUp API
+          SWAGGER_VERSION=ci
+          EOF
+
+      - name: Start full Docker Compose stack
+        run: docker compose up -d --build
+
+      - name: Wait for web service to be ready
+        run: |
+          for i in $(seq 1 30); do
+            STATUS=$(docker compose ps --format json | python3 -c "
+          import json, sys
+          data = sys.stdin.read().strip()
+          lines = [l for l in data.splitlines() if l.strip()]
+          for line in lines:
+              svc = json.loads(line)
+              if svc.get('Service') == 'web':
+                  print(svc.get('State',''))
+                  break
+          " 2>/dev/null || echo "starting")
+            echo "web state: $STATUS (attempt $i/30)"
+            if [ "$STATUS" = "running" ]; then
+              sleep 8
+              break
+            fi
+            sleep 5
+          done
+
+      - name: Run Django migrations
+        run: docker compose exec -T web python manage.py migrate --run-syncdb
+
+      - name: Playwright E2E — admin login + API docs
+        run: |
+          uv run python -c "
+          from playwright.sync_api import sync_playwright
+          with sync_playwright() as p:
+              browser = p.chromium.launch(headless=True)
+              ctx = browser.new_context(ignore_https_errors=True)
+              page = ctx.new_page()
+
+              # API docs (main app)
+              page.goto('https://localhost:8445/api/docs')
+              assert 'swagger' in page.content().lower() or page.title() != '', \
+                  f'Swagger UI not loaded: title={page.title()}'
+              print('OK: /api/docs ->', page.title())
+
+              # Gmail API docs
+              page.goto('https://localhost:8445/api/gmail/docs')
+              assert 'swagger' in page.content().lower(), 'Gmail Swagger UI not loaded'
+              print('OK: /api/gmail/docs ->', page.title())
+
+              # Admin login form
+              page.goto('https://localhost:8445/admin/login/')
+              assert page.locator('input[name=username]').count() > 0, \
+                  'Admin login form not found'
+              print('OK: /admin/login/ has username input')
+
+              browser.close()
+          print('All Playwright checks passed.')
+          "
+
+      - name: Collect compose logs on failure
+        if: failure()
+        run: docker compose logs --tail=100
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down -v

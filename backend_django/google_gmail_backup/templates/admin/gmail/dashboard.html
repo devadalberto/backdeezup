@@ -1,0 +1,143 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+
+<style>
+:root{--g0:#000;--g1:#0d0d0d;--g2:#111;--gb:#1e3a1e;--gx:#00ff41;--gm:#00c832;--gd:#008f1f;--ga:#005c14;--gr:#ff3131;--gy:#ffb300;--gy2:#ff8f00;--gt:#00bfff;--fw:#e0ffe0;--fs:13px;}
+body,#content,#content-main{background:var(--g0)!important;color:var(--gm)!important;}
+h1{color:var(--gx)!important;text-shadow:0 0 8px var(--gx);letter-spacing:2px;font-family:monospace;}
+.card{border:1px solid var(--gd);border-radius:4px;padding:16px;margin:12px 0;background:var(--g1);box-shadow:0 0 6px rgba(0,255,65,.1);}
+.card b{color:var(--gx);font-family:monospace;}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;}
+.kpi{border:1px solid var(--gd);border-radius:4px;padding:14px 16px;background:var(--g1);text-align:center;}
+.kpi-label{font-size:10px;color:var(--gd);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.kpi-val{font-size:26px;font-weight:bold;color:var(--gx);font-family:monospace;}
+.kpi-sub{font-size:11px;color:var(--gd);margin-top:2px;}
+/* ── Backup Progress ─────────────────────────────── */
+.progress-card{border:1px solid var(--gm);border-radius:4px;padding:20px;margin:0 0 16px;background:var(--g1);box-shadow:0 0 12px rgba(0,255,65,.15);}
+.progress-label{font-size:11px;color:var(--gd);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.progress-pct{font-size:36px;font-weight:bold;color:var(--gx);font-family:monospace;text-shadow:0 0 10px var(--gx);}
+.progress-detail{font-size:13px;color:var(--gm);margin-top:4px;font-family:monospace;}
+.progress-bar-wrap{background:var(--ga);border-radius:6px;height:12px;margin:10px 0 6px;overflow:hidden;}
+.progress-bar-fill{background:var(--gx);height:12px;border-radius:6px;box-shadow:0 0 8px var(--gx);transition:width .6s;}
+.progress-blocked{color:var(--gr);font-size:12px;font-family:monospace;margin-top:6px;}
+.progress-ready{color:var(--gx);font-size:12px;font-family:monospace;margin-top:6px;}
+/* ── Tables ──────────────────────────────────────── */
+table{width:100%;border-collapse:collapse;font-size:13px;font-family:monospace;}
+thead tr{background:var(--gb);}
+thead th{padding:7px 10px;color:var(--gx);letter-spacing:1px;text-align:left;}
+tbody tr{border-bottom:1px solid var(--ga);}
+tbody tr:hover{background:var(--g2);}
+tbody td{padding:7px 10px;color:var(--fw);}
+tbody td b{color:var(--gx);}
+/* ── State badge ─────────────────────────────────── */
+.state-verified{color:var(--gx);}
+.state-downloaded{color:var(--gt);}
+.state-discovered{color:var(--gm);}
+.state-trashed,.state-deleted{color:var(--gr);}
+.btn{display:inline-block;padding:7px 16px;background:var(--ga);color:var(--gm);border:1px solid var(--gd);border-radius:3px;cursor:pointer;font-family:monospace;font-size:var(--fs);text-decoration:none;transition:all .15s;}
+.btn:hover{background:var(--gb);color:var(--gx);border-color:var(--gx);box-shadow:0 0 6px var(--gx);}
+</style>
+
+<!-- ── Backup Progress (HTMX live) ──────────────────────────────────────── -->
+<div class="progress-card" id="backupProgress"
+     hx-get="/htmx/gmail/progress/"
+     hx-trigger="load, every 10s"
+     hx-swap="innerHTML">
+  <div class="progress-label">Gmail Backup Progress</div>
+  <div style="color:var(--gd);font-family:monospace">Loading...</div>
+</div>
+
+<!-- ── KPI grid ─────────────────────────────────────────────────────────── -->
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-label">Total Messages</div>
+    <div class="kpi-val">{{ totals.messages|default:"—" }}</div>
+    <div class="kpi-sub">in Gmail account</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Verified</div>
+    <div class="kpi-val" style="color:var(--gx)">{{ totals.verified|default:"—" }}</div>
+    <div class="kpi-sub">.eml on disk + checked</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">In Transit</div>
+    <div class="kpi-val" style="color:var(--gt)">{{ totals.downloaded|default:"—" }}</div>
+    <div class="kpi-sub">downloaded, awaiting verify</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">With Attachments</div>
+    <div class="kpi-val" style="color:var(--gy)">{{ totals.with_attachments|default:"—" }}</div>
+    <div class="kpi-sub">messages with files</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Total Size</div>
+    <div class="kpi-val" style="font-size:18px;padding-top:4px">{{ totals.bytes_total|filesizeformat }}</div>
+    <div class="kpi-sub">estimated inbox size</div>
+  </div>
+</div>
+
+<!-- ── By State breakdown ───────────────────────────────────────────────── -->
+<div class="card">
+  <b>By State</b>
+  <table style="margin-top:10px">
+    <thead><tr><th>State</th><th>Count</th><th>Est. Size</th><th>% of total</th></tr></thead>
+    <tbody>
+      {% for row in by_state %}
+      <tr>
+        <td class="state-{{ row.state|lower }}"><b>{{ row.state }}</b></td>
+        <td>{{ row.n }}</td>
+        <td>{{ row.bytes|default:0|filesizeformat }}</td>
+        <td style="color:var(--gd)">
+          {% if totals.messages %}
+            {% widthratio row.n totals.messages 100 %}%
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="4" style="color:var(--gd);padding:12px">No data yet — run make gmail-discover</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Accounts ─────────────────────────────────────────────────────────── -->
+<div class="card">
+  <b>Accounts</b>
+  {% for a in accounts %}
+  <div style="margin-top:10px;font-family:monospace;font-size:13px">
+    <span style="color:var(--gx)">{{ a.email }}</span>
+    <span style="color:var(--gd);margin-left:12px">historyId: {{ a.last_history_id|default:"none" }}</span>
+    <span style="color:var(--gd);margin-left:12px">last full sync: {{ a.last_full_sync_at|default:"never" }}</span>
+    <span style="color:var(--gd);margin-left:12px">last incremental: {{ a.last_incremental_at|default:"never" }}</span>
+    <span style="color:var(--gm);margin-left:12px">{{ a.total_messages }} messages</span>
+  </div>
+  {% empty %}
+  <p style="color:var(--gd);margin-top:8px">No accounts synced yet. Run: <code style="color:var(--gt)">make gmail-discover</code></p>
+  {% endfor %}
+</div>
+
+<!-- ── Top Senders ──────────────────────────────────────────────────────── -->
+<div class="card">
+  <b>Top Senders</b>
+  <table style="margin-top:10px">
+    <thead><tr><th>Sender</th><th>Messages</th><th>Est. Size</th></tr></thead>
+    <tbody>
+      {% for s in top_senders %}
+      <tr>
+        <td>{{ s.from_address }}</td>
+        <td><b>{{ s.n }}</b></td>
+        <td>{{ s.bytes|default:0|filesizeformat }}</td>
+      </tr>
+      {% empty %}<tr><td colspan="3" style="color:var(--gd);padding:12px">No data yet</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ── Actions ──────────────────────────────────────────────────────────── -->
+<div style="margin:16px 0;display:flex;gap:10px;flex-wrap:wrap">
+  <a class="btn" href="/admin/gmail/ops/">&#9654; Gmail Ops Console</a>
+  <a class="btn" href="/api/gmail/progress" target="_blank">&#9654; Progress (JSON)</a>
+  <a class="btn" href="/api/gmail/docs" target="_blank">&#9654; API Docs</a>
+</div>
+
+{% endblock %}

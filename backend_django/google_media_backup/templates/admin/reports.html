@@ -1,0 +1,105 @@
+{% extends "admin/base_site.html" %} {% load static %} {% block content %}
+<h1>Gmail Media Cleanup — Reports</h1>
+
+<div
+  style="
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin: 18px 0;
+  "
+>
+  <div class="module">
+    <h2>Totals</h2>
+    <div class="inline-group">
+      <div class="form-row">Assets: <b>{{ totals.assets|default:"0" }}</b></div>
+      <div class="form-row">
+        Media Items: <b>{{ totals.media_items|default:"0" }}</b>
+      </div>
+      <div class="form-row">
+        Bytes (sum): <b>{{ totals.bytes_total|default:"0" }}</b>
+      </div>
+    </div>
+  </div>
+
+  <div class="module">
+    <h2>By State</h2>
+    <table class="grp-table">
+      <thead>
+        <tr>
+          <th>State</th>
+          <th>Count</th>
+          <th>Bytes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in summary %}
+        <tr>
+          <td>{{ row.state }}</td>
+          <td>{{ row.n }}</td>
+          <td>{{ row.bytes|default:"0" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3">No data</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="module">
+    <h2>Top MIME Types</h2>
+    <table class="grp-table">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Count</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in top_mimes %}
+        <tr>
+          <td>{{ m.mime_type }}</td>
+          <td>{{ m.n }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="2">No data</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="module">
+  <h2>Recent Runs</h2>
+  <table class="grp-table">
+    <thead>
+      <tr>
+        <th>Run ID</th>
+        <th>Status</th>
+        <th>Started</th>
+        <th>Finished</th>
+        <th>Totals</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in runs %}
+      <tr>
+        <td style="font-family: monospace">{{ r.run_id }}</td>
+        <td>{{ r.status }}</td>
+        <td>{{ r.started_at }}</td>
+        <td>{{ r.finished_at|default:"" }}</td>
+        <td><code style="font-size: 12px">{{ r.totals }}</code></td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5">No runs yet.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

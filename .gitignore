@@ -1,0 +1,27 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+.env
+.venv/
+secrets/*.json
+media/
+staticfiles/
+site/
+dist/
+.DS_Store
+setup*.sh
+graphify-out/cache/
+nginx/certs/*.crt
+nginx/certs/*.key
+nginx/certs/*.pem
+graphify-out/.rebuild.lock
+.claude/settings.local.json
+# AI assistant & internal planning — not committed
+CLAUDE.md
+AGENTS.md
+GOALS.md
+GOALS_TODOS.md
+TODO.md
+shared_context.md

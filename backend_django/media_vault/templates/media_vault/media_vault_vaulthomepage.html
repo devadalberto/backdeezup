@@ -1,0 +1,22 @@
+{% extends "media_vault/base.html" %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+<h1>{{ page.title }}</h1>
+{% if page.tagline %}<p style="color:var(--gm);margin-bottom:16px;font-size:14px;">{{ page.tagline }}</p>{% endif %}
+{% if page.intro %}<p style="color:var(--fw);margin-bottom:24px;">{{ page.intro }}</p>{% endif %}
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:16px;">
+  {% for child in page.get_children.live %}
+  <a href="{% pageurl child %}"
+     style="display:block;padding:20px;border:1px solid var(--ga);border-radius:4px;background:var(--g1);text-decoration:none;transition:all .15s;">
+    <div style="color:var(--gx);font-size:15px;font-weight:bold;margin-bottom:6px;">{{ child.title }}</div>
+    <div style="color:var(--gd);font-size:12px;">{{ child.specific_class.get_verbose_name }}</div>
+  </a>
+  {% empty %}
+  <div style="color:var(--gd);padding:20px;">
+    No pages yet. <a href="/cms/">Add pages in Wagtail CMS</a>.
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

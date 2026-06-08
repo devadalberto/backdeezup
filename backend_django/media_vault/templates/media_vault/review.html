@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BackDeezUp — Media Review</title>
+<style>
+:root{--gx:#00ff41;--gm:#00c832;--gd:#008f1f;--ga:#003a10;--g0:#000;--g1:#080808;--g2:#111;--fw:#ccffcc;--gr:#ff3131;--gy:#c8a800;--gt:#00bfff;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--g0);color:var(--fw);font-family:'Courier New',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+header{background:var(--g1);border-bottom:1px solid var(--ga);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{color:var(--gx);font-size:16px;letter-spacing:3px;text-shadow:0 0 8px var(--gx);}
+.stats{font-size:12px;color:var(--gd);}
+.stats span{color:var(--gm);margin-left:8px;}
+.progress-bar{height:3px;background:var(--g2);}
+.progress-fill{height:3px;background:var(--gx);transition:width .3s;box-shadow:0 0 6px var(--gx);}
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;overflow:hidden;}
+.media-container{max-width:900px;width:100%;text-align:center;position:relative;}
+.media-title{color:var(--gx);font-size:14px;letter-spacing:1px;margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.media-meta{color:var(--gd);font-size:11px;margin-bottom:12px;}
+.media-display{background:var(--g1);border:1px solid var(--ga);border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:300px;max-height:60vh;}
+.media-display img{max-width:100%;max-height:60vh;object-fit:contain;display:block;}
+.media-display video{max-width:100%;max-height:60vh;}
+.no-media{color:var(--gd);font-size:18px;padding:40px;}
+.controls{margin-top:16px;display:flex;gap:12px;justify-content:center;align-items:center;}
+.btn{padding:10px 28px;border-radius:4px;cursor:pointer;font-family:monospace;font-size:14px;font-weight:bold;letter-spacing:1px;border:2px solid;transition:all .15s;}
+.btn:hover{transform:scale(1.05);}
+.btn:disabled{opacity:.3;cursor:not-allowed;transform:none;}
+.btn-keep{background:#003a10;color:var(--gx);border-color:var(--gx);}
+.btn-keep:hover{box-shadow:0 0 12px var(--gx);background:#005a18;}
+.btn-skip{background:#111;color:var(--gy);border-color:var(--gy);}
+.btn-skip:hover{box-shadow:0 0 8px var(--gy);}
+.btn-delete{background:#3a0000;color:var(--gr);border-color:var(--gr);}
+.btn-delete:hover{box-shadow:0 0 12px var(--gr);background:#5a0000;}
+.shortcuts{color:var(--gd);font-size:11px;margin-top:8px;}
+.shortcuts kbd{background:var(--g2);border:1px solid var(--ga);padding:1px 5px;border-radius:3px;color:var(--gm);}
+.type-toggle{display:flex;gap:8px;justify-content:center;margin-bottom:12px;}
+.type-btn{padding:4px 12px;font-size:12px;font-family:monospace;cursor:pointer;background:var(--g1);border:1px solid var(--ga);color:var(--gm);border-radius:3px;}
+.type-btn.active{background:var(--ga);border-color:var(--gx);color:var(--gx);}
+.done-screen{text-align:center;padding:40px;}
+.done-screen h2{color:var(--gx);font-size:24px;letter-spacing:2px;margin-bottom:16px;}
+.done-screen p{color:var(--gm);margin-bottom:8px;}
+a{color:var(--gm);text-decoration:none;}
+a:hover{color:var(--gx);}
+.toast{position:fixed;bottom:20px;right:20px;padding:8px 16px;border-radius:4px;font-family:monospace;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+.toast-keep{background:var(--ga);color:var(--gx);border:1px solid var(--gx);}
+.toast-delete{background:#3a0000;color:var(--gr);border:1px solid var(--gr);}
+.toast-skip{background:#2a2000;color:var(--gy);border:1px solid var(--gy);}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo">&#9608; Media Review</span>
+  <div class="stats">
+    reviewed <span id="statReviewed">0</span> /
+    total <span id="statTotal">?</span> &nbsp;|&nbsp;
+    keep <span id="statKeep" style="color:var(--gx)">0</span> &nbsp;
+    delete <span id="statDelete" style="color:var(--gr)">0</span> &nbsp;
+    skip <span id="statSkip" style="color:var(--gy)">0</span>
+    &nbsp;|&nbsp; <a href="/admin/">Admin</a> &nbsp; <a href="/cms/">CMS</a>
+  </div>
+</header>
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+<main>
+  <div class="media-container" id="mediaContainer">
+
+    <div class="type-toggle">
+      <button class="type-btn active" id="btnTypeImage" onclick="switchType('image')">Images</button>
+      <button class="type-btn" id="btnTypeVideo" onclick="switchType('video')">Videos</button>
+    </div>
+
+    <div id="mediaDisplay">
+      <div class="no-media">Loading...</div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-delete" id="btnDelete" onclick="decide('delete')" disabled>&#10007; Delete</button>
+      <button class="btn btn-skip"   id="btnSkip"   onclick="decide('skip')"   disabled>&#x2192; Skip</button>
+      <button class="btn btn-keep"   id="btnKeep"   onclick="decide('keep')"   disabled>&#10003; Keep</button>
+    </div>
+    <div class="shortcuts">
+      <kbd>K</kbd> Keep &nbsp; <kbd>D</kbd> Delete &nbsp; <kbd>S</kbd> / <kbd>Space</kbd> Skip &nbsp; <kbd>Z</kbd> Undo last
+    </div>
+
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CSRF = (document.cookie.match('(^|;) ?csrftoken=([^;]*)(;|$)')||[])[2]||'';
+let currentItem = null;
+let currentType = 'image';
+let history = [];
+let stats = {reviewed:0, keep:0, delete:0, skip:0, total:0};
+
+async function loadStatus() {
+  try {
+    const r = await fetch('/api/vault/status');
+    const d = await r.json();
+    stats.total = d.total_items || 0;
+    document.getElementById('statTotal').textContent = stats.total;
+    updateProgress();
+  } catch(e) {}
+}
+
+async function loadNext() {
+  setButtons(false);
+  document.getElementById('mediaDisplay').innerHTML = '<div class="no-media" style="font-size:13px;color:var(--gd)">Loading...</div>';
+  try {
+    const r = await fetch(`/api/vault/next-undecided?item_type=${currentType}`);
+    const d = await r.json();
+    if (d.done) {
+      showDone();
+      return;
+    }
+    currentItem = d;
+    renderItem(d);
+    setButtons(true);
+  } catch(e) {
+    document.getElementById('mediaDisplay').innerHTML = `<div class="no-media" style="color:var(--gr)">Error: ${e}</div>`;
+  }
+}
+
+function renderItem(item) {
+  let html = `<div class="media-title">${item.title||'Untitled'}</div>
+    <div class="media-meta">${item.source_type||''} ${item.source_id?'· '+item.source_id.slice(0,20)+'...':''}</div>`;
+  if (item.type === 'image' && item.url) {
+    html += `<div class="media-display"><img src="${item.url}" alt="${item.title}" onerror="this.style.display='none'"></div>`;
+  } else if (item.type === 'video' && item.sources && item.sources.length) {
+    const srcs = item.sources.map(s=>`<source src="${s.src}" type="${s.type}">`).join('');
+    html += `<div class="media-display"><video controls style="max-width:100%;max-height:60vh;">${srcs}<p style="color:var(--gr);padding:20px">Video not supported</p></video></div>`;
+  } else {
+    html += `<div class="media-display"><div class="no-media" style="font-size:28px;">&#128248;<br><span style="font-size:13px;color:var(--gd)">No preview</span></div></div>`;
+  }
+  document.getElementById('mediaDisplay').innerHTML = html;
+}
+
+async function decide(action) {
+  if (!currentItem) return;
+  if (action === 'skip') {
+    history.push({item: currentItem, action: 'skip'});
+    stats.skip++; stats.reviewed++;
+    showToast('Skipped', 'skip');
+    updateStats(); loadNext(); return;
+  }
+  setButtons(false);
+  try {
+    await fetch('/api/vault/decide', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+      body: JSON.stringify({item_type: currentItem.type==='image'?'image':'video', item_id: currentItem.id, action})
+    });
+    history.push({item: currentItem, action});
+    if (action==='keep') stats.keep++;
+    else stats.delete++;
+    stats.reviewed++;
+    showToast(action==='keep'?'Kept ✓':'Deleted ✗', action);
+    updateStats(); loadNext();
+  } catch(e) { setButtons(true); showToast('Error: '+e,'delete'); }
+}
+
+async function undoLast() {
+  if (!history.length) return;
+  const last = history.pop();
+  if (last.action === 'keep') stats.keep--;
+  else if (last.action === 'delete') stats.delete--;
+  else stats.skip--;
+  stats.reviewed--;
+  if (last.action !== 'skip') {
+    await fetch('/api/vault/decide', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+      body: JSON.stringify({item_type: last.item.type==='image'?'image':'video', item_id: last.item.id, action:'undecided'})
+    });
+  }
+  showToast('Undone','skip');
+  updateStats();
+  currentItem = last.item; renderItem(last.item); setButtons(true);
+}
+
+function switchType(type) {
+  currentType = type;
+  document.getElementById('btnTypeImage').className = 'type-btn' + (type==='image'?' active':'');
+  document.getElementById('btnTypeVideo').className = 'type-btn' + (type==='video'?' active':'');
+  loadNext();
+}
+
+function showDone() {
+  setButtons(false);
+  document.getElementById('mediaDisplay').innerHTML = `
+    <div class="done-screen">
+      <h2>&#10003; ALL ${currentType.toUpperCase()}S REVIEWED</h2>
+      <p>Keep: <span style="color:var(--gx)">${stats.keep}</span> &nbsp; Delete: <span style="color:var(--gr)">${stats.delete}</span> &nbsp; Skipped: <span style="color:var(--gy)">${stats.skip}</span></p>
+      <p style="margin-top:16px"><a href="?type=${currentType==='image'?'video':'image'}" style="color:var(--gt)">Switch to ${currentType==='image'?'videos':'images'}</a> &nbsp;|&nbsp; <a href="/cms/">Go to CMS</a></p>
+    </div>`;
+}
+
+function setButtons(enabled) {
+  ['btnKeep','btnDelete','btnSkip'].forEach(id=>document.getElementById(id).disabled=!enabled);
+}
+
+function updateStats() {
+  document.getElementById('statReviewed').textContent = stats.reviewed;
+  document.getElementById('statKeep').textContent = stats.keep;
+  document.getElementById('statDelete').textContent = stats.delete;
+  document.getElementById('statSkip').textContent = stats.skip;
+  updateProgress();
+}
+
+function updateProgress() {
+  const pct = stats.total ? Math.round(stats.reviewed/stats.total*100) : 0;
+  document.getElementById('progressFill').style.width = pct+'%';
+}
+
+let toastTimer;
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast toast-${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.classList.remove('show'), 1200);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key==='k'||e.key==='K') decide('keep');
+  else if (e.key==='d'||e.key==='D') decide('delete');
+  else if (e.key==='s'||e.key==='S'||e.key===' ') { e.preventDefault(); decide('skip'); }
+  else if (e.key==='z'||e.key==='Z') undoLast();
+  else if (e.key==='ArrowRight') decide('skip');
+});
+
+// Init
+const urlType = new URLSearchParams(location.search).get('type');
+if (urlType) { currentType = urlType; switchType(urlType); }
+loadStatus();
+loadNext();
+</script>
+</body>
+</html>

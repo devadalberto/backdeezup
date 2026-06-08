@@ -1,0 +1,479 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+
+<!-- Live backup progress (HTMX) -->
+<div id="backupProgress"
+     hx-get="/htmx/gmail/progress/"
+     hx-trigger="load, every 15s"
+     hx-swap="innerHTML"
+     style="margin-bottom:16px;padding:14px 16px;background:var(--g1);border:1px solid var(--gm);border-radius:4px;box-shadow:0 0 10px rgba(0,255,65,.1);">
+  <span style="color:var(--gd);font-family:monospace;font-size:12px;">Loading backup progress...</span>
+</div>
+
+<!-- KPI Dashboard -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px" id="kpiGrid">
+  <div class="card" style="text-align:center">
+    <div style="font-size:11px;color:var(--gd);letter-spacing:2px">TOTAL MESSAGES</div>
+    <div style="font-size:28px;font-weight:bold;color:var(--gx);text-shadow:0 0 8px var(--gx)" id="kpiTotal">—</div>
+  </div>
+  <div class="card" style="text-align:center">
+    <div style="font-size:11px;color:var(--gd);letter-spacing:2px">VERIFIED</div>
+    <div style="font-size:28px;font-weight:bold;color:var(--gx)" id="kpiVerified">—</div>
+    <div style="background:var(--ga);border-radius:4px;height:6px;margin-top:6px">
+      <div id="kpiVerifiedBar" style="background:var(--gx);height:6px;border-radius:4px;width:0%;transition:width .5s;box-shadow:0 0 6px var(--gx)"></div>
+    </div>
+  </div>
+  <div class="card" style="text-align:center">
+    <div style="font-size:11px;color:var(--gd);letter-spacing:2px">PENDING DL</div>
+    <div style="font-size:28px;font-weight:bold;color:var(--gy)" id="kpiTrashed">—</div>
+    <div style="font-size:10px;color:var(--gd)" id="kpiDownloaded"></div>
+  </div>
+  <div class="card" style="text-align:center">
+    <div style="font-size:11px;color:var(--gd);letter-spacing:2px">WITH ATTACHMENTS</div>
+    <div style="font-size:28px;font-weight:bold;color:var(--gt)" id="kpiAttach">—</div>
+  </div>
+  <div class="card" style="text-align:center">
+    <div style="font-size:11px;color:var(--gd);letter-spacing:2px">RULES ACTIVE</div>
+    <div style="font-size:28px;font-weight:bold;color:var(--gm)" id="kpiRules">—</div>
+  </div>
+  <div class="card" style="text-align:center">
+    <div style="font-size:11px;color:var(--gd);letter-spacing:2px">CLEANUP ACTIONS</div>
+    <div style="font-size:28px;font-weight:bold;color:var(--gm)" id="kpiAudit">—</div>
+    <div style="font-size:10px;color:var(--gd)" id="kpiLastRun">last run: —</div>
+  </div>
+</div>
+
+<style>
+/* Matrix theme — phosphor green on black */
+:root {
+  --g0: #000;
+  --g1: #0d0d0d;
+  --g2: #111;
+  --g3: #1a1a1a;
+  --gb: #1e3a1e;
+  --gx: #00ff41;
+  --gm: #00c832;
+  --gd: #008f1f;
+  --ga: #005c14;
+  --gr: #ff3131;
+  --gy: #c8a800;
+  --gt: #00bfff;
+  --fw: #e0ffe0;
+  --fs: 13px;
+}
+body, #content, #content-main { background: var(--g0) !important; color: var(--gm) !important; }
+h1 { color: var(--gx) !important; text-shadow: 0 0 8px var(--gx); letter-spacing: 2px; font-family: monospace; }
+.card {
+  border: 1px solid var(--gd);
+  border-radius: 4px;
+  padding: 16px;
+  margin: 12px 0;
+  background: var(--g1);
+  box-shadow: 0 0 6px rgba(0,255,65,.12);
+}
+.card b { color: var(--gx); font-family: monospace; letter-spacing: 1px; }
+.row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+input[type=number], input[type=text] {
+  background: var(--g2);
+  color: var(--gm);
+  border: 1px solid var(--gd);
+  border-radius: 3px;
+  padding: 3px 6px;
+  font-family: monospace;
+}
+input[type=number]:focus, input[type=text]:focus { outline: 1px solid var(--gx); }
+.btn {
+  padding: 6px 14px;
+  border: 1px solid var(--gd);
+  background: var(--ga);
+  color: var(--gm);
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: var(--fs);
+  font-family: monospace;
+  transition: all .15s;
+}
+.btn:hover { background: var(--gb); color: var(--gx); border-color: var(--gx); box-shadow: 0 0 6px var(--gx); }
+.btn:disabled { opacity:.35; cursor:not-allowed; }
+.btn-primary { background: var(--ga); color: var(--gx); border-color: var(--gm); }
+.btn-danger  { background: #3a0000; color: var(--gr); border-color: var(--gr); }
+.btn-danger:hover { background: #5a0000; box-shadow: 0 0 6px var(--gr); }
+.btn-warn    { background: #2a2000; color: var(--gy); border-color: var(--gy); }
+.btn-warn:hover { box-shadow: 0 0 6px var(--gy); }
+.btn-sm      { padding: 2px 8px; font-size: 11px; }
+.badge-on    { color: var(--gx); font-weight: bold; text-shadow: 0 0 4px var(--gx); font-family: monospace; }
+.badge-off   { color: #444; font-family: monospace; }
+.tag { display:inline-block; padding:2px 7px; border-radius:3px; font-size:11px; font-family:monospace; }
+.tag-dry { background: #001a33; color: var(--gt); border: 1px solid var(--gt); }
+.tag-ok  { background: var(--ga); color: var(--gx); border: 1px solid var(--gd); }
+.tag-err { background: #3a0000; color: var(--gr); border: 1px solid var(--gr); }
+pre#out {
+  background: var(--g0);
+  color: var(--gx);
+  border: 1px solid var(--gd);
+  border-radius: 4px;
+  padding: 12px;
+  overflow: auto;
+  max-height: 280px;
+  font-size: 12px;
+  font-family: monospace;
+  white-space: pre-wrap;
+  text-shadow: 0 0 3px rgba(0,255,65,.4);
+}
+table.audit-table { width:100%; border-collapse:collapse; font-size:12px; font-family:monospace; }
+table.audit-table th { background: var(--gb); color: var(--gx); padding:5px 8px; text-align:left; letter-spacing:1px; }
+table.audit-table td { padding:5px 8px; border-bottom:1px solid var(--ga); color: var(--fw); }
+table.audit-table tr:hover td { background: var(--g2); }
+table { width:100%; border-collapse:collapse; font-size:13px; font-family:monospace; }
+table thead tr { background: var(--gb); }
+table thead th { padding:7px 8px; color:var(--gx); letter-spacing:1px; text-align:left; }
+table tbody tr { border-bottom:1px solid var(--ga); }
+table tbody tr:hover { background: var(--g2); }
+table tbody td { padding:7px 8px; color: var(--fw); }
+table tbody td b { color: var(--gx); }
+table tbody td span[style*="color:#888"] { color: var(--gd) !important; }
+code { color: var(--gt); font-family: monospace; }
+a.btn { text-decoration: none; }
+ul { color: var(--gm); }
+li { margin: 3px 0; }
+.confirm-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:9999; align-items:center; justify-content:center; }
+.confirm-box {
+  background: var(--g2);
+  border: 1px solid var(--gx);
+  box-shadow: 0 0 20px rgba(0,255,65,.3);
+  border-radius: 6px;
+  padding: 28px;
+  max-width: 420px;
+  width: 90%;
+  font-family: monospace;
+}
+.confirm-box h3 { color: var(--gr); margin-top:0; }
+.confirm-box p  { color: var(--fw); }
+</style>
+
+<!-- Confirmation dialog -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h3 id="confirmTitle">Confirm action</h3>
+    <p id="confirmMsg"></p>
+    <div class="row">
+      <button class="btn btn-danger" id="confirmYes">Execute</button>
+      <button class="btn" onclick="closeConfirm()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Accounts status -->
+<div class="card">
+  <b>Accounts</b>
+  {% for a in accounts %}
+  <div style="margin-top:8px">
+    <b>{{ a.email }}</b>
+    &nbsp;|&nbsp; historyId: {{ a.last_history_id|default:"none" }}
+    &nbsp;|&nbsp; last full sync: {{ a.last_full_sync_at|default:"never" }}
+    &nbsp;|&nbsp; last incremental: {{ a.last_incremental_at|default:"never" }}
+    &nbsp;|&nbsp; messages: {{ a.total_messages }}
+  </div>
+  {% empty %}
+    <p>No accounts synced yet. Run: <code>make gmail-discover</code></p>
+  {% endfor %}
+</div>
+
+<!-- Pipeline operations -->
+<div class="card">
+  <b>Pipeline</b>
+  <div class="row" style="margin-top:10px">
+    <label>Limit&nbsp;<input id="limit" type="number" value="100" style="width:70px"></label>
+    <label>Search (q)&nbsp;<input id="qfilter" type="text" placeholder="e.g. from:newsletter" style="width:260px"></label>
+  </div>
+  <div class="row">
+    <button class="btn btn-primary" onclick="call('gmail/sync/discover?max_pages=20&page_size=500', 'POST', this)">Discover</button>
+    <button class="btn btn-primary" onclick="call('gmail/sync/incremental', 'POST', this)">Incremental sync</button>
+    <button class="btn" onclick="callLimit('gmail/sync/download', this)">Download .eml</button>
+    <button class="btn" onclick="callLimit('gmail/sync/verify', this)">Verify</button>
+  </div>
+</div>
+
+<!-- Protected senders -->
+<div class="card">
+  <b>Protected Senders</b>&nbsp;
+  <span style="font-size:12px;color:var(--gd)">— starred + labeled, never trashed by any cleanup rule</span>
+  <div class="row" style="margin-top:10px">
+    <button class="btn btn-primary" onclick="call('gmail/protected-senders/apply', 'POST', this)">
+      Apply Protected Sender Rules (star + label all family emails)
+    </button>
+    <a class="btn btn-sm" href="/admin/google_gmail_backup/protectedsender/" style="margin-left:8px">Manage</a>
+  </div>
+  <ul style="margin:8px 0 0 16px;font-size:13px;">
+    {% for ps in protected_senders %}
+    <li style="color:var(--gm);margin:3px 0;">{{ ps.email }} <span style="color:var(--gd)">&#8594; {{ ps.label_to_apply }}</span>{% if ps.star %} <span style="color:var(--gy)">&#9733;</span>{% endif %}</li>
+    {% empty %}
+    <li style="color:var(--gd)">None seeded — run: <code>make seed-rules</code></li>
+    {% endfor %}
+  </ul>
+</div>
+
+<!-- Cleanup rules -->
+<div class="card">
+  <b>Cleanup Rules</b>
+  <div id="cleanup-live" hx-get="/htmx/gmail/cleanup-status/" hx-trigger="load, every 3s" hx-swap="innerHTML" style="margin:8px 0;min-height:20px;"></div>
+  <div class="row" style="margin-top:10px">
+    <button class="btn btn-warn" onclick="call('gmail/rules/run-all?dry_run=true', 'POST', this)">
+      Dry-run All Enabled Rules
+    </button>
+    <button class="btn btn-danger"
+      onclick="confirmAction('Run ALL enabled rules for real?', 'This will trash/label/archive matching emails.', () => call(\'gmail/rules/run-all?dry_run=false\', \'POST\', null))">
+      Execute All Enabled Rules
+    </button>
+    <a href="/admin/google_gmail_backup/cleanuprule/" class="btn">Manage Rules in Admin</a>
+  </div>
+
+  <table style="margin-top:12px">
+    <thead>
+      <tr>
+        <th>Rule</th>
+        <th>Status</th>
+        <th>Action</th>
+        <th>Min Age</th>
+        <th>Last Dry-Run</th>
+        <th>Last Real Run</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for rule in rules %}
+    <tr>
+      <td>
+        <b>{{ rule.name }}</b><br>
+        <span style="color:var(--gd);font-size:11px;font-family:monospace">{{ rule.gmail_query|truncatechars:80 }}</span>
+      </td>
+      <td style="text-align:center">
+        {% if rule.enabled %}<span class="badge-on">ON</span>{% else %}<span class="badge-off">OFF</span>{% endif %}
+      </td>
+      <td style="text-align:center"><code style="color:var(--gt)">{{ rule.action }}</code></td>
+      <td style="text-align:center">{{ rule.min_age_days }}d</td>
+      <td style="text-align:center">{{ rule.last_dry_run_count }} msgs</td>
+      <td style="text-align:center">
+        {% if rule.last_run_at %}{{ rule.last_run_at|date:"M d H:i" }}<br><span style="color:var(--gd);font-size:11px">{{ rule.last_affected_count }} affected</span>{% else %}<span style="color:var(--gd)">never</span>{% endif %}
+      </td>
+      <td>
+        <button class="btn btn-sm btn-warn" onclick="call('gmail/rules/{{ rule.id }}/dry-run', 'POST', this)">Dry-run</button>
+        <button class="btn btn-sm btn-danger" style="margin-left:4px"
+          onclick="execRule({{ rule.id }}, '{{ rule.name|escapejs }}', '{{ rule.action }}', this)">Execute</button>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="7" style="padding:12px;color:var(--gd)">No rules seeded yet. Run: <code>make seed-rules</code></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Empty Gmail Trash -->
+<div class="card">
+  <b>Empty Gmail Trash</b>&nbsp;
+  <span style="font-size:12px;color:var(--gd)">— permanently delete all trashed messages</span>
+  <div class="row" style="margin-top:10px">
+    <button class="btn btn-warn" onclick="dryRunTrash(this)">
+      &#9654; Dry-run (count trash only)
+    </button>
+    <button class="btn btn-danger" onclick="emptyTrash(false, this)">
+      &#9888; Execute — Empty Trash (&#8805;90% guard)
+    </button>
+    <button class="btn btn-danger" style="border-color:#ff6600;color:#ff6600" onclick="emptyTrash(true, this)">
+      &#9888; Force Empty Trash (skip guard)
+    </button>
+  </div>
+  <p style="font-size:11px;color:var(--gd);margin-top:8px">
+    Note: the 22% gap IS the trash — the guard is circular. Use <b style="color:#ff6600">Force Empty</b> to bypass it.
+    Dry-run first to confirm the count.
+  </p>
+</div>
+
+<!-- Output — lives here so result is immediately visible after any action -->
+<div class="card" style="border-color:var(--gm);position:sticky;bottom:12px;z-index:50;">
+  <b style="color:var(--gx)">&#9654; Output</b>
+  <span style="font-size:11px;color:var(--gd);margin-left:8px">— result of last action appears here</span>
+  <pre id="out" style="margin-top:8px">(click any button above — result appears here)</pre>
+</div>
+
+<!-- Export -->
+<div class="card">
+  <b>Export</b>
+  <div class="row" style="margin-top:10px">
+    <span style="color:var(--gd);font-size:12px">Gmail Messages:</span>
+    <a class="btn btn-sm" href="/api/gmail/export/messages?fmt=csv&limit=5000" target="_blank">CSV</a>
+    <a class="btn btn-sm" href="/api/gmail/export/messages?fmt=xlsx&limit=5000" target="_blank">XLSX</a>
+    <a class="btn btn-sm" href="/api/gmail/export/messages?fmt=json&limit=5000" target="_blank">JSON</a>
+    <a class="btn btn-sm" href="/api/gmail/export/messages?fmt=xml&limit=5000" target="_blank">XML</a>
+    <a class="btn btn-sm" href="/api/gmail/export/messages?fmt=pdf&limit=5000" target="_blank">PDF</a>
+  </div>
+  <div class="row">
+    <span style="color:var(--gd);font-size:12px">Audit Log:</span>
+    <a class="btn btn-sm" href="/api/gmail/export/audit-log?fmt=csv&limit=1000" target="_blank">CSV</a>
+    <a class="btn btn-sm" href="/api/gmail/export/audit-log?fmt=xlsx&limit=1000" target="_blank">XLSX</a>
+    <a class="btn btn-sm" href="/api/gmail/export/audit-log?fmt=json&limit=1000" target="_blank">JSON</a>
+    <a class="btn btn-sm" href="/api/gmail/export/audit-log?fmt=xml&limit=1000" target="_blank">XML</a>
+    <a class="btn btn-sm" href="/api/gmail/export/audit-log?fmt=pdf&limit=1000" target="_blank">PDF</a>
+  </div>
+</div>
+
+<!-- Audit log -->
+<div class="card">
+  <b>Audit Log</b>&nbsp;<span style="font-size:12px;color:var(--gd)">last 20 entries — append-only</span>
+  <table class="audit-table" style="margin-top:8px">
+    <thead>
+      <tr>
+        <th>Rule</th><th>Action</th><th>Dry-run</th><th>Affected</th>
+        <th>Actor</th><th>Status</th><th>Started</th><th>Duration</th>
+      </tr>
+    </thead>
+    <tbody id="auditBody" hx-get="/htmx/gmail/audit-log/" hx-trigger="load, every 15s" hx-swap="innerHTML">
+    {% for entry in audit_log %}
+    <tr>
+      <td>{{ entry.rule_name }}</td>
+      <td><code>{{ entry.action }}</code></td>
+      <td>{% if entry.dry_run %}<span class="tag tag-dry">dry</span>{% else %}<b>REAL</b>{% endif %}</td>
+      <td>{{ entry.affected_count }}</td>
+      <td>{{ entry.actor_label }}</td>
+      <td>
+        {% if entry.status == "OK" or entry.status == "DRY_RUN" %}
+          <span class="tag tag-ok">{{ entry.status }}</span>
+        {% elif entry.status == "ERROR" %}
+          <span class="tag tag-err">ERROR</span>
+        {% else %}
+          <span class="tag">{{ entry.status }}</span>
+        {% endif %}
+      </td>
+      <td>{{ entry.started_at|date:"M d H:i:s" }}</td>
+      <td>{% if entry.finished_at %}{{ entry.started_at|timesince:entry.finished_at }}{% else %}—{% endif %}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="8" style="color:#888;padding:8px">No audit entries yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <button class="btn btn-sm" style="margin-top:8px" onclick="refreshAudit()">Refresh audit log</button>
+</div>
+
+<script>
+function getCookie(name) {
+  const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return v ? v[2] : '';
+}
+
+function dryRunTrash(btn) {
+  call('gmail/ops/empty-trash?dry_run=true&skip_backup_check=true', 'POST', btn);
+}
+
+function emptyTrash(skipGuard, btn) {
+  const msg = skipGuard
+    ? 'BYPASSES the 90% backup check.\n\nThe 7,293 trashed messages will be PERMANENTLY DELETED.\nYour .eml backups are the only copy after this.\n\nProceed?'
+    : 'Permanently delete ALL trashed messages?\nRequires ≥90% backup complete.\n\nProceed?';
+  if (!confirm(msg)) return;
+  const url = 'gmail/ops/empty-trash?dry_run=false&skip_backup_check=' + skipGuard;
+  call(url, 'POST', btn);
+}
+
+async function call(path, method, btn) {
+  const out = document.getElementById('out');
+  if (btn) btn.disabled = true;
+  out.textContent = 'Calling /api/' + path + ' ...';
+  try {
+    const res = await fetch('/api/' + path, {
+      method: method || 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    });
+    const txt = await res.text();
+    try {
+      out.textContent = 'HTTP ' + res.status + '\n\n' + JSON.stringify(JSON.parse(txt), null, 2);
+    } catch { out.textContent = 'HTTP ' + res.status + '\n\n' + txt; }
+  } catch(e) {
+    out.textContent = 'ERROR: ' + e;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function callLimit(path, btn) {
+  const limit = document.getElementById('limit').value || '100';
+  const q = document.getElementById('qfilter') ? document.getElementById('qfilter').value : '';
+  let url = path + '?limit=' + limit;
+  if (q) url += '&q=' + encodeURIComponent(q);
+  call(url, 'POST', btn);
+}
+
+function execRule(ruleId, ruleName, action, btn) {
+  if (!confirm('Execute rule: ' + ruleName + '?\nThis will ' + action + ' matching emails for real.')) return;
+  call('gmail/rules/' + ruleId + '/execute', 'POST', btn);
+}
+
+let _confirmCallback = null;
+function confirmAction(title, msg, callback) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent = msg;
+  _confirmCallback = callback;
+  document.getElementById('confirmOverlay').style.display = 'flex';
+}
+function closeConfirm() {
+  document.getElementById('confirmOverlay').style.display = 'none';
+  _confirmCallback = null;
+}
+document.getElementById('confirmYes').onclick = function() {
+  closeConfirm();
+  if (_confirmCallback) _confirmCallback();
+};
+
+async function refreshAudit() {
+  const res = await fetch('/api/gmail/audit-log');
+  const data = await res.json();
+  const tbody = document.getElementById('auditBody');
+  if (!data.length) return;
+  tbody.innerHTML = data.map(e => `
+    <tr>
+      <td>${e.rule}</td>
+      <td><code style="color:var(--gt)">${e.action}</code></td>
+      <td>${e.dry_run ? '<span class="tag tag-dry">dry</span>' : '<b>REAL</b>'}</td>
+      <td>${e.affected}</td>
+      <td>${e.actor}</td>
+      <td><span class="tag ${e.status==='OK'||e.status==='DRY_RUN'?'tag-ok':e.status==='ERROR'?'tag-err':''}">${e.status}</span></td>
+      <td>${new Date(e.started_at).toLocaleString()}</td>
+      <td>—</td>
+    </tr>`).join('');
+}
+
+// ── KPI loader ─────────────────────────────────────────────────────────────
+async function loadKPIs() {
+  try {
+    const prog = await fetch('/api/gmail/progress').then(r=>r.json());
+    const total    = prog.total || 0;
+    const verified = prog.verified || 0;
+    const accounted = prog.accounted || verified;
+    const pct      = total ? Math.round(accounted/total*100) : 0;
+    document.getElementById('kpiTotal').textContent    = total.toLocaleString();
+    document.getElementById('kpiVerified').textContent = verified.toLocaleString() + ' (' + pct + '%)';
+    document.getElementById('kpiVerifiedBar').style.width = pct + '%';
+    document.getElementById('kpiTrashed').textContent  = (prog.trashed||prog.discovered||0).toLocaleString();
+    const dl = prog.downloaded || 0;
+    if (dl) document.getElementById('kpiDownloaded').textContent = dl.toLocaleString() + ' downloaded';
+  } catch(e) {}
+  try {
+    const rules = await fetch('/api/gmail/rules').then(r=>r.json());
+    document.getElementById('kpiRules').textContent = rules.filter(r=>r.enabled).length + ' / ' + rules.length;
+  } catch(e) {}
+  try {
+    const audit = await fetch('/api/gmail/audit-log?limit=50').then(r=>r.json());
+    const real = audit.filter(a=>!a.dry_run);
+    document.getElementById('kpiAudit').textContent = real.length + ' real runs';
+    if (real.length) document.getElementById('kpiLastRun').textContent =
+      'last: ' + new Date(real[0].started_at).toLocaleString();
+  } catch(e) {}
+  try {
+    const msgs = await fetch('/api/gmail/messages?state=VERIFIED').then(r=>r.json());
+    document.getElementById('kpiAttach').textContent = msgs.filter(m=>m.has_attachments).length + '+';
+  } catch(e) {}
+}
+loadKPIs();
+setInterval(loadKPIs, 60000);
+</script>
+{% endblock %}

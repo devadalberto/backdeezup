@@ -1,0 +1,249 @@
+/*
+ * Matrix theme for Wagtail 7.4 CMS admin
+ * Phosphor green (#00ff41) on black (#000000)
+ * Applied via insert_global_admin_css hook in media_vault/wagtail_hooks.py
+ */
+
+/* ── CSS custom property overrides (Wagtail 7.4 design tokens) ─────────────── */
+:root,
+.w-theme-dark,
+.w-theme-light {
+  /* Primary — replaces Wagtail's default purple/indigo with deep Matrix green */
+  --w-color-primary-hue:           120;
+  --w-color-primary-saturation:    100%;
+  --w-color-primary-lightness:     8%;    /* #003300 */
+
+  /* Secondary — interactive / button highlight: mid green */
+  --w-color-secondary-hue:         120;
+  --w-color-secondary-saturation:  100%;
+  --w-color-secondary-lightness:   25%;   /* #007f00 */
+
+  /* Grey-800 controls dark panel / sidebar surfaces */
+  --w-color-grey-800-hue:          120;
+  --w-color-grey-800-saturation:   20%;
+  --w-color-grey-800-lightness:    5%;    /* #0b0f0b near-black green tint */
+
+  /* Grey-600 for secondary surfaces */
+  --w-color-grey-600-hue:          120;
+  --w-color-grey-600-saturation:   15%;
+  --w-color-grey-600-lightness:    10%;
+
+  /* Focus ring */
+  --w-color-focus:                 #00ff41;
+  --w-focus-ring-width:            2px;
+  --w-focus-ring-color:            #00ff41;
+}
+
+/* ── Global font + background ────────────────────────────────────────────────── */
+body,
+.w-body,
+[data-controller] {
+  font-family: 'Courier New', Courier, monospace !important;
+  background: #000 !important;
+  color: #ccffcc !important;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────────── */
+.sidebar,
+[data-wagtail-sidebar],
+.sidebar-main-menu {
+  background: #080808 !important;
+  border-right: 1px solid #003a10 !important;
+}
+
+.sidebar-menu-item__link {
+  color: #00c832 !important;
+  font-family: monospace !important;
+}
+.sidebar-menu-item__link:hover,
+.sidebar-menu-item--active .sidebar-menu-item__link {
+  background: #003a10 !important;
+  color: #00ff41 !important;
+  box-shadow: inset 3px 0 0 #00ff41;
+  text-shadow: 0 0 4px #00ff41;
+}
+
+/* ── Wagtail admin header / breadcrumb ──────────────────────────────────────── */
+.w-header,
+header[data-wagtail-header],
+.page-explorer-header,
+.breadcrumb {
+  background: #000 !important;
+  border-bottom: 1px solid #003a10 !important;
+}
+
+/* ── Panels and cards ─────────────────────────────────────────────────────────── */
+.w-panel,
+.w-panel__header,
+.w-panel__content,
+.panel,
+.panel__header {
+  background: #0d0d0d !important;
+  border: 1px solid #003a10 !important;
+  color: #ccffcc !important;
+}
+.w-panel__heading,
+.panel__heading,
+h2.w-panel__heading {
+  color: #00ff41 !important;
+  font-family: monospace !important;
+  letter-spacing: 1px;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────────── */
+.button,
+button.button,
+a.button,
+input[type="submit"].button {
+  background: #003a10 !important;
+  color: #00ff41 !important;
+  border: 1px solid #008f1f !important;
+  font-family: monospace !important;
+  transition: box-shadow .15s, background .15s;
+}
+.button:hover,
+button.button:hover {
+  background: #0d1f0d !important;
+  box-shadow: 0 0 6px #00ff41 !important;
+  color: #00ff41 !important;
+}
+.button.button-primary,
+.button.yes {
+  border-color: #00c832 !important;
+}
+.button.serious,
+.button.no,
+.button.button-secondary.serious {
+  background: #3a0000 !important;
+  color: #ff3131 !important;
+  border-color: #ff3131 !important;
+}
+
+/* ── Forms / inputs ─────────────────────────────────────────────────────────── */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="url"],
+textarea,
+select,
+.chooser,
+.chooser__title {
+  background: #111 !important;
+  color: #00c832 !important;
+  border: 1px solid #003a10 !important;
+  font-family: monospace !important;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid #00ff41 !important;
+  box-shadow: 0 0 4px #00ff41 !important;
+}
+
+/* ── Tables ─────────────────────────────────────────────────────────────────── */
+.listing thead tr,
+table thead tr {
+  background: #0d1f0d !important;
+}
+.listing thead th,
+table thead th {
+  color: #00ff41 !important;
+  font-family: monospace !important;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #003a10 !important;
+}
+.listing tbody tr,
+table tbody tr {
+  background: #080808 !important;
+  color: #ccffcc !important;
+}
+.listing tbody tr:nth-child(odd),
+table tbody tr:nth-child(odd) {
+  background: #0d0d0d !important;
+}
+.listing tbody tr:hover,
+table tbody tr:hover {
+  background: #003a10 !important;
+}
+.listing td a,
+table td a {
+  color: #00c832 !important;
+}
+.listing td a:hover,
+table td a:hover {
+  color: #00ff41 !important;
+  text-decoration: underline;
+}
+
+/* ── Messages / alerts ─────────────────────────────────────────────────────── */
+.messages li.success,
+.w-message--success {
+  background: #003a10 !important;
+  color: #00ff41 !important;
+  border-left: 3px solid #00ff41;
+}
+.messages li.warning,
+.w-message--warning {
+  background: #2a2000 !important;
+  color: #c8a800 !important;
+  border-left: 3px solid #c8a800;
+}
+.messages li.error,
+.w-message--error {
+  background: #3a0000 !important;
+  color: #ff3131 !important;
+  border-left: 3px solid #ff3131;
+}
+
+/* ── StreamField editor ─────────────────────────────────────────────────────── */
+.c-sf-container,
+.c-sf-block,
+[data-contentpath-key] {
+  background: #0d0d0d !important;
+  border: 1px solid #003a10 !important;
+}
+.c-sf-block__header {
+  background: #0d1f0d !important;
+  color: #00ff41 !important;
+}
+
+/* ── Image/media chooser modals ─────────────────────────────────────────────── */
+.modal-dialog,
+.modal-content {
+  background: #0d0d0d !important;
+  border: 1px solid #00c832 !important;
+  box-shadow: 0 0 20px rgba(0,255,65,.2) !important;
+}
+.modal-header {
+  background: #000 !important;
+  border-bottom: 1px solid #003a10 !important;
+  color: #00ff41 !important;
+}
+
+/* ── Dashboard homepage panels ──────────────────────────────────────────────── */
+.home-summary-item__count {
+  color: #00ff41 !important;
+  text-shadow: 0 0 8px #00ff41;
+}
+.home-summary-item__sub {
+  color: #00c832 !important;
+}
+
+/* ── Image grid (Wagtail image library) ─────────────────────────────────────── */
+.images-grid-item,
+.image-choice {
+  background: #0d0d0d !important;
+  border: 1px solid #003a10 !important;
+}
+.images-grid-item:hover,
+.image-choice:hover {
+  border-color: #00ff41 !important;
+  box-shadow: 0 0 6px #00ff41 !important;
+}
+
+/* ── Keep/delete badge colors ───────────────────────────────────────────────── */
+.keep-badge-keep     { color: #00ff41; font-weight: bold; }
+.keep-badge-delete   { color: #ff3131; font-weight: bold; }
+.keep-badge-undecided { color: #c8a800; }

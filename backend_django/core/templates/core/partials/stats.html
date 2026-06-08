@@ -1,0 +1,57 @@
+{% if drive_total %}
+
+<div class="stat-card">
+  <div class="stat-value">{{ drive_verified|default:0 }}</div>
+  <div class="stat-label">Drive Verified</div>
+  <div class="stat-bar"><div class="stat-bar-fill" style="width:{{ drive_pct|default:0 }}%"></div></div>
+  <div style="font-size:11px;color:var(--muted);margin-top:4px;">{{ drive_pct|default:0 }}% &middot; {{ drive_total }} total</div>
+  {% if drive_pct == 100 %}
+  <span class="stat-badge badge-ok">&#10003; COMPLETE</span>
+  {% else %}
+  <span class="stat-badge badge-running">IN PROGRESS</span>
+  {% endif %}
+</div>
+
+<div class="stat-card">
+  <div class="stat-value">{{ gmail_verified|default:0 }}</div>
+  <div class="stat-label">Gmail Backed Up</div>
+  <div class="stat-bar"><div class="stat-bar-fill" style="width:{{ gmail_pct|default:0 }}%"></div></div>
+  <div style="font-size:11px;color:var(--muted);margin-top:4px;">{{ gmail_pct|default:0 }}% &middot; {{ gmail_total }} total</div>
+  {% if gmail_pct >= 90 %}
+  <span class="stat-badge badge-ok">&#10003; TRASH UNLOCK</span>
+  {% else %}
+  <span class="stat-badge badge-running">{{ gmail_pct }}% — need 90%</span>
+  {% endif %}
+</div>
+
+<div class="stat-card">
+  <div class="stat-value">{{ media_items|default:0 }}</div>
+  <div class="stat-label">Media Items</div>
+  <div style="font-size:11px;color:var(--muted);margin-top:8px;">Deduplicated by SHA-256</div>
+  {% if vault_images or vault_media %}
+  <div style="font-size:11px;color:var(--muted);margin-top:4px;">{{ vault_images }} images &middot; {{ vault_media }} videos</div>
+  {% endif %}
+</div>
+
+<div class="stat-card">
+  {% if running_job %}
+  <div class="stat-value" style="font-size:1.2rem;color:var(--amber);">&#9654; Running</div>
+  <div class="stat-label">Cleanup Active</div>
+  <span class="stat-badge badge-running">{{ running_job.rule_name|truncatechars:25 }}</span>
+  {% elif last_cleanup %}
+  <div class="stat-value" style="font-size:1.2rem;color:var(--gx);">&#10003; OK</div>
+  <div class="stat-label">Last Cleanup</div>
+  <div style="font-size:11px;color:var(--muted);margin-top:4px;">{{ last_cleanup.affected_count }} msgs &middot; {{ last_cleanup.finished_at|date:"M d H:i" }}</div>
+  {% else %}
+  <div class="stat-value" style="font-size:1.5rem;">&#8212;</div>
+  <div class="stat-label">No Cleanup Run</div>
+  <div style="font-size:11px;color:var(--muted);margin-top:4px;"><a href="/admin/gmail/ops/" style="color:var(--amber)">Run now &#8594;</a></div>
+  {% endif %}
+</div>
+
+{% else %}
+<div class="stat-card" style="grid-column:1/-1;text-align:center;">
+  <div class="stat-value" style="font-size:1.2rem;color:var(--amber);">&#9608;</div>
+  <div class="stat-label" style="margin-top:8px;">Connecting to backend...</div>
+</div>
+{% endif %}

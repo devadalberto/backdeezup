@@ -1,0 +1,17 @@
+{% load wagtailimages_tags %}
+<figure class="vault-image keep-{{ value.keep }}" data-keep="{{ value.keep }}">
+  {% image value.image.image fill-800x600 as img %}
+  <img src="{{ img.url }}" alt="{{ value.image.alt }}" loading="lazy"
+       style="max-width:100%;border:1px solid #003a10;border-radius:4px;">
+  {% if value.caption %}
+  <figcaption style="color:#00c832;font-family:monospace;font-size:12px;margin-top:4px;">
+    {{ value.caption }}{% if value.credit %} — {{ value.credit }}{% endif %}
+  </figcaption>
+  {% endif %}
+  <div class="keep-badge keep-badge-{{ value.keep }}" style="font-family:monospace;font-size:11px;margin-top:4px;">
+    {% if value.keep == "keep" %}&#10003; KEEP
+    {% elif value.keep == "delete" %}&#10007; DELETE
+    {% else %}? UNDECIDED
+    {% endif %}
+  </div>
+</figure>

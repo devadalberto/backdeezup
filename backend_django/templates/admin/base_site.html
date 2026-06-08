@@ -1,0 +1,770 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }} | BackDeezUp{% endblock %}
+
+{% block branding %}
+<div id="site-name">
+  <a href="{% url 'admin:index' %}" class="bdz-logo">
+    <span class="bdz-logo-mark">&#9608;</span><span class="bdz-logo-name">BackDeez</span><span class="bdz-logo-up">Up</span>
+  </a>
+</div>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+/* ══════════════════════════════════════════════════════════════
+   PALETTE — 4 themes: amber(default) · matrix · cyberpunk · noir
+   All rules use var() so swapping :root vars re-skins everything.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Theme 1: Amber Terminal (DEFAULT) ──────────────────────── */
+:root,
+[data-theme="amber"] {
+  --gx:  #00ff41;   /* phosphor green — borders/lines */
+  --gm:  #00c832;   /* mid green — structural links */
+  --gd:  #008f1f;   /* dark green */
+  --ga:  #002e0b;   /* deep green bg */
+  --gb:  #0d0900;   /* amber-tinted surface */
+  --g0:  #000000;   /* black */
+  --g1:  #080600;   /* near-black warm */
+  --g2:  #100c00;   /* card surface */
+  --g3:  #181200;   /* elevated surface */
+  --fw:  #ffb300;   /* body text — AMBER */
+  --gy:  #ffb300;   /* amber accent */
+  --gy2: #ff8f00;   /* deep amber */
+  --gy3: #1a0e00;   /* amber-tinted bg */
+  --gr:  #ff3131;   /* red danger */
+  --gt:  #00d4ff;   /* cyan info */
+  --fs:  13px;
+  /* logo */
+  --logo-mark: #ffb300;
+  --logo-name: #00ff41;
+  --logo-up:   #ffb300;
+}
+
+/* ── Theme 2: Matrix (classic) ──────────────────────────────── */
+[data-theme="matrix"] {
+  --gx:  #00ff41;
+  --gm:  #00c832;
+  --gd:  #008f1f;
+  --ga:  #002e0b;
+  --gb:  #0a1a0a;
+  --g0:  #000000;
+  --g1:  #070707;
+  --g2:  #0e0e0e;
+  --g3:  #161616;
+  --fw:  #b8ffb8;   /* body text — soft green */
+  --gy:  #ffb300;
+  --gy2: #ff8f00;
+  --gy3: #1a0e00;
+  --gr:  #ff3131;
+  --gt:  #00d4ff;
+  --fs:  13px;
+  --logo-mark: #ffb300;
+  --logo-name: #00ff41;
+  --logo-up:   #ffb300;
+}
+
+/* ── Theme 3: Cyberpunk ─────────────────────────────────────── */
+[data-theme="cyberpunk"] {
+  --gx:  #00d4ff;   /* cyan — dominant structural */
+  --gm:  #00aacc;   /* mid cyan */
+  --gd:  #006688;   /* dark cyan */
+  --ga:  #000d1a;   /* deep blue-black */
+  --gb:  #000d1a;
+  --g0:  #000811;   /* very dark blue-black bg */
+  --g1:  #000d1a;
+  --g2:  #001122;
+  --g3:  #001a33;
+  --fw:  #e0ffff;   /* cyan-white body text */
+  --gy:  #ff00ff;   /* magenta accent (CTA) */
+  --gy2: #cc00cc;   /* deep magenta */
+  --gy3: #1a001a;   /* magenta-tinted bg */
+  --gr:  #ff3131;
+  --gt:  #00d4ff;
+  --fs:  13px;
+  --logo-mark: #ff00ff;
+  --logo-name: #00d4ff;
+  --logo-up:   #ff00ff;
+}
+
+/* ── Theme 4: Amber Noir ────────────────────────────────────── */
+[data-theme="noir"] {
+  --gx:  #ff6600;   /* deep orange — structural */
+  --gm:  #cc5200;   /* mid orange */
+  --gd:  #4a3000;   /* dark amber line */
+  --ga:  #100800;   /* deep warm bg */
+  --gb:  #120a00;
+  --g0:  #080600;   /* very dark warm bg */
+  --g1:  #0d0800;
+  --g2:  #120a00;
+  --g3:  #1a0f00;
+  --fw:  #fff3cc;   /* cream body text */
+  --gy:  #ffaa00;   /* warm amber accent */
+  --gy2: #cc8800;   /* deep amber */
+  --gy3: #1a0e00;
+  --gr:  #ff3131;
+  --gt:  #ffdd88;   /* warm highlight */
+  --fs:  13px;
+  --logo-mark: #ffaa00;
+  --logo-name: #ff6600;
+  --logo-up:   #ffaa00;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   THEME SWITCHER — sci-fi HUD panel (fixed bottom-right)
+   ══════════════════════════════════════════════════════════════ */
+#bdz-theme-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  width: 36px;
+  height: 36px;
+  background: var(--g1);
+  border: 1px solid var(--gy2);
+  color: var(--gy);
+  font-size: 18px;
+  line-height: 36px;
+  text-align: center;
+  cursor: pointer;
+  font-family: monospace;
+  box-shadow: 0 0 12px var(--gy2), inset 0 0 6px rgba(0,0,0,.6);
+  transition: box-shadow .2s, border-color .2s;
+  user-select: none;
+}
+#bdz-theme-btn:hover {
+  border-color: var(--gy);
+  box-shadow: 0 0 20px var(--gy), inset 0 0 8px rgba(0,0,0,.6);
+}
+
+#bdz-theme-panel {
+  display: none;
+  position: fixed;
+  bottom: 64px;
+  right: 20px;
+  z-index: 9998;
+  width: 200px;
+  background: var(--g1);
+  border: 1px solid var(--gy2);
+  border-top: 2px solid var(--gy);
+  box-shadow: 0 0 30px rgba(0,0,0,.8), 0 0 16px var(--gy2);
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  animation: bdz-panel-in .15s ease-out;
+}
+#bdz-theme-panel.open { display: block; }
+
+@keyframes bdz-panel-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+#bdz-theme-panel .bdz-panel-hdr {
+  padding: 6px 10px;
+  color: var(--gy);
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--gy2);
+  background: var(--gy3);
+}
+
+.bdz-theme-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--g3);
+  transition: background .1s;
+  color: var(--fw);
+}
+.bdz-theme-opt:last-child { border-bottom: none; }
+.bdz-theme-opt:hover { background: var(--g3); }
+.bdz-theme-opt.active {
+  background: var(--gy3);
+  border-left: 2px solid var(--gy);
+  padding-left: 8px;
+}
+
+.bdz-swatch {
+  width: 28px;
+  height: 16px;
+  border: 1px solid rgba(255,255,255,.15);
+  flex-shrink: 0;
+  display: flex;
+  gap: 0;
+  overflow: hidden;
+}
+.bdz-swatch span {
+  flex: 1;
+  display: block;
+}
+
+.bdz-theme-name {
+  flex: 1;
+  letter-spacing: 1px;
+  font-size: 10px;
+}
+.bdz-theme-tag {
+  font-size: 8px;
+  letter-spacing: 1px;
+  opacity: .6;
+  text-transform: uppercase;
+}
+
+/* ── Logo (uses theme vars) ─────────────────────────────────── */
+.bdz-logo {
+  font-family: monospace;
+  font-size: 20px;
+  letter-spacing: 4px;
+  text-decoration: none;
+  line-height: 1;
+}
+.bdz-logo-mark {
+  color: var(--logo-mark);
+  text-shadow: 0 0 12px var(--logo-mark), 0 0 24px var(--gy2);
+}
+.bdz-logo-name {
+  color: var(--logo-name);
+  text-shadow: 0 0 8px var(--logo-name), 0 0 16px var(--gm);
+}
+.bdz-logo-up {
+  color: var(--logo-up);
+  text-shadow: 0 0 12px var(--logo-up), 0 0 24px var(--gy2);
+}
+
+/* ── Global ─────────────────────────────────────────────────── */
+body, html {
+  background: var(--g0) !important;
+  color: var(--fw) !important;
+  font-family: 'Courier New', monospace !important;
+}
+a { color: var(--gm); }
+a:hover { color: var(--gx); }
+code { color: var(--gt); font-family: monospace; }
+
+/* ── Django admin header ────────────────────────────────────── */
+#header {
+  background: var(--g0) !important;
+  border-bottom: 2px solid var(--gy2) !important;
+  padding: 6px 20px !important;
+}
+#header a, #header a:visited { color: var(--gm) !important; }
+#header a:hover { color: var(--gx) !important; text-shadow: 0 0 6px var(--gx); }
+#user-tools { color: var(--gd) !important; font-size: 12px; }
+#user-tools a { color: var(--gm) !important; }
+#user-tools a:hover { color: var(--gx) !important; }
+
+/* ── Breadcrumbs ────────────────────────────────────────────── */
+div.breadcrumbs {
+  background: var(--g1) !important;
+  border-bottom: 1px solid var(--ga) !important;
+  color: var(--gd) !important;
+  font-family: monospace !important;
+  font-size: 12px !important;
+}
+div.breadcrumbs a { color: var(--gm) !important; }
+div.breadcrumbs a:hover { color: var(--gx) !important; }
+
+/* ── Main content ───────────────────────────────────────────── */
+#content, #content-main, .colM, .colMS {
+  background: var(--g0) !important;
+  color: var(--fw) !important;
+}
+#content h1 {
+  color: var(--gx) !important;
+  font-family: monospace !important;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px var(--gx);
+  border-bottom: 1px solid var(--ga);
+  padding-bottom: 6px;
+  margin-bottom: 16px;
+}
+#content h2, #content h3 {
+  color: var(--gm) !important;
+  font-family: monospace !important;
+  letter-spacing: 1px;
+}
+
+/* ── Sidebar nav ────────────────────────────────────────────── */
+#nav-sidebar, .sidebar {
+  background: var(--g1) !important;
+  border-right: 1px solid var(--ga) !important;
+}
+.sidebar a { color: var(--gm) !important; }
+.sidebar a:hover { color: var(--gx) !important; }
+#nav-sidebar .current-model { color: var(--gy) !important; font-weight: bold; }
+
+/* ── Module headers ─────────────────────────────────────────── */
+.module h2, .module caption, .inline-group h2 {
+  background: var(--gb) !important;
+  color: var(--gx) !important;
+  border: none !important;
+  border-left: 3px solid var(--gy) !important;
+  letter-spacing: 1px;
+  padding-left: 10px !important;
+}
+.module {
+  background: var(--g1) !important;
+  border: 1px solid var(--ga) !important;
+  box-shadow: 0 0 8px rgba(0,255,65,.05);
+}
+
+/* ── Tables ─────────────────────────────────────────────────── */
+#result_list { border-collapse: collapse !important; }
+#result_list thead th {
+  background: var(--gb) !important;
+  color: var(--gx) !important;
+  border-bottom: 2px solid var(--gy2) !important;
+  letter-spacing: 1px;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+#result_list tbody tr { background: var(--g1) !important; color: var(--fw) !important; }
+#result_list tbody tr:nth-child(odd) { background: var(--g2) !important; }
+#result_list tbody tr:hover { background: var(--ga) !important; }
+#result_list td, #result_list th { border-color: var(--ga) !important; }
+#result_list td a { color: var(--gm) !important; }
+#result_list td a:hover { color: var(--gx) !important; }
+.column-header a { color: var(--gx) !important; }
+
+/* ── Action toolbar ─────────────────────────────────────────── */
+.actions, #changelist-form .actions {
+  background: var(--g2) !important;
+  border: 1px solid var(--ga) !important;
+  border-left: 3px solid var(--gd) !important;
+}
+.actions select, .actions input {
+  background: var(--g1) !important;
+  color: var(--gm) !important;
+  border: 1px solid var(--gd) !important;
+}
+.button, input[type=submit], input[type=button], .submit-row input {
+  background: var(--ga) !important;
+  color: var(--gx) !important;
+  border: 1px solid var(--gm) !important;
+  font-family: monospace !important;
+  cursor: pointer;
+  transition: all .15s;
+  letter-spacing: 1px;
+}
+.button:hover, input[type=submit]:hover {
+  background: var(--gb) !important;
+  color: var(--gx) !important;
+  box-shadow: 0 0 8px var(--gx);
+}
+
+/* ── Forms ───────────────────────────────────────────────────── */
+.form-row { border-bottom: 1px solid var(--ga) !important; }
+input[type=text], input[type=password], input[type=email],
+input[type=number], textarea, select {
+  background: var(--g2) !important;
+  color: var(--gm) !important;
+  border: 1px solid var(--gd) !important;
+  font-family: monospace !important;
+}
+input:focus, textarea:focus, select:focus {
+  outline: 1px solid var(--gx) !important;
+  box-shadow: 0 0 5px var(--gx);
+}
+label { color: var(--gm) !important; }
+.help { color: var(--gd) !important; font-size: 11px; }
+.errorlist li { color: var(--gr) !important; }
+
+/* ── Filters ─────────────────────────────────────────────────── */
+#changelist-filter {
+  background: var(--g1) !important;
+  border-left: 2px solid var(--gy2) !important;
+}
+#changelist-filter h2 {
+  background: var(--gy3) !important;
+  color: var(--gy) !important;
+  border-bottom: 1px solid var(--gy2) !important;
+  letter-spacing: 1px;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+#changelist-filter h3 { color: var(--gy) !important; font-size: 11px; letter-spacing: 1px; }
+#changelist-filter a { color: var(--gm) !important; }
+#changelist-filter a:hover { color: var(--gx) !important; }
+#changelist-filter li.selected a { color: var(--gy) !important; font-weight: bold; }
+
+/* ── Pagination ──────────────────────────────────────────────── */
+.paginator { color: var(--gd) !important; font-size: 12px; }
+.paginator a { color: var(--gm) !important; }
+.paginator a:hover { color: var(--gx) !important; }
+.paginator .this-page { color: var(--gy) !important; font-weight: bold; }
+
+/* ── Messages/alerts ─────────────────────────────────────────── */
+.messagelist li { font-family: monospace !important; border-radius: 3px; }
+.messagelist .success { background: var(--ga) !important; color: var(--gx) !important; border-left: 4px solid var(--gx); }
+.messagelist .warning { background: var(--gy3) !important; color: var(--gy) !important; border-left: 4px solid var(--gy); }
+.messagelist .error   { background: #2a0000 !important; color: var(--gr) !important; border-left: 4px solid var(--gr); }
+
+/* ── Object tools — amber CTA ────────────────────────────────── */
+.object-tools a {
+  background: var(--gy3) !important;
+  color: var(--gy) !important;
+  border: 1px solid var(--gy2) !important;
+  font-family: monospace !important;
+  letter-spacing: 1px;
+}
+.object-tools a:hover {
+  background: #2a1500 !important;
+  box-shadow: 0 0 10px var(--gy) !important;
+  color: var(--gy) !important;
+}
+.addlink { color: var(--gy) !important; }
+.addlink::before { color: var(--gy) !important; }
+.default {
+  background: var(--gy3) !important;
+  border-color: var(--gy2) !important;
+  color: var(--gy) !important;
+  font-family: monospace !important;
+}
+.default:hover { box-shadow: 0 0 8px var(--gy) !important; }
+
+/* ── Submit row ──────────────────────────────────────────────── */
+.submit-row {
+  background: var(--g1) !important;
+  border-top: 2px solid var(--gy2) !important;
+  padding: 10px 16px !important;
+}
+.deletelink { color: var(--gr) !important; }
+.deletelink:hover { text-shadow: 0 0 6px var(--gr); }
+
+/* ── Inline groups ───────────────────────────────────────────── */
+.inline-group { background: var(--g1) !important; border: 1px solid var(--ga) !important; }
+.inline-related { background: var(--g2) !important; border: 1px solid var(--ga) !important; }
+
+/* ── Checkboxes ──────────────────────────────────────────────── */
+input[type=checkbox] { accent-color: var(--gy); }
+
+/* ════════════════════════════════════════════════════════════════
+   TOP NAVIGATION BAR
+   Logo language: amber ▓ marker · bright green text · black bg
+   ════════════════════════════════════════════════════════════════ */
+#matrix-nav {
+  background: var(--g0);
+  border-bottom: 2px solid var(--gy2);
+  padding: 0;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+  box-shadow: 0 2px 16px rgba(255,179,0,.12), 0 1px 0 rgba(0,255,65,.08);
+}
+#matrix-nav .nav-inner {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 8px;
+  max-width: 100%;
+}
+
+/* Each top-level group */
+#matrix-nav .nav-group { position: relative; }
+
+/* Top-level label: ▓ (amber) + text (bright green) */
+#matrix-nav .nav-label {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  color: var(--gx);
+  cursor: pointer;
+  gap: 5px;
+  white-space: nowrap;
+  transition: color .12s, border-color .12s, text-shadow .12s;
+  border-bottom: 2px solid transparent;
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+#matrix-nav .nav-label .nav-icon {
+  color: var(--gy);
+  text-shadow: 0 0 8px var(--gy);
+  font-size: 10px;
+}
+#matrix-nav .nav-label .nav-caret {
+  color: var(--gd);
+  font-size: 9px;
+  margin-left: 1px;
+  transition: color .12s;
+}
+
+/* Hover: whole label goes amber */
+#matrix-nav .nav-label:hover,
+#matrix-nav .nav-group:hover > .nav-label {
+  color: var(--gy);
+  text-shadow: 0 0 8px var(--gy);
+  border-bottom-color: var(--gy);
+}
+#matrix-nav .nav-group:hover > .nav-label .nav-caret { color: var(--gy); }
+
+/* Dropdown panel */
+#matrix-nav .nav-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  min-width: 230px;
+  background: var(--g1);
+  border: 1px solid var(--gy2);
+  border-top: 2px solid var(--gy);
+  box-shadow: 0 8px 24px rgba(255,179,0,.15), 0 2px 8px rgba(0,0,0,.8);
+  z-index: 1200;
+}
+#matrix-nav .nav-group:hover .nav-dropdown { display: block; }
+
+/* Section label inside dropdown — amber with amber-tinted bg */
+#matrix-nav .nav-dropdown .nav-section {
+  padding: 5px 14px 4px;
+  color: var(--gy);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: var(--gy3);
+  border-bottom: 1px solid var(--gy2);
+  border-left: 3px solid var(--gy);
+}
+
+/* Dropdown links — bright green default */
+#matrix-nav .nav-dropdown a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  color: var(--gx);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ga);
+  transition: all .1s;
+  font-size: 13px;
+}
+#matrix-nav .nav-dropdown a .lnk-icon {
+  color: var(--gd);
+  font-size: 10px;
+  flex-shrink: 0;
+  transition: color .1s;
+}
+
+/* Hover: amber accent with amber left border */
+#matrix-nav .nav-dropdown a:hover {
+  background: var(--gy3);
+  color: var(--gy);
+  border-left: 3px solid var(--gy);
+  padding-left: 11px;
+  text-shadow: 0 0 6px var(--gy);
+}
+#matrix-nav .nav-dropdown a:hover .lnk-icon { color: var(--gy); }
+
+/* Danger link override */
+#matrix-nav .nav-dropdown a.danger { color: var(--gr) !important; }
+#matrix-nav .nav-dropdown a.danger .lnk-icon { color: var(--gr) !important; }
+#matrix-nav .nav-dropdown a.danger:hover { background: #2a0000; border-left-color: var(--gr); color: var(--gr) !important; text-shadow: 0 0 6px var(--gr); }
+
+/* Vertical divider between groups */
+#matrix-nav .nav-divider {
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--gy2), transparent);
+  margin: 8px 0;
+  align-self: stretch;
+  opacity: 0.4;
+}
+
+/* Content offset */
+#content-main { margin-top: 0 !important; }
+</style>
+{% endblock %}
+
+{% block nav-global %}
+<nav id="matrix-nav">
+  <div class="nav-inner">
+
+    <div class="nav-group">
+      <div class="nav-label">
+        <span class="nav-icon">&#9608;</span>Gmail<span class="nav-caret">&#9660;</span>
+      </div>
+      <div class="nav-dropdown">
+        <div class="nav-section">operations</div>
+        <a href="/admin/gmail/ops/"><span class="lnk-icon">&#9654;</span>Ops Console</a>
+        <a href="/admin/gmail/dashboard/"><span class="lnk-icon">&#9654;</span>Dashboard</a>
+        <div class="nav-section">data</div>
+        <a href="/admin/google_gmail_backup/gmailmessage/"><span class="lnk-icon">&#9654;</span>Messages</a>
+        <a href="/admin/google_gmail_backup/gmailsyncstate/"><span class="lnk-icon">&#9654;</span>Sync State</a>
+        <div class="nav-section">rules</div>
+        <a href="/admin/gmail/rule-builder/"><span class="lnk-icon">&#9608;</span>Rule Builder</a>
+        <a href="/admin/google_gmail_backup/cleanuprule/"><span class="lnk-icon">&#9654;</span>Cleanup Rules</a>
+        <a href="/admin/google_gmail_backup/protectedsender/"><span class="lnk-icon">&#9654;</span>Protected Senders</a>
+        <a href="/admin/google_gmail_backup/cleanupauditlog/"><span class="lnk-icon">&#9654;</span>Audit Log</a>
+        <div class="nav-section">danger zone</div>
+        <a href="/admin/gmail/ops/" class="danger"><span class="lnk-icon">&#9888;</span>Empty Trash (in Ops)</a>
+      </div>
+    </div>
+
+    <div class="nav-divider"></div>
+
+    <div class="nav-group">
+      <div class="nav-label">
+        <span class="nav-icon">&#9608;</span>Drive<span class="nav-caret">&#9660;</span>
+      </div>
+      <div class="nav-dropdown">
+        <div class="nav-section">operations</div>
+        <a href="/admin/ops/"><span class="lnk-icon">&#9654;</span>Ops Console</a>
+        <a href="/admin/reports/"><span class="lnk-icon">&#9654;</span>Reports</a>
+        <div class="nav-section">data</div>
+        <a href="/admin/google_media_backup/driveasset/"><span class="lnk-icon">&#9654;</span>Drive Assets</a>
+        <a href="/admin/google_media_backup/mediaitem/"><span class="lnk-icon">&#9654;</span>Media Items</a>
+        <a href="/admin/google_media_backup/runlog/"><span class="lnk-icon">&#9654;</span>Run Logs</a>
+      </div>
+    </div>
+
+    <div class="nav-divider"></div>
+
+    <div class="nav-group">
+      <div class="nav-label">
+        <span class="nav-icon">&#9608;</span>Pipeline<span class="nav-caret">&#9660;</span>
+      </div>
+      <div class="nav-dropdown">
+        <div class="nav-section">progress</div>
+        <a href="/api/progress" target="_blank"><span class="lnk-icon">&#9654;</span>Drive Progress (JSON)</a>
+        <a href="/api/gmail/progress" target="_blank"><span class="lnk-icon">&#9654;</span>Gmail Progress (JSON)</a>
+        <div class="nav-section">api docs</div>
+        <a href="/api/docs" target="_blank"><span class="lnk-icon">&#9654;</span>Drive API Docs</a>
+        <a href="/api/gmail/docs" target="_blank"><span class="lnk-icon">&#9654;</span>Gmail API Docs</a>
+        <a href="/api/vault/docs" target="_blank"><span class="lnk-icon">&#9654;</span>Vault API Docs</a>
+      </div>
+    </div>
+
+    <div class="nav-divider"></div>
+
+    <div class="nav-group">
+      <div class="nav-label">
+        <span class="nav-icon">&#9608;</span>Media Vault<span class="nav-caret">&#9660;</span>
+      </div>
+      <div class="nav-dropdown">
+        <div class="nav-section">operations</div>
+        <a href="/admin/vault/ops/"><span class="lnk-icon">&#9654;</span>Vault Ops Console</a>
+        <div class="nav-section">wagtail cms</div>
+        <a href="/cms/" target="_blank"><span class="lnk-icon">&#9654;</span>Wagtail CMS</a>
+        <div class="nav-section">browse</div>
+        <a href="/cms/images/"><span class="lnk-icon">&#9654;</span>Images</a>
+        <a href="/cms/documents/"><span class="lnk-icon">&#9654;</span>Documents</a>
+        <a href="/cms/media/"><span class="lnk-icon">&#9654;</span>Videos &amp; Audio</a>
+        <div class="nav-section">review</div>
+        <a href="/vault/review/"><span class="lnk-icon">&#9654;</span>Review Interface</a>
+        <a href="/api/vault/status" target="_blank"><span class="lnk-icon">&#9654;</span>Vault Status (JSON)</a>
+      </div>
+    </div>
+
+    <div class="nav-divider"></div>
+
+    <div class="nav-group">
+      <div class="nav-label">
+        <span class="nav-icon">&#9608;</span>Admin<span class="nav-caret">&#9660;</span>
+      </div>
+      <div class="nav-dropdown">
+        <a href="/"><span class="lnk-icon">&#9654;</span>Landing Page</a>
+        <a href="/admin/"><span class="lnk-icon">&#9654;</span>Admin Dashboard</a>
+        <a href="/admin/auth/user/"><span class="lnk-icon">&#9654;</span>Users</a>
+        <a href="/admin/django_apscheduler/djangojob/"><span class="lnk-icon">&#9654;</span>Scheduler Jobs</a>
+      </div>
+    </div>
+
+  </div>
+</nav>
+
+<!-- ══ THEME SWITCHER HUD ══════════════════════════════════════ -->
+<div id="bdz-theme-btn" title="Theme configurator" onclick="bdzTogglePanel()">&#9881;</div>
+
+<div id="bdz-theme-panel">
+  <div class="bdz-panel-hdr">&#9660; THEME CONFIG</div>
+
+  <div class="bdz-theme-opt" data-theme="amber" onclick="bdzSetTheme('amber')">
+    <div class="bdz-swatch">
+      <span style="background:#000"></span>
+      <span style="background:#ffb300"></span>
+      <span style="background:#00ff41"></span>
+    </div>
+    <span class="bdz-theme-name">AMBER</span>
+    <span class="bdz-theme-tag">default</span>
+  </div>
+
+  <div class="bdz-theme-opt" data-theme="matrix" onclick="bdzSetTheme('matrix')">
+    <div class="bdz-swatch">
+      <span style="background:#000"></span>
+      <span style="background:#00ff41"></span>
+      <span style="background:#b8ffb8"></span>
+    </div>
+    <span class="bdz-theme-name">MATRIX</span>
+    <span class="bdz-theme-tag">classic</span>
+  </div>
+
+  <div class="bdz-theme-opt" data-theme="cyberpunk" onclick="bdzSetTheme('cyberpunk')">
+    <div class="bdz-swatch">
+      <span style="background:#000811"></span>
+      <span style="background:#00d4ff"></span>
+      <span style="background:#ff00ff"></span>
+    </div>
+    <span class="bdz-theme-name">CYBERPUNK</span>
+    <span class="bdz-theme-tag">cyber</span>
+  </div>
+
+  <div class="bdz-theme-opt" data-theme="noir" onclick="bdzSetTheme('noir')">
+    <div class="bdz-swatch">
+      <span style="background:#080600"></span>
+      <span style="background:#ffaa00"></span>
+      <span style="background:#fff3cc"></span>
+    </div>
+    <span class="bdz-theme-name">AMBER NOIR</span>
+    <span class="bdz-theme-tag">warm</span>
+  </div>
+</div>
+
+<script>
+(function() {
+  var THEMES = ['amber', 'matrix', 'cyberpunk', 'noir'];
+  var KEY = 'bdz-theme';
+
+  function applyTheme(t) {
+    if (THEMES.indexOf(t) === -1) t = 'amber';
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem(KEY, t);
+    document.querySelectorAll('.bdz-theme-opt').forEach(function(el) {
+      el.classList.toggle('active', el.getAttribute('data-theme') === t);
+    });
+  }
+
+  window.bdzSetTheme = function(t) {
+    applyTheme(t);
+    bdzClosePanel();
+  };
+
+  window.bdzTogglePanel = function() {
+    var p = document.getElementById('bdz-theme-panel');
+    p.classList.toggle('open');
+  };
+
+  window.bdzClosePanel = function() {
+    document.getElementById('bdz-theme-panel').classList.remove('open');
+  };
+
+  // Close panel on outside click
+  document.addEventListener('click', function(e) {
+    var btn = document.getElementById('bdz-theme-btn');
+    var panel = document.getElementById('bdz-theme-panel');
+    if (btn && panel && !btn.contains(e.target) && !panel.contains(e.target)) {
+      bdzClosePanel();
+    }
+  });
+
+  // Apply saved theme on load (default: amber)
+  var saved = localStorage.getItem(KEY) || 'amber';
+  applyTheme(saved);
+})();
+</script>
+<script src="https://unpkg.com/htmx.org@2.0.4"></script>
+{% endblock %}

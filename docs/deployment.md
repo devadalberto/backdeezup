@@ -1,0 +1,241 @@
+# Deployment
+
+Full production deployment runbook — tested on Debian 13 WSL2 on Windows Server 2025.
+
+---
+
+## Prerequisites
+
+- Docker Engine installed (see [Installation](installation.md))
+- `git` and `ssh` configured for GitHub access
+- Google OAuth credentials (`google_client.json`)
+- Repo cloned: `git clone git@github.com:devadalberto/backdeezup.git`
+
+---
+
+## Makefile reference
+
+All common operations are available via `make`. Run `make help` to see all targets.
+
+### Docker / production
+
+| Command | What it does |
+|---|---|
+| `make build` | Build the Docker image |
+| `make up` | Start all containers (detached) |
+| `make down` | Stop all containers |
+| `make restart` | `down` + `up` |
+| `make redeploy` | `git pull` + `build` + `down` + `up` + `migrate` — full update in one command |
+| `make logs` | Tail all container logs |
+| `make ps` | Show container status |
+
+### Django
+
+| Command | What it does |
+|---|---|
+| `make migrate` | Run database migrations |
+| `make superuser` | Create Django superuser |
+| `make shell` | Open Django shell inside container |
+| `make check` | Run Django system check |
+
+### Drive / Photos pipeline
+
+| Command | What it does |
+|---|---|
+| `make discover` | Discover Drive media (images/videos) |
+| `make discover-files` | Discover Drive documents (PDF, Office, etc.) |
+| `make discover-photos` | Discover Google Photos |
+| `make sync-download` | Download DISCOVERED assets (limit=20) |
+| `make sync-import` | SHA-256 hash + copy to media/ (limit=20) |
+| `make sync-verify` | Verify both proofs: disk + DB (limit=50) |
+| `make sync-mark-delete` | Queue VERIFIED assets for deletion (limit=100) |
+| `make sync-commit-delete` | Execute Drive deletion in trash mode (limit=50) |
+
+### Gmail pipeline
+
+| Command | What it does |
+|---|---|
+| `make gmail-discover` | Full Gmail snapshot — discovers all message metadata |
+| `make gmail-incremental` | Incremental sync via historyId (fast, run after first discover) |
+| `make gmail-download` | Download raw .eml files to disk (limit=20) |
+| `make gmail-verify` | Verify .eml files exist on disk (limit=50) |
+
+### Local dev
+
+| Command | What it does |
+|---|---|
+| `make run` | Django dev server on port 8844 (no Docker) |
+| `make docs` | MkDocs documentation server on port 8001 |
+
+### WSL2 / Windows
+
+| Command | What it does |
+|---|---|
+| `make wsl-proxy` | Forward port 8844 from Windows IP to WSL2 internal IP |
+
+Override the API host with `HOST=`:
+```bash
+make discover HOST=http://192.168.88.60:8844
+make gmail-discover HOST=http://192.168.88.60:8844
+```
+
+---
+
+## First-time deployment
+
+### 1. Clone and configure
+
+```bash
+git clone git@github.com:devadalberto/backdeezup.git
+cd backdeezup
+cp .env.sample .env
+vim .env   # fill in all CHANGE_ME values
+```
+
+Generate required values:
+```bash
+# Django secret key
+python3 -c "import secrets; print(secrets.token_urlsafe(50))"
+
+# Fernet encryption key (stdlib only)
+python3 -c "import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())"
+```
+
+### 2. Place Google credentials
+
+```bash
+mkdir -p secrets
+cp /path/to/client_secret_*.json secrets/google_client.json
+```
+
+### 3. Build and start
+
+```bash
+make build
+make up
+make ps      # verify all 4 containers are Up
+```
+
+### 4. Initialise database and create superuser
+
+```bash
+make migrate
+make superuser
+```
+
+### 5. Authenticate with Google
+
+Open **http://localhost:8844/api/docs** → `POST /auth/connect`
+
+Complete the OAuth flow in your browser. The encrypted token is saved to `secrets/google_token.json`.
+
+---
+
+## Drive + Photos backup pipeline
+
+Run each step in sequence:
+
+```bash
+make discover           # find images/videos in Drive
+make discover-files     # find documents in Drive
+make discover-photos    # find items in Google Photos
+make sync-download      # download to local disk
+make sync-import        # hash + copy to media/
+make sync-verify        # confirm both proofs
+make sync-mark-delete   # queue for deletion
+make sync-commit-delete # trash in Drive (recoverable 30 days)
+```
+
+Run steps in a loop until each returns `0` new items:
+```bash
+# Example: keep downloading until done
+while make sync-download | grep -q '"downloaded": [^0]'; do sleep 2; done
+```
+
+---
+
+## Gmail backup pipeline
+
+```bash
+make gmail-discover     # full snapshot — run once to populate DB
+make gmail-incremental  # run regularly to pick up new mail
+make gmail-download     # save .eml files to disk
+make gmail-verify       # confirm files on disk
+```
+
+!!! tip "Incremental sync"
+    After the first `gmail-discover`, use `gmail-incremental` for all subsequent runs.
+    It uses Gmail's `historyId` and is much faster. Falls back to full discover automatically if history expires (>7 days between runs).
+
+!!! note "Gmail cleanup"
+    Trash and label operations are available in the Gmail Ops Console at `/admin/gmail/ops/` or via the API at `/api/gmail/cleanup/*`. All cleanup actions are **dry-run by default**.
+
+---
+
+## Update deployment (subsequent releases)
+
+One command handles pull + rebuild + restart + migrate:
+
+```bash
+make redeploy
+```
+
+Or step by step:
+```bash
+git pull origin main
+make build
+make down
+make up
+make migrate
+```
+
+---
+
+## Ongoing operations
+
+```bash
+make logs               # tail all container logs
+make ps                 # container status
+make shell              # Django shell
+make check              # Django system check
+make down               # stop everything
+```
+
+---
+
+## WSL2 external access (Windows Server only)
+
+To expose the app on the Windows VM's external IP:
+
+```bash
+make wsl-proxy          # run from inside Debian WSL
+```
+
+Or manually in PowerShell (as Administrator):
+```powershell
+$wslIp = wsl -d Debian -- hostname -I | ForEach-Object { $_.Trim().Split(" ")[0] }
+netsh interface portproxy add v4tov4 listenaddress=0.0.0.0 listenport=8844 connectaddress=$wslIp connectport=8844
+New-NetFirewallRule -DisplayName "BackDeezUp 8844" -Direction Inbound -Protocol TCP -LocalPort 8844 -Action Allow
+```
+
+!!! warning "WSL IP changes on restart"
+    Re-run `make wsl-proxy` after each WSL restart.
+
+---
+
+## Production checklist
+
+- [ ] `DEBUG=False` in `.env`
+- [ ] `DJANGO_SECRET_KEY` is a long random string
+- [ ] `ALLOWED_HOSTS` includes your server IP/hostname
+- [ ] `CSRF_TRUSTED_ORIGINS` includes your server URL with port
+- [ ] `POSTGRES_PASSWORD` is not the sample value
+- [ ] `GOOGLE_ENCRYPTION_KEY` backed up securely
+- [ ] `secrets/google_client.json` in place
+- [ ] `make ps` — all 4 containers `Up`
+- [ ] `make migrate` — all migrations applied
+- [ ] Superuser created (`make superuser`)
+- [ ] OAuth completed (`POST /auth/connect`)
+- [ ] Static files loading (`/admin/` has styles)
+- [ ] Drive pipeline tested (`make discover`)
+- [ ] Gmail pipeline tested (`make gmail-discover`)

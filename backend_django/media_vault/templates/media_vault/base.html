@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}{{ page.title }}{% endblock %} | BackDeezUp Vault</title>
+<style>
+:root { --gx:#00ff41; --gm:#00c832; --gd:#008f1f; --ga:#003a10; --g0:#000; --g1:#080808; --g2:#111; --fw:#ccffcc; --gr:#ff3131; --gy:#c8a800; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background:var(--g0); color:var(--fw); font-family:'Courier New',monospace; min-height:100vh; }
+header { background:var(--g1); border-bottom:1px solid var(--ga); padding:12px 24px; display:flex; align-items:center; justify-content:space-between; }
+header .logo { color:var(--gx); font-size:18px; letter-spacing:3px; text-shadow:0 0 8px var(--gx); text-decoration:none; }
+nav a { color:var(--gm); text-decoration:none; margin-left:16px; font-size:13px; }
+nav a:hover { color:var(--gx); text-shadow:0 0 4px var(--gx); }
+main { max-width:1400px; margin:0 auto; padding:24px; }
+h1 { color:var(--gx); letter-spacing:2px; border-bottom:1px solid var(--ga); padding-bottom:8px; margin-bottom:16px; }
+h2 { color:var(--gm); margin:16px 0 8px; }
+a { color:var(--gm); }
+a:hover { color:var(--gx); }
+.filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.filter-bar a { padding:4px 10px; border:1px solid var(--ga); border-radius:3px; font-size:12px; color:var(--gm); text-decoration:none; }
+.filter-bar a.active, .filter-bar a:hover { background:var(--ga); color:var(--gx); border-color:var(--gx); }
+footer { border-top:1px solid var(--ga); padding:12px 24px; text-align:center; color:var(--gd); font-size:11px; margin-top:32px; }
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+<header>
+  <a class="logo" href="/vault/">&#9608; BackDeezUp Vault</a>
+  <nav>
+    <a href="/vault/">Home</a>
+    <a href="/cms/">CMS Admin</a>
+    <a href="/admin/gmail/ops/">Gmail Ops</a>
+    <a href="/admin/">Django Admin</a>
+  </nav>
+</header>
+<main>
+  {% block content %}{% endblock %}
+</main>
+<footer>BackDeezUp &mdash; your Google media, organized &mdash; <a href="/cms/">Wagtail CMS</a></footer>
+</body>
+</html>
