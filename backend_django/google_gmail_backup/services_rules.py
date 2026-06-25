@@ -101,40 +101,41 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
                 normalized = {e.lower() for e in protected}
                 for email in normalized:
                     qs = qs.exclude(from_address__icontains=email)
-            candidates = list(qs[:5000])  # hard cap to prevent memory exhaustion
-
-            affected_ids = [m.gmail_id for m in candidates]
-            sample_subjects = [m.subject[:80] for m in candidates[:10]]
-            audit.affected_count = len(affected_ids)
-            audit.affected_gmail_ids = affected_ids[:100]
-            audit.affected_ids_truncated = len(affected_ids) > 100
-            audit.sample_subjects = sample_subjects
-
             if dry_run:
+                # Dry-run: count from DB only (no Gmail API, fast)
+                total_count = qs.count()
+                sample_subjects = [m.subject[:80] for m in qs[:10]]
+                audit.affected_count = total_count
+                audit.affected_gmail_ids = list(qs.values_list("gmail_id", flat=True)[:100])
+                audit.affected_ids_truncated = total_count > 100
+                audit.sample_subjects = sample_subjects
                 audit.status = "DRY_RUN"
                 audit.finished_at = timezone.now()
                 audit.save()
-                rule.last_dry_run_count = len(affected_ids)
+                rule.last_dry_run_count = total_count
                 rule.save(update_fields=["last_dry_run_count"])
                 return audit
 
-            # Execute the action
+            # Execute — batch loop, no hard cap (max 50 iterations = 50k messages safety)
             svc = gmail_service()
             if not svc:
                 raise RuntimeError("Not authenticated — run make auth first")
 
             executed = 0
-            if rule.action == CleanupRule.ACTION_TRASH:
-                trashed_ids = []
-                for msg in candidates:
-                    if trash_message(msg.gmail_id):
-                        trashed_ids.append(msg.gmail_id)
-                        executed += 1
-                if trashed_ids:
-                    now = timezone.now()
-                    # Snapshot metadata for each trashed message
-                    for msg in candidates:
-                        if msg.gmail_id in trashed_ids and not msg.metadata_snapshot:
+            sample_subjects = []
+            BATCH = 1000
+
+            for _iteration in range(50):
+                batch = list(qs[:BATCH])
+                if not batch:
+                    break
+                if not sample_subjects:
+                    sample_subjects = [m.subject[:80] for m in batch[:10]]
+
+                if rule.action == CleanupRule.ACTION_TRASH:
+                    trashed_ids = []
+                    for msg in batch:
+                        if not msg.metadata_snapshot:
                             msg.metadata_snapshot = {
                                 "subject": msg.subject,
                                 "from_address": msg.from_address,
@@ -144,32 +145,40 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
                                 "size_estimate": msg.size_estimate,
                             }
                             msg.save(update_fields=["metadata_snapshot"])
-                    GmailMessage.objects.filter(gmail_id__in=trashed_ids).update(
-                        state=GmailMessage.STATE_TRASHED,
-                        deleted_at=now,
-                        deletion_source="cleanup_rule",
-                    )
+                        if trash_message(msg.gmail_id):
+                            trashed_ids.append(msg.gmail_id)
+                            executed += 1
+                    if trashed_ids:
+                        GmailMessage.objects.filter(gmail_id__in=trashed_ids).update(
+                            state=GmailMessage.STATE_TRASHED,
+                            deleted_at=timezone.now(),
+                            deletion_source="cleanup_rule",
+                        )
 
-            elif rule.action == CleanupRule.ACTION_STAR:
-                for msg in candidates:
-                    if modify_labels(msg.gmail_id, add_labels=["STARRED"]):
-                        if "STARRED" not in msg.labels:
-                            msg.labels = list(msg.labels) + ["STARRED"]
-                            msg.save(update_fields=["labels"])
-                        executed += 1
+                elif rule.action == CleanupRule.ACTION_STAR:
+                    for msg in batch:
+                        if modify_labels(msg.gmail_id, add_labels=["STARRED"]):
+                            if "STARRED" not in msg.labels:
+                                msg.labels = list(msg.labels) + ["STARRED"]
+                                msg.save(update_fields=["labels"])
+                            executed += 1
 
-            elif rule.action == CleanupRule.ACTION_LABEL:
-                label_id = _get_or_create_label(svc, rule.label_name)
-                for msg in candidates:
-                    if modify_labels(msg.gmail_id, add_labels=[label_id]):
-                        executed += 1
+                elif rule.action == CleanupRule.ACTION_LABEL:
+                    label_id = _get_or_create_label(svc, rule.label_name)
+                    for msg in batch:
+                        if modify_labels(msg.gmail_id, add_labels=[label_id]):
+                            executed += 1
 
-            elif rule.action == CleanupRule.ACTION_ARCHIVE:
-                for msg in candidates:
-                    if modify_labels(msg.gmail_id, remove_labels=["INBOX"]):
-                        executed += 1
+                elif rule.action == CleanupRule.ACTION_ARCHIVE:
+                    for msg in batch:
+                        if modify_labels(msg.gmail_id, remove_labels=["INBOX"]):
+                            executed += 1
+
+                if len(batch) < BATCH:
+                    break  # last batch processed
 
             audit.affected_count = executed
+            audit.sample_subjects = sample_subjects
             audit.status = "OK"
             audit.finished_at = timezone.now()
             audit.save()

@@ -27,6 +27,8 @@ class GmailSyncState(models.Model):
     total_messages      = models.IntegerField(default=0)
     created_at          = models.DateTimeField(auto_now_add=True)
     updated_at          = models.DateTimeField(auto_now=True)
+    last_error          = models.TextField(blank=True, default="")
+    last_error_at       = models.DateTimeField(blank=True, null=True)
 
     def __str__(self) -> str:
         return self.email

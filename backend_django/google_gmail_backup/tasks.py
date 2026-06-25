@@ -9,6 +9,25 @@ from celery import shared_task
 log = logging.getLogger(__name__)
 
 
+def _record_task_failure(task_name: str, exc: Exception) -> None:
+    """Record task failure on all GmailSyncState rows and fire Sentry if configured."""
+    try:
+        from .models import GmailSyncState
+        from django.utils import timezone
+        # Update all sync state rows — in single-account setup there's only one
+        GmailSyncState.objects.update(
+            last_error=f"[{task_name}] {str(exc)[:900]}",
+            last_error_at=timezone.now(),
+        )
+    except Exception:
+        pass
+    try:
+        import sentry_sdk
+        sentry_sdk.capture_exception(exc)
+    except Exception:
+        pass
+
+
 @shared_task(bind=True, max_retries=3, default_retry_delay=120, name="google_gmail_backup.tasks.task_gmail_incremental_sync")
 def task_gmail_incremental_sync(self):
     """Incremental Gmail sync — picks up new messages since last historyId."""
@@ -108,6 +127,7 @@ def task_gmail_incremental_sync(self):
 
     except Exception as exc:
         log.error("task_gmail_incremental_sync failed: %s", exc)
+        _record_task_failure("incremental_sync", exc)
         raise self.retry(exc=exc)
 
 
@@ -232,6 +252,7 @@ def task_gmail_reconcile(self):
 
     except Exception as exc:
         log.error("task_gmail_reconcile failed: %s", exc)
+        _record_task_failure("task_gmail_reconcile", exc)
         raise self.retry(exc=exc)
 
 

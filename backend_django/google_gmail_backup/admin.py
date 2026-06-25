@@ -14,9 +14,9 @@ from .models import (
 
 @admin.register(GmailSyncState)
 class GmailSyncStateAdmin(admin.ModelAdmin):
-    list_display = ["email", "last_history_id", "last_full_sync_at", "last_incremental_at", "total_messages"]
+    list_display = ["email", "last_history_id", "last_full_sync_at", "last_incremental_at", "total_messages", "last_error", "last_error_at"]
     readonly_fields = ["email", "last_history_id", "last_full_sync_at",
-                       "last_incremental_at", "total_messages", "created_at", "updated_at"]
+                       "last_incremental_at", "total_messages", "created_at", "updated_at", "last_error", "last_error_at"]
 
 
 @admin.register(GmailAttachment)
