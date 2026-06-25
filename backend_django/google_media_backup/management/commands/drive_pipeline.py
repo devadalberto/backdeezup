@@ -341,20 +341,29 @@ class Command(BaseCommand):
             final = deterministic_path(asset.name, hint, kind=kind)
             try:
                 if download_file(asset.drive_id, tmp) and os.path.exists(tmp):
-                    os.replace(tmp, final)
-                    asset.download_path = final
-                    asset.downloaded_at = timezone.now()
-                    asset.state = "DOWNLOADED"
-                    asset.error = None
-                    asset.save(update_fields=["download_path", "downloaded_at", "state", "error"])
-                    downloaded += 1
+                    # Size integrity check: verify downloaded bytes match Drive API size
+                    actual_size = os.path.getsize(tmp)
+                    if asset.size_bytes > 0 and actual_size != asset.size_bytes:
+                        os.unlink(tmp)
+                        asset.error = f"Size mismatch: got {actual_size} expected {asset.size_bytes}"
+                        asset.last_attempt_at = timezone.now()
+                        asset.save(update_fields=["error", "last_attempt_at"])
+                        errors += 1
+                    else:
+                        os.replace(tmp, final)
+                        asset.download_path = final
+                        asset.downloaded_at = timezone.now()
+                        asset.state = "DOWNLOADED"
+                        asset.error = ""
+                        asset.save(update_fields=["download_path", "downloaded_at", "state", "error"])
+                        downloaded += 1
                 else:
                     asset.error = "Download failed"
                     asset.last_attempt_at = timezone.now()
                     asset.save(update_fields=["error", "last_attempt_at"])
                     errors += 1
             except Exception as exc:
-                asset.error = str(exc)
+                asset.error = str(exc)[:500]
                 asset.last_attempt_at = timezone.now()
                 asset.save(update_fields=["error", "last_attempt_at"])
                 errors += 1

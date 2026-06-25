@@ -180,6 +180,14 @@ class Command(BaseCommand):
                             )
                             doc.file.save(os.path.basename(asset.download_path), File(f), save=False)
                             doc.save()
+                    # Remove original download to avoid double-storage
+                    # Wagtail now owns the canonical copy in media/documents/
+                    try:
+                        os.unlink(asset.download_path)
+                        asset.download_path = ""
+                        asset.save(update_fields=["download_path"])
+                    except OSError:
+                        pass
                     documents += 1
                     self.stdout.write(f"  document: {asset.name}")
                 except Exception as exc:

@@ -174,8 +174,12 @@ def task_gmail_download_batch(limit: int = 500, workers: int = 10):
 
 @shared_task(bind=True, max_retries=1, default_retry_delay=300, name="google_gmail_backup.tasks.task_gmail_reconcile")
 def task_gmail_reconcile(self):
-    """Compare local VERIFIED messages against live Gmail — mark missing as SOFT_DELETED."""
-    import time
+    """Compare local VERIFIED messages against live Gmail — mark missing as SOFT_DELETED.
+
+    Uses list diff strategy: fetches all live Gmail IDs (~50 API calls) then diffs
+    against local DB — avoids per-message API calls (was 25,000 calls → ~7h runtime).
+    Only calls messages.get() for IDs that exist locally but not in Gmail list.
+    """
     try:
         from .services_gmail import gmail_service
         from .models import GmailMessage
@@ -186,74 +190,105 @@ def task_gmail_reconcile(self):
             log.warning("task_gmail_reconcile: not authenticated, skipping")
             return {"skipped": True, "reason": "not authenticated"}
 
-        verified_ids = list(
+        # Step 1: get all local VERIFIED/DOWNLOADED IDs
+        local_ids = set(
             GmailMessage.objects.filter(
                 state__in=[GmailMessage.STATE_VERIFIED, GmailMessage.STATE_DOWNLOADED]
             ).values_list("gmail_id", flat=True)
         )
-        log.info("task_gmail_reconcile: checking %d messages against live Gmail", len(verified_ids))
+        log.info("task_gmail_reconcile: %d local messages to check", len(local_ids))
 
-        confirmed = 0
+        # Step 2: fetch all live Gmail IDs using messages.list (not messages.get)
+        # Excludes trash/spam by default — gives us what's in normal labels
+        live_ids = set()
+        page_token = None
+        pages = 0
+        while True:
+            params = {"userId": "me", "maxResults": 500, "fields": "messages(id),nextPageToken"}
+            if page_token:
+                params["pageToken"] = page_token
+            res = svc.users().messages().list(**params).execute()
+            for m in res.get("messages", []):
+                live_ids.add(m["id"])
+            page_token = res.get("nextPageToken")
+            pages += 1
+            if not page_token:
+                break
+        log.info("task_gmail_reconcile: fetched %d live IDs in %d pages", len(live_ids), pages)
+
+        # Step 3: diff — IDs in local DB but NOT in live Gmail list
+        missing_ids = local_ids - live_ids
+        log.info("task_gmail_reconcile: %d potentially missing (may be in archive/sent/spam)", len(missing_ids))
+
+        # Step 4: for missing IDs, call messages.get to confirm they're truly gone
+        # (they may be in Archive, Sent, Spam — just not in the default list)
+        import time
         soft_deleted = 0
+        confirmed = len(local_ids) - len(missing_ids)
         errors = 0
+        now = timezone.now()
 
         BATCH_SIZE = 50
-        for i in range(0, len(verified_ids), BATCH_SIZE):
-            batch = verified_ids[i:i + BATCH_SIZE]
+        missing_list = list(missing_ids)
+        for i in range(0, len(missing_list), BATCH_SIZE):
+            batch = missing_list[i:i + BATCH_SIZE]
             for gmail_id in batch:
                 try:
                     result = svc.users().messages().get(
-                        userId="me", id=gmail_id, format="minimal"
+                        userId="me", id=gmail_id, format="minimal",
+                        fields="id,labelIds",
                     ).execute()
                     labels = result.get("labelIds", [])
                     if "TRASH" in labels:
-                        msg = GmailMessage.objects.get(gmail_id=gmail_id)
-                        msg.state = GmailMessage.STATE_SOFT_DELETED
-                        msg.deleted_at = timezone.now()
-                        msg.deletion_source = "gmail_user"
-                        if not msg.metadata_snapshot:
-                            msg.metadata_snapshot = {
-                                "subject": msg.subject,
-                                "from_address": msg.from_address,
-                                "to_address": msg.to_address,
-                                "date": str(msg.date) if msg.date else None,
-                                "labels": msg.labels,
-                                "size_estimate": msg.size_estimate,
-                            }
-                        msg.save(update_fields=["state", "deleted_at", "deletion_source", "metadata_snapshot"])
+                        _mark_soft_deleted(gmail_id, "gmail_user", now)
                         soft_deleted += 1
                     else:
-                        confirmed += 1
+                        confirmed += 1  # exists in archive/sent/other label
                 except Exception as exc:
                     exc_str = str(exc)
                     if "404" in exc_str or "notFound" in exc_str:
-                        msg = GmailMessage.objects.get(gmail_id=gmail_id)
-                        msg.state = GmailMessage.STATE_SOFT_DELETED
-                        msg.deleted_at = timezone.now()
-                        msg.deletion_source = "gmail_sync"
-                        if not msg.metadata_snapshot:
-                            msg.metadata_snapshot = {
-                                "subject": msg.subject,
-                                "from_address": msg.from_address,
-                                "to_address": msg.to_address,
-                                "date": str(msg.date) if msg.date else None,
-                                "labels": msg.labels,
-                                "size_estimate": msg.size_estimate,
-                            }
-                        msg.save(update_fields=["state", "deleted_at", "deletion_source", "metadata_snapshot"])
+                        _mark_soft_deleted(gmail_id, "gmail_sync", now)
                         soft_deleted += 1
                     else:
                         log.warning("task_gmail_reconcile: error checking %s: %s", gmail_id, exc)
                         errors += 1
-            time.sleep(0.1)
+            if i + BATCH_SIZE < len(missing_list):
+                time.sleep(0.1)  # rate limit only on the targeted subset
 
-        log.info("task_gmail_reconcile: confirmed=%d soft_deleted=%d errors=%d", confirmed, soft_deleted, errors)
-        return {"confirmed": confirmed, "soft_deleted": soft_deleted, "errors": errors}
+        log.info(
+            "task_gmail_reconcile: confirmed=%d soft_deleted=%d errors=%d "
+            "(list_pages=%d, targeted_checks=%d)",
+            confirmed, soft_deleted, errors, pages, len(missing_ids),
+        )
+        return {"confirmed": confirmed, "soft_deleted": soft_deleted, "errors": errors,
+                "list_pages": pages, "targeted_checks": len(missing_ids)}
 
     except Exception as exc:
         log.error("task_gmail_reconcile failed: %s", exc)
         _record_task_failure("task_gmail_reconcile", exc)
         raise self.retry(exc=exc)
+
+
+def _mark_soft_deleted(gmail_id: str, source: str, now) -> None:
+    """Mark a single GmailMessage as SOFT_DELETED with metadata snapshot."""
+    from .models import GmailMessage
+    try:
+        msg = GmailMessage.objects.get(gmail_id=gmail_id)
+        msg.state = GmailMessage.STATE_SOFT_DELETED
+        msg.deleted_at = now
+        msg.deletion_source = source
+        if not msg.metadata_snapshot:
+            msg.metadata_snapshot = {
+                "subject": msg.subject,
+                "from_address": msg.from_address,
+                "to_address": msg.to_address,
+                "date": str(msg.date) if msg.date else None,
+                "labels": msg.labels,
+                "size_estimate": msg.size_estimate,
+            }
+        msg.save(update_fields=["state", "deleted_at", "deletion_source", "metadata_snapshot"])
+    except GmailMessage.DoesNotExist:
+        pass
 
 
 @shared_task(name="google_gmail_backup.tasks.task_purge_expired_soft_deletes")

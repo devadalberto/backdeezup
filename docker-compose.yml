@@ -39,6 +39,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
 
   celery:
     build: .
@@ -61,6 +66,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
 
   celerybeat:
     build: .
@@ -78,6 +88,11 @@ services:
         condition: service_healthy
       web:
         condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 192M
 
   nginx:
     image: nginx:stable-alpine
