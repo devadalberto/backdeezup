@@ -13,19 +13,18 @@ dist/
 .DS_Store
 setup*.sh
 graphify-out/cache/
+graphify-out/.rebuild.lock
 nginx/certs/*.crt
 nginx/certs/*.key
 nginx/certs/*.pem
-graphify-out/.rebuild.lock
-<<<<<<< HEAD
 .claude/settings.local.json
-# AI assistant & internal planning — not committed
+
+# AI assistant & internal planning files — never commit to root
+# These live in docs/ai-dev/ if needed in the repo
 CLAUDE.md
 AGENTS.md
+GEMINI.md
 GOALS.md
 GOALS_TODOS.md
 TODO.md
 shared_context.md
-=======
-.claude/settings.local.json
->>>>>>> feat/ci-cd-autostart
