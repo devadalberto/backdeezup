@@ -8,6 +8,8 @@ import logging
 from datetime import timedelta
 
 from django.db import transaction
+
+from .schemas import snapshot_from_message
 from django.utils import timezone
 
 from .models import CleanupAuditLog, CleanupRule, GmailMessage, ProtectedSender
@@ -138,14 +140,7 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
                     trashed_ids = []
                     for msg in batch:
                         if not msg.metadata_snapshot:
-                            msg.metadata_snapshot = {
-                                "subject": msg.subject,
-                                "from_address": msg.from_address,
-                                "to_address": msg.to_address,
-                                "date": str(msg.date) if msg.date else None,
-                                "labels": msg.labels,
-                                "size_estimate": msg.size_estimate,
-                            }
+                            msg.metadata_snapshot = snapshot_from_message(msg)
                             msg.save(update_fields=["metadata_snapshot"])
                         if trash_message(msg.gmail_id):
                             trashed_ids.append(msg.gmail_id)

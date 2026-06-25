@@ -6,6 +6,8 @@ import logging
 
 from celery import shared_task
 
+from .schemas import snapshot_from_message
+
 log = logging.getLogger(__name__)
 
 
@@ -69,14 +71,7 @@ def task_gmail_incremental_sync(self):
                 msg = GmailMessage.objects.filter(gmail_id=mid).first()
                 if msg and msg.state != GmailMessage.STATE_DELETED:
                     if not msg.metadata_snapshot:
-                        msg.metadata_snapshot = {
-                            "subject": msg.subject,
-                            "from_address": msg.from_address,
-                            "to_address": msg.to_address,
-                            "date": str(msg.date) if msg.date else None,
-                            "labels": msg.labels,
-                            "size_estimate": msg.size_estimate,
-                        }
+                        msg.metadata_snapshot = snapshot_from_message(msg)
                     msg.state = GmailMessage.STATE_DELETED
                     msg.deleted_at = msg.deleted_at or timezone.now()
                     msg.deletion_source = msg.deletion_source or "gmail_sync"
@@ -93,14 +88,7 @@ def task_gmail_incremental_sync(self):
                         msg.state = GmailMessage.STATE_SOFT_DELETED
                         msg.deleted_at = timezone.now()
                         msg.deletion_source = "gmail_user"
-                        msg.metadata_snapshot = {
-                            "subject": msg.subject,
-                            "from_address": msg.from_address,
-                            "to_address": msg.to_address,
-                            "date": str(msg.date) if msg.date else None,
-                            "labels": msg.labels,
-                            "size_estimate": msg.size_estimate,
-                        }
+                        msg.metadata_snapshot = snapshot_from_message(msg)
                         msg.save(update_fields=["state", "deleted_at", "deletion_source", "metadata_snapshot"])
                         soft_deleted += 1
 
@@ -278,14 +266,7 @@ def _mark_soft_deleted(gmail_id: str, source: str, now) -> None:
         msg.deleted_at = now
         msg.deletion_source = source
         if not msg.metadata_snapshot:
-            msg.metadata_snapshot = {
-                "subject": msg.subject,
-                "from_address": msg.from_address,
-                "to_address": msg.to_address,
-                "date": str(msg.date) if msg.date else None,
-                "labels": msg.labels,
-                "size_estimate": msg.size_estimate,
-            }
+            msg.metadata_snapshot = snapshot_from_message(msg)
         msg.save(update_fields=["state", "deleted_at", "deletion_source", "metadata_snapshot"])
     except GmailMessage.DoesNotExist:
         pass
@@ -307,14 +288,7 @@ def task_purge_expired_soft_deletes():
 
     for msg in expired.iterator(chunk_size=500):
         if not msg.metadata_snapshot:
-            msg.metadata_snapshot = {
-                "subject": msg.subject,
-                "from_address": msg.from_address,
-                "to_address": msg.to_address,
-                "date": str(msg.date) if msg.date else None,
-                "labels": msg.labels,
-                "size_estimate": msg.size_estimate,
-            }
+            msg.metadata_snapshot = snapshot_from_message(msg)
             msg.save(update_fields=["metadata_snapshot"])
 
     expired.update(state=GmailMessage.STATE_DELETED)
