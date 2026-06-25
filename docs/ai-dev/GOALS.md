@@ -57,6 +57,39 @@ PHASE 9 -- Human-operable FOSS release (FINAL)
   Claude exits. Cron and the human take over.
 
 ================================================================
+GRILL FINDINGS — quality, security, future-proofing
+(items 1-15 from audit; implement in sequence after Phase 9)
+================================================================
+
+PHASE 10 -- Critical reliability fixes (grill items 1-3)
+  1. OAuth token single point of failure → store in DB, health check, Sentry alert on None
+  2. Celery max-retries silent failure → on_failure handler, last_error on GmailSyncState
+  3. apply_rule() 5,000 cap causes incomplete execution → loop until affected_count == 0
+
+PHASE 11 -- API hardening + index fixes (grill items 4-7)
+  4. Drive export: no retry on 429/exportSizeLimit → exponential backoff, CSV fallback
+  5. batchDelete idempotency → skip messages with deleted_at < 24h ago
+  6. from_address ILIKE on 32k rows → add from_email_normalized field + index
+  7. No rate limiting on rule execution API → Redis lock, 1 concurrent execution/account
+
+PHASE 12 -- Performance + storage (grill items 8-9, 11, 15)
+  8. Reconcile 7-hour runtime → diff Gmail list vs local DB (no per-message API calls)
+  9. Double-storage of documents → hardlink or delete original after Wagtail import
+  11. Container CPU/memory limits → deploy.resources.limits in docker-compose
+  15. No checksum at download → verify SHA-256 vs Drive md5Checksum after download
+
+PHASE 13 -- Schema + data integrity (grill item 10)
+  10. metadata_snapshot no schema enforcement → Pydantic MetadataSnapshot, validate on write
+
+PHASE 14 -- Multi-account + restore (grill items 12-13)
+  12. Multi-account → token per email hash, pass correct token to each service call
+  13. No restore-to-Gmail → restore_to_gmail() + admin action "Restore selected to Gmail"
+
+PHASE 15 -- Webhooks + deduplication (grill items 14, 17)
+  14. Polling every 6h → Gmail push webhook via Pub/Sub, 7-day watch renewal task
+  17. Cross-source SHA-256 dedup → check MediaItem.sha256 before creating duplicate VaultImage
+
+================================================================
 TOOLS
   make preflight          -- ALWAYS run first
   make test-full          -- lint + tests (before every PR/merge)

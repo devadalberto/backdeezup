@@ -192,4 +192,50 @@ to clone, configure, and operate it using the README alone. Claude exits here.
 
 ---
 
-_Last updated: 2026-06-02 (Phase 2 complete, Phase 3 in progress — 2,530 trashed, empty trash pending)_
+_Last updated: 2026-06-03 (Phases 0-9 DONE, v1.0.0 on main, Photos blocked on Google scope)_
+
+---
+
+## Phase 10 -- Critical reliability fixes (grill #1-3)
+
+- [ ] #1 OAuth token → store in DB (OAuthToken model or GmailSyncState field), health check endpoint, Sentry alert when gmail_service() returns None
+- [ ] #2 Celery max-retries → on_failure handler, last_error + last_error_at on GmailSyncState, show in dashboard
+- [ ] #3 apply_rule() 5,000 cap → loop until affected_count == 0 (batches of 1,000)
+
+---
+
+## Phase 11 -- API hardening + index fixes (grill #4-7)
+
+- [ ] #4 Drive export retry → exponential backoff on 429/500/503, CSV fallback for exportSizeLimit
+- [ ] #5 batchDelete idempotency → skip messages with deleted_at < 24h ago
+- [ ] #6 from_address ILIKE → add from_email_normalized field + db_index, backfill, update queries
+- [ ] #7 Rate limit rule execution → Redis lock, 1 concurrent per account, 409 if busy
+
+---
+
+## Phase 12 -- Performance + storage + containers (grill #8-9, 11, 15)
+
+- [ ] #8 Reconcile speed → diff Gmail list vs local DB (50 API calls not 25,000)
+- [ ] #9 Document double-storage → delete original after Wagtail import
+- [ ] #11 Container limits → deploy.resources.limits in docker-compose (web/celery/celerybeat)
+- [ ] #15 Checksum at download → verify file size vs size_bytes (or MD5 vs md5_checksum)
+
+---
+
+## Phase 13 -- Schema integrity (grill #10)
+
+- [ ] #10 metadata_snapshot → Pydantic MetadataSnapshot schema, validate on every write
+
+---
+
+## Phase 14 -- Multi-account + restore (grill #12-13)
+
+- [ ] #12 Multi-account → token per email hash, token_path on GmailSyncState, pass email to services
+- [ ] #13 Restore-to-Gmail → restore_to_gmail() in services_gmail.py, admin action "Restore selected"
+
+---
+
+## Phase 15 -- Webhooks + deduplication (grill #14, 17)
+
+- [ ] #14 Gmail push webhook → Pub/Sub topic, /api/gmail/push endpoint, weekly watch renewal
+- [ ] #17 Cross-source SHA-256 dedup → check MediaItem.sha256 before creating duplicate VaultImage

@@ -765,3 +765,369 @@ Answer YES to all of these before closing Phase 7:
   [ ] A GitHub user who finds this repo can set it up from the README
   [ ] make test-full passes clean on main
   [ ] GitHub Actions CI is green on main
+
+================================================================
+GRILL FINDINGS RUNBOOKS (Phases 10-15)
+================================================================
+
+----------------------------------------------------------------
+PHASE 10 -- Critical reliability fixes
+----------------------------------------------------------------
+
+STEP 1. OAuth token DB storage (grill item #1)
+  Problem: secrets/google_token.json is the sole copy of the refresh token.
+  If deleted or GOOGLE_ENCRYPTION_KEY lost, all Google API access dies silently.
+
+  Fix:
+    a) Add OAuthToken model (or field on GmailSyncState):
+       email, encrypted_token (TextField), updated_at
+    b) Update _save_creds() to write to DB AND file (DB is canonical)
+    c) Update _load_creds() to read from DB first, fall back to file
+    d) Add health check: GET /api/health/google → tests token validity
+    e) In each Celery task: if gmail_service() returns None → log + Sentry alert
+
+STEP 2. Celery silent failure on max retries (grill item #2)
+  Problem: When a task hits max_retries, it silently stops.
+  historyId never advances. Weeks of messages missed.
+
+  Fix:
+    a) Add on_failure handler to task_gmail_incremental_sync and task_gmail_reconcile:
+       def on_failure(self, exc, task_id, args, kwargs, einfo):
+           GmailSyncState.objects.filter(...).update(last_error=str(exc))
+           if sentry_sdk: sentry_sdk.capture_exception(exc)
+    b) Add last_error + last_error_at fields to GmailSyncState (migration needed)
+    c) Show last_error in /admin/gmail/dashboard/ as a warning banner
+
+STEP 3. apply_rule() 5,000 cap leaves rules incomplete (grill item #3)
+  Problem: Dry-run counts from local DB (cap 5,000). Real run intersects
+  with Gmail API — if 12,000 messages match but only 5,000 are processed,
+  the other 7,000 remain VERIFIED and re-match next run forever.
+
+  Fix option A (preferred): Remove the cap, process all in batches of 1,000:
+    while True:
+        candidates = list(qs[:1000])
+        if not candidates: break
+        # process + update state
+        if len(candidates) < 1000: break
+
+  Fix option B: Loop apply_rule() from run_all_enabled_rules() until
+  affected_count == 0 for each rule (max 10 iterations to prevent infinite loop).
+
+  Files: backend_django/google_gmail_backup/services_rules.py:apply_rule()
+         backend_django/google_gmail_backup/services_rules.py:run_all_enabled_rules()
+
+VERIFICATION:
+  DATABASE_URL="" uv run pytest -m "unit or smoke" -q
+  docker compose exec web python manage.py shell -c "
+    from google_gmail_backup.services_rules import run_all_enabled_rules
+    results = run_all_enabled_rules(dry_run=True)
+    print(sum(a.affected_count for a in results), 'would be affected')
+  "
+
+----------------------------------------------------------------
+PHASE 11 -- API hardening + index fixes
+----------------------------------------------------------------
+
+STEP 4. Drive export retry on 429/quota (grill item #4)
+  Problem: download_or_export_file() returns False on 429 with no retry.
+  Fix in backend_django/google_media_backup/services_google.py:
+    from googleapiclient.errors import HttpError
+    import time
+
+    def download_or_export_file(file_id, mime_type, out_path):
+        for attempt in range(4):
+            try:
+                # existing download logic
+                ...
+                return True
+            except HttpError as e:
+                if e.resp.status in (429, 500, 503):
+                    time.sleep(2 ** attempt)  # 1s, 2s, 4s, 8s
+                    continue
+                if e.resp.status == 403 and 'exportSizeLimit' in str(e):
+                    # fall back to CSV for sheets
+                    if mime_type == 'application/vnd.google-apps.spreadsheet':
+                        return _export_as_csv(file_id, out_path)
+                raise
+        return False
+
+STEP 5. batchDelete idempotency (grill item #5)
+  Problem: Celery retry after partial execution re-trashes already-trashed messages.
+  select_for_update(skip_locked=True) helps but doesn't cover cross-run races.
+  Fix in services_rules.py:apply_rule():
+    # Skip messages where deleted_at is within last 24h (already processed recently)
+    from django.utils import timezone
+    from datetime import timedelta
+    qs = qs.exclude(
+        deleted_at__gte=timezone.now() - timedelta(hours=24)
+    )
+
+STEP 6. from_address ILIKE performance (grill item #6)
+  Problem: 4 × 32k ILIKE scans per cleanup run. No index on from_address.
+  Fix:
+    a) Add to GmailMessage model:
+       from_email_normalized = models.EmailField(blank=True, default="", db_index=True)
+    b) Override save() to populate:
+       self.from_email_normalized = _normalize_email(self.from_address).lower()
+    c) Add migration
+    d) Backfill: GmailMessage.objects.all().update(
+           from_email_normalized=Func('from_address', function='LOWER', ...)
+       )  -- or management command for large table
+    e) Update _is_protected() and protected sender queries to use __exact on normalized field
+
+  Files: backend_django/google_gmail_backup/models.py
+         backend_django/google_gmail_backup/services_rules.py:_protected_emails()
+
+STEP 7. Rate limiting on rule execution (grill item #7)
+  Problem: Any logged-in user can trigger 16 concurrent Gmail API rule executions.
+  Fix:
+    a) Add Redis lock in run_all_enabled_rules():
+       from django_redis import get_redis_connection
+       rc = get_redis_connection("default")
+       lock_key = f"cleanup_lock:{account_email}"
+       if not rc.set(lock_key, "1", nx=True, ex=600):  # 10min TTL
+           raise RuntimeError("Cleanup already running for this account")
+    b) Return 409 from API endpoint if lock held
+    c) Show "running" state in ops console (HTMX polling)
+
+  Files: backend_django/google_gmail_backup/services_rules.py
+         backend_django/google_gmail_backup/api.py:rules_run_all()
+
+VERIFICATION:
+  make test-full
+  # Manually verify: run rules twice simultaneously — second should get 409
+
+----------------------------------------------------------------
+PHASE 12 -- Performance + storage + containers
+----------------------------------------------------------------
+
+STEP 8. Reconcile without per-message API calls (grill item #8)
+  Problem: task_gmail_reconcile calls messages.get() for each of 25k messages.
+  At 5 quota units each, 25k × 0.1s sleep = 7 hours. Restarts from zero on failure.
+
+  Fix (replace the per-message loop):
+    a) Call messages.list(q="-in:trash", maxResults=500) to get all live inbox IDs
+       (paged, ~50 pages = ~50 API calls total instead of 25,000)
+    b) Collect the full set of live_ids into a Python set
+    c) Query local VERIFIED+DOWNLOADED IDs as a set
+    d) local_only = local_ids - live_ids → mark SOFT_DELETED
+    e) Only call messages.get() for the local_only set to confirm they're truly gone
+       (may be in other labels: Sent, Archive — not just inbox)
+
+  This reduces API calls from 25,000 to ~50 + len(local_only).
+
+  File: backend_django/google_gmail_backup/tasks.py:task_gmail_reconcile()
+
+STEP 9. Double-storage of documents (grill item #9)
+  Problem: import_media.py copies files into Wagtail storage.
+  Original at deterministic_path() + Wagtail copy = 2× disk usage.
+
+  Fix option A (safe): After VaultDocument is created and saved successfully,
+  delete the original download_path file:
+    os.unlink(asset.download_path)
+    asset.download_path = ""
+    asset.save(update_fields=["download_path"])
+
+  Fix option B (advanced): Custom Wagtail storage backend that uses hardlinks.
+  Only works on same filesystem (which it is — same Docker volume).
+
+  Start with option A. Add to import_media.py _import_drive() document block.
+
+STEP 11. Container resource limits (grill item #11)
+  Problem: Celery runaway task can starve web container workers.
+  Fix in docker-compose.yml — add deploy.resources section:
+
+    web:
+      deploy:
+        resources:
+          limits:
+            cpus: '1.0'
+            memory: 512M
+
+    celery:
+      deploy:
+        resources:
+          limits:
+            cpus: '2.0'
+            memory: 1G
+
+    celerybeat:
+      deploy:
+        resources:
+          limits:
+            cpus: '0.1'
+            memory: 128M
+
+  Note: docker compose (v2) respects deploy.resources without swarm mode
+  as of Docker Engine 20.10+. Verify with: docker stats
+
+STEP 15. Checksum verification at download (grill item #15)
+  Problem: download_file() streams to disk but never verifies content integrity.
+  A partial download or corruption is invisible until Wagtail import fails.
+
+  Fix in backend_django/google_media_backup/services_google.py:download_file():
+    After successful download:
+    from google_media_backup.utils import sha256_file
+    actual_sha = sha256_file(out_path)
+    expected_md5 = asset.md5_checksum  # pass this in as a parameter
+    # Note: Drive gives MD5, not SHA-256 — use hashlib.md5 for comparison
+    # Or: just verify file size matches size_bytes from API (cheaper, still catches truncation)
+    if os.path.getsize(out_path) != expected_size:
+        os.unlink(out_path)
+        return False
+
+  Files: services_google.py:download_file()
+         drive_pipeline.py:_download() — pass size_bytes to verify
+
+VERIFICATION:
+  docker stats  # verify CPU/memory caps enforced
+  make docs-run LIMIT=5  # verify docs still download correctly after fix
+
+----------------------------------------------------------------
+PHASE 13 -- Schema integrity
+----------------------------------------------------------------
+
+STEP 10. metadata_snapshot Pydantic schema (grill item #10)
+  Problem: metadata_snapshot is a free-form JSONField. A field rename silently
+  breaks the snapshot format with no error at write time.
+
+  Fix:
+    a) Create backend_django/google_gmail_backup/schemas.py (or add to existing):
+       from pydantic import BaseModel
+       from typing import Optional
+       class MetadataSnapshot(BaseModel):
+           subject: str = ""
+           from_address: str = ""
+           to_address: str = ""
+           date: Optional[str] = None
+           labels: list[str] = []
+           size_estimate: int = 0
+
+    b) In services_rules.py and tasks.py, replace raw dict with:
+       snapshot = MetadataSnapshot(
+           subject=msg.subject,
+           from_address=msg.from_address,
+           ...
+       ).model_dump()
+       msg.metadata_snapshot = snapshot
+
+    c) Add a migration-level check constraint or at minimum a test that
+       validates the schema round-trips correctly.
+
+  Files: backend_django/google_gmail_backup/schemas.py (create or update)
+         backend_django/google_gmail_backup/services_rules.py
+         backend_django/google_gmail_backup/tasks.py
+
+VERIFICATION:
+  DATABASE_URL="" uv run pytest -m unit -q
+  # Add a unit test: MetadataSnapshot(**snapshot_dict) must not raise
+
+----------------------------------------------------------------
+PHASE 14 -- Multi-account + restore
+----------------------------------------------------------------
+
+STEP 12. Multi-account token management (grill item #12)
+  Problem: Single google_token.json. Adding a second account overwrites the first.
+
+  Fix:
+    a) Add email parameter to _save_creds(creds, email) and _load_creds(email)
+    b) Token filename: secrets/google_token_{sha256(email)[:8]}.json
+    c) GmailSyncState.token_path = models.CharField() to store the path
+    d) gmail_service(email=None) — if email provided, load that account's token
+    e) Celery tasks pass account_email from GmailSyncState rows
+    f) OAuth flow: ask which account is being authenticated; save to correct file
+
+  This is a non-breaking change — existing single-account setup still works.
+
+  Files: backend_django/google_media_backup/services_google.py (auth functions)
+         backend_django/google_gmail_backup/models.py (GmailSyncState.token_path)
+         backend_django/google_gmail_backup/tasks.py (pass email to services)
+
+STEP 13. Restore-to-Gmail (grill item #13)
+  Problem: SOFT_DELETED messages with .eml on disk can't be put back in Gmail.
+
+  Fix:
+    a) Add restore_to_gmail(gmail_id) in services_gmail.py:
+       svc = gmail_service()
+       eml_content = open(msg.raw_path, "rb").read()
+       result = svc.users().messages().insert(
+           userId="me",
+           body={"labelIds": ["INBOX"]},
+           media_body=MediaIoBaseUpload(io.BytesIO(eml_content), mimetype="message/rfc822")
+       ).execute()
+       # Returns new gmail_id (different from original)
+
+    b) Add Django admin action on GmailMessageAdmin:
+       "Restore selected to Gmail inbox"
+
+    c) Add note in UI: "Restored as new message — original thread context lost"
+
+  Files: backend_django/google_gmail_backup/services_gmail.py
+         backend_django/google_gmail_backup/admin.py
+
+VERIFICATION:
+  # Test with a single SOFT_DELETED message that has raw_path set
+  # Verify it appears in Gmail inbox after restore
+  # Verify DB state updated (new gmail_id stored or flagged)
+
+----------------------------------------------------------------
+PHASE 15 -- Webhooks + deduplication
+----------------------------------------------------------------
+
+STEP 14. Gmail push webhooks (grill item #14)
+  Problem: 6h polling lag. New emails sit unprocessed for up to 6h.
+  Gmail push notifications via Pub/Sub fire within seconds.
+
+  Prerequisites:
+    a) Create a Google Cloud Pub/Sub topic: backdeezup-gmail-push
+    b) Grant gmail publish permissions to the topic
+    c) Create push subscription pointing to https://<your-domain>/api/gmail/push
+
+  Code:
+    a) Add /api/gmail/push POST endpoint in api.py:
+       - Verify JWT from Google
+       - Decode base64 notification data
+       - Call task_gmail_incremental_sync.delay() for the affected email
+       - Return 200 immediately (Google retries on non-200)
+
+    b) Add watch setup command:
+       docker compose exec web python manage.py setup_gmail_watch
+       Calls svc.users().watch(userId="me", body={
+           "topicName": "projects/<project>/topics/backdeezup-gmail-push",
+           "labelIds": ["INBOX"]
+       })
+
+    c) Add Celery Beat task task_renew_gmail_watch — weekly, renews the watch
+       (watches expire every 7 days)
+
+  Note: Requires public HTTPS endpoint. For home server: use ngrok or Cloudflare Tunnel
+  during development. For production: already have nginx + TLS.
+
+STEP 17. Cross-source SHA-256 deduplication (grill item #17)
+  Problem: A photo sent as Gmail attachment AND saved to Drive creates 2 VaultImages
+  with identical content but different source_ids.
+
+  Fix in backend_django/media_vault/management/commands/import_media.py:
+    Before creating VaultImage or VaultMedia:
+    from google_media_backup.utils import sha256_file
+    sha = sha256_file(file_path)
+
+    existing = VaultImage.objects.filter(sha256=sha).first()
+    if existing:
+        # Link source_id to existing image instead of creating duplicate
+        # Could store multiple source_ids in a JSONField or a separate relation
+        skipped += 1
+        continue
+
+    img.sha256 = sha
+    # Add sha256 field to VaultImage model (migration needed)
+
+  Also add sha256 to VaultMedia for video dedup.
+
+  Files: backend_django/media_vault/models.py (add sha256 field to VaultImage, VaultMedia)
+         backend_django/media_vault/management/commands/import_media.py
+
+VERIFICATION:
+  # Import the same image from two sources
+  # VaultImage count should be 1, not 2
+  DATABASE_URL="" uv run pytest -m integration -q
