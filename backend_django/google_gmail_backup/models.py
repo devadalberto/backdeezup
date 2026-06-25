@@ -71,6 +71,8 @@ class GmailMessage(models.Model):
     subject      = models.TextField(blank=True, default="")
     # RFC 5321 max address length is 320 chars; +display name overhead → 1000 is intentional
     from_address = models.CharField(max_length=1000, blank=True, default="")
+    # Normalized bare email (lowercase, no display name) — indexed for fast protected sender lookup
+    from_email_normalized = models.CharField(max_length=320, blank=True, default="", db_index=True)
     # to_address may contain multiple recipients separated by ", "
     to_address   = models.TextField(blank=True, default="")
     date         = models.DateTimeField(blank=True, null=True, db_index=True)
@@ -110,6 +112,16 @@ class GmailMessage(models.Model):
         db_index=True,
         help_text="Mirrors GmailSyncState.email — logical FK, not enforced at DB level.",
     )
+
+    def save(self, *args, **kwargs):
+        # Keep from_email_normalized in sync with from_address
+        addr = self.from_address or ""
+        if "<" in addr:
+            addr = addr.split("<")[-1].strip("> ").lower()
+        else:
+            addr = addr.strip().lower()
+        self.from_email_normalized = addr[:320]
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"{self.subject or '(no subject)'} <{self.from_address}>"

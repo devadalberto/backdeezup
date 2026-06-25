@@ -72,10 +72,13 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
         with transaction.atomic():
             # select_for_update requires an open transaction — prevents concurrent
             # rule runs from double-trashing the same messages.
+            # Exclude messages processed within last 24h (idempotency guard for Celery retries).
+            from datetime import timedelta as _td
+            recent_cutoff = timezone.now() - _td(hours=24)
             qs = GmailMessage.objects.select_for_update(skip_locked=True).filter(
                 state=GmailMessage.STATE_VERIFIED,
                 date__lte=cutoff,
-            )
+            ).exclude(deleted_at__gte=recent_cutoff)
 
             # For dry-run: count from local DB only (fast, no Gmail API call)
             # For real run: also cross-reference live Gmail query to catch label changes
@@ -96,11 +99,10 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
                             break
                     qs = qs.filter(gmail_id__in=matching_ids)
 
-            # Exclude protected senders — push filter to DB, not Python iteration
+            # Exclude protected senders — use indexed from_email_normalized (O(1) vs ILIKE O(n))
             if rule.respect_protected_senders and protected:
                 normalized = {e.lower() for e in protected}
-                for email in normalized:
-                    qs = qs.exclude(from_address__icontains=email)
+                qs = qs.exclude(from_email_normalized__in=normalized)
             if dry_run:
                 # Dry-run: count from DB only (no Gmail API, fast)
                 total_count = qs.count()
@@ -222,23 +224,19 @@ def apply_protected_sender_rules() -> CleanupAuditLog:
     executed = 0
     affected_ids = []
 
-    # Batch all senders into a single OR query — avoids N separate ILIKE scans
-    from django.db.models import Q as _Q
-    sender_q = _Q()
-    for sender in protected:
-        sender_q |= _Q(from_address__icontains=sender.email)
-
+    # Use indexed from_email_normalized for O(1) exact match instead of ILIKE scans
+    protected_emails = {s.email.lower() for s in protected}
     all_candidate_msgs = list(
         GmailMessage.objects.filter(
-            sender_q,
+            from_email_normalized__in=protected_emails,
             state=GmailMessage.STATE_VERIFIED,
         ).exclude(labels__contains=["STARRED"])
     )
-    # Group by sender for label assignment
+    # Group by sender using normalized field (exact match, indexed)
     candidate_by_email: dict = {}
     for msg in all_candidate_msgs:
         for sender in protected:
-            if sender.email.lower() in msg.from_address.lower():
+            if msg.from_email_normalized == sender.email.lower():
                 candidate_by_email.setdefault(sender.email, []).append(msg)
                 break
 
@@ -277,12 +275,34 @@ def apply_protected_sender_rules() -> CleanupAuditLog:
 
 
 def run_all_enabled_rules(dry_run: bool = True, actor_label: str = "scheduler") -> list:
-    """Run all enabled CleanupRules. Returns list of audit log records."""
-    results = []
-    for rule in CleanupRule.objects.filter(enabled=True).order_by("name"):
-        try:
-            audit = apply_rule(rule, dry_run=dry_run, actor_label=actor_label)
-            results.append(audit)
-        except Exception as e:
-            log.error("Rule '%s' raised: %s", rule.name, e)
-    return results
+    """Run all enabled CleanupRules. Returns list of audit log records.
+
+    Uses a Redis lock to prevent concurrent executions from two callers.
+    Raises RuntimeError if another execution is already running.
+    """
+    from django.core.cache import cache
+
+    LOCK_KEY = "backdeezup:cleanup_rules_running"
+    LOCK_TTL = 1800  # 30 minutes max — prevents stuck lock from blocking forever
+
+    if not dry_run:
+        # Acquire Redis lock — nx=True means only set if key doesn't exist
+        acquired = cache.add(LOCK_KEY, actor_label, LOCK_TTL)
+        if not acquired:
+            running_by = cache.get(LOCK_KEY, "unknown")
+            raise RuntimeError(
+                f"Cleanup rules already running (started by: {running_by}). "
+                "Wait for it to finish or check /admin/google_gmail_backup/cleanupauditlog/."
+            )
+    try:
+        results = []
+        for rule in CleanupRule.objects.filter(enabled=True).order_by("name"):
+            try:
+                audit = apply_rule(rule, dry_run=dry_run, actor_label=actor_label)
+                results.append(audit)
+            except Exception as e:
+                log.error("Rule '%s' raised: %s", rule.name, e)
+        return results
+    finally:
+        if not dry_run:
+            cache.delete(LOCK_KEY)

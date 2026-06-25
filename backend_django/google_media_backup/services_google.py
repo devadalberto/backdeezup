@@ -216,35 +216,56 @@ def list_common_files(page_size: int = 200, page_token: str | None = None):
     return (res.get("files", []), res.get("nextPageToken"))
 
 
+def _cleanup_partial(path: str) -> None:
+    try:
+        if os.path.exists(path):
+            os.remove(path)
+    except OSError:
+        pass
+
+
 def download_file(file_id: str, out_path: str) -> bool:
+    import time
+    from googleapiclient.errors import HttpError
     svc = drive_service()
     if not svc:
         return False
-    req = svc.files().get_media(fileId=file_id)
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    with io.FileIO(out_path, "wb") as fh:
-        dl = MediaIoBaseDownload(fh, req)
-        done = False
+    for attempt in range(4):
         try:
-            while not done:
-                _, done = dl.next_chunk()
+            req = svc.files().get_media(fileId=file_id)
+            os.makedirs(os.path.dirname(out_path), exist_ok=True)
+            with io.FileIO(out_path, "wb") as fh:
+                dl = MediaIoBaseDownload(fh, req)
+                done = False
+                while not done:
+                    _, done = dl.next_chunk()
             return True
-        except Exception:
-            try:
-                if os.path.exists(out_path):
-                    os.remove(out_path)
-            except Exception:
-                pass
+        except HttpError as e:
+            _cleanup_partial(out_path)
+            if e.resp.status in (429, 500, 503):
+                time.sleep(2 ** attempt)
+                continue
             return False
+        except Exception:
+            _cleanup_partial(out_path)
+            return False
+    return False
 
 
 def download_or_export_file(file_id: str, mime_type: str, out_path: str) -> bool:
     """Download a file, or export it if it's a Google native format (Docs/Sheets/Slides)."""
-    if mime_type in GOOGLE_EXPORT_MAP:
-        export_mime, _ = GOOGLE_EXPORT_MAP[mime_type]
-        svc = drive_service()
-        if not svc:
-            return False
+    import time
+    from googleapiclient.errors import HttpError
+
+    if mime_type not in GOOGLE_EXPORT_MAP:
+        return download_file(file_id, out_path)
+
+    export_mime, _ = GOOGLE_EXPORT_MAP[mime_type]
+    svc = drive_service()
+    if not svc:
+        return False
+
+    for attempt in range(4):
         try:
             req = svc.files().export_media(fileId=file_id, mimeType=export_mime)
             os.makedirs(os.path.dirname(out_path), exist_ok=True)
@@ -254,15 +275,30 @@ def download_or_export_file(file_id: str, mime_type: str, out_path: str) -> bool
                 while not done:
                     _, done = dl.next_chunk()
             return True
-        except Exception:
-            try:
-                if os.path.exists(out_path):
-                    os.remove(out_path)
-            except OSError:
-                pass
+        except HttpError as e:
+            _cleanup_partial(out_path)
+            if e.resp.status in (429, 500, 503):
+                time.sleep(2 ** attempt)
+                continue
+            if e.resp.status == 403 and "exportSizeLimit" in str(e):
+                # Fall back to CSV for spreadsheets that exceed export size limit
+                if mime_type == "application/vnd.google-apps.spreadsheet":
+                    csv_path = os.path.splitext(out_path)[0] + ".csv"
+                    try:
+                        req2 = svc.files().export_media(fileId=file_id, mimeType="text/csv")
+                        with io.FileIO(csv_path, "wb") as fh2:
+                            dl2 = MediaIoBaseDownload(fh2, req2)
+                            done = False
+                            while not done:
+                                _, done = dl2.next_chunk()
+                        return True
+                    except Exception:
+                        _cleanup_partial(csv_path)
             return False
-    else:
-        return download_file(file_id, out_path)
+        except Exception:
+            _cleanup_partial(out_path)
+            return False
+    return False
 
 
 def list_drive_files(page_size: int = 200, page_token: str | None = None, media_only: bool = True):
