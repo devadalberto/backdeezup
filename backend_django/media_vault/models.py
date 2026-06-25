@@ -20,6 +20,7 @@ class VaultImage(AbstractImage):
     source_id = models.CharField(max_length=256, blank=True, default="")
     source_email = models.EmailField(blank=True, default="")
     imported_at = models.DateTimeField(default=timezone.now)
+    sha256 = models.CharField(max_length=64, blank=True, default="", db_index=True)
     keep = models.BooleanField(default=None, null=True, help_text="None=undecided, True=keep, False=delete")
     notes = models.TextField(blank=True, default="")
 
@@ -65,6 +66,7 @@ class VaultMedia(AbstractMedia):
     source_id = models.CharField(max_length=256, blank=True, default="")
     source_email = models.EmailField(blank=True, default="")
     imported_at = models.DateTimeField(default=timezone.now)
+    sha256 = models.CharField(max_length=64, blank=True, default="", db_index=True)
     keep = models.BooleanField(default=None, null=True, help_text="None=undecided, True=keep, False=delete")
     notes = models.TextField(blank=True, default="")
     duration_seconds = models.IntegerField(default=0)

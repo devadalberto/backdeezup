@@ -12,7 +12,7 @@ DJ    := backend_django/manage.py
         discover discover-files discover-photos \
         photos-discover photos-download photos-run photos-delete photos-progress \
         docs-discover docs-download docs-import docs-run docs-progress \
-        gmail-discover gmail-incremental gmail-download gmail-verify gmail-run gmail-loop gmail-progress gmail-reconcile gmail-purge-expired \
+        gmail-discover gmail-incremental gmail-download gmail-verify gmail-run gmail-loop gmail-progress gmail-reconcile gmail-purge-expired gmail-watch-setup \
         pipeline pipeline-gmail pipeline-all \
         progress \
         sync-download sync-import sync-verify sync-mark-delete sync-commit-delete sync-run \
@@ -328,6 +328,9 @@ gmail-reconcile:
 
 gmail-purge-expired:
 	docker compose exec web bash -c "cd /app/backend_django && python manage.py shell -c \"from google_gmail_backup.tasks import task_purge_expired_soft_deletes; print(task_purge_expired_soft_deletes())\""
+
+gmail-watch-setup:
+	docker compose exec web python manage.py setup_gmail_watch
 
 gmail-run:
 	docker compose exec web python manage.py gmail_pipeline all --limit $(LIMIT)

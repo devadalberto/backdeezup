@@ -294,3 +294,34 @@ def task_purge_expired_soft_deletes():
     expired.update(state=GmailMessage.STATE_DELETED)
     log.info("task_purge_expired_soft_deletes: purged %d records", count)
     return {"purged": count}
+
+
+@shared_task(name="google_gmail_backup.tasks.task_renew_gmail_watch")
+def task_renew_gmail_watch():
+    """Renew Gmail push notification watch — expires every 7 days."""
+    from decouple import config
+    topic = config("GMAIL_PUBSUB_TOPIC", default="")
+    if not topic:
+        log.info("task_renew_gmail_watch: GMAIL_PUBSUB_TOPIC not set, skipping")
+        return {"skipped": True, "reason": "GMAIL_PUBSUB_TOPIC not configured"}
+    try:
+        from google_media_backup.services_google import _load_creds, _save_creds
+        from google.auth.transport.requests import Request
+        from googleapiclient.discovery import build
+
+        creds = _load_creds()
+        if not creds:
+            return {"skipped": True, "reason": "not authenticated"}
+        if creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+            _save_creds(creds)
+        svc = build("gmail", "v1", credentials=creds)
+        result = svc.users().watch(
+            userId="me",
+            body={"topicName": topic, "labelIds": ["INBOX"], "labelFilterBehavior": "INCLUDE"},
+        ).execute()
+        log.info("task_renew_gmail_watch: renewed, historyId=%s", result.get("historyId"))
+        return {"renewed": True, "historyId": result.get("historyId")}
+    except Exception as exc:
+        log.error("task_renew_gmail_watch failed: %s", exc)
+        return {"error": str(exc)}

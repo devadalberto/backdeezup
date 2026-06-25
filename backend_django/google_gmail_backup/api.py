@@ -1,4 +1,5 @@
 import uuid
+import logging
 from typing import List, Optional
 import datetime as dt
 
@@ -23,6 +24,8 @@ from .services_gmail import (
     modify_labels,
     list_history,
 )
+
+log = logging.getLogger(__name__)
 
 gmail_api = NinjaAPI(urls_namespace="gmail", docs_url="/docs", auth=django_auth)
 
@@ -724,3 +727,42 @@ def export_messages(request, fmt: str = "csv", state: str = "", limit: int = 100
     ]
     name = f"gmail_messages{'_' + state if state else ''}"
     return export_queryset(request, rows, MSG_FIELDS, name, fmt)
+
+
+# ── Push webhook (Google Cloud Pub/Sub) ───────────────────────────────────────
+
+@gmail_api.post("/push", auth=None)
+def gmail_push_webhook(request):
+    """Gmail push notification endpoint (Google Cloud Pub/Sub).
+
+    Google POSTs a base64-encoded notification when new Gmail activity occurs.
+    We decode it and trigger task_gmail_incremental_sync.
+    Must return 200 quickly — Google retries on any non-200 response.
+
+    Setup:
+        1. Create Pub/Sub topic: gcloud pubsub topics create backdeezup-gmail-push
+        2. Grant Gmail publish rights: gcloud pubsub topics add-iam-policy-binding ...
+        3. Create push subscription pointing to https://<host>/api/gmail/push
+        4. Call setup_gmail_watch management command (or make gmail-watch-setup)
+    """
+    import base64
+    import json as _json
+
+    try:
+        body = request.body
+        data = _json.loads(body)
+        message = data.get("message", {})
+        encoded = message.get("data", "")
+        if encoded:
+            decoded = base64.b64decode(encoded).decode("utf-8")
+            notification = _json.loads(decoded)
+            email = notification.get("emailAddress", "")
+            history_id = notification.get("historyId", "")
+            log.info("gmail_push_webhook: notification for %s historyId=%s", email, history_id)
+        # Always trigger incremental sync — it will check historyId itself
+        from .tasks import task_gmail_incremental_sync
+        task_gmail_incremental_sync.delay()
+    except Exception as exc:
+        log.warning("gmail_push_webhook: failed to parse notification: %s", exc)
+    # Always return 200 — Google retries on non-200
+    return {"ok": True}

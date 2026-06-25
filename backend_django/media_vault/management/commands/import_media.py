@@ -13,6 +13,7 @@ Usage:
     make import-media ARGS="--dry-run"
 
 Safe to run multiple times — skips files already imported (by source_id).
+Cross-source deduplication: skips files with duplicate SHA-256 across sources.
 """
 import mimetypes
 import os
@@ -20,6 +21,7 @@ import os
 from django.core.management.base import BaseCommand
 from django.core.files import File
 from django.db import transaction
+from google_media_backup.utils import sha256_file
 
 
 IMAGE_MIMES = {
@@ -114,6 +116,13 @@ class Command(BaseCommand):
                 if VaultImage.objects.filter(source_id=asset.drive_id, source_type="drive").exists():
                     skipped += 1
                     continue
+
+                # Cross-source deduplication: check SHA-256
+                file_sha = sha256_file(asset.download_path)
+                if VaultImage.objects.filter(sha256=file_sha).exists():
+                    skipped += 1
+                    continue
+
                 if dry_run:
                     self.stdout.write(f"  [DRY] image: {asset.name} ({mime})")
                     images += 1
@@ -126,6 +135,7 @@ class Command(BaseCommand):
                                 source_type="drive",
                                 source_id=asset.drive_id,
                                 source_email="",
+                                sha256=file_sha,
                             )
                             img.file.save(os.path.basename(asset.download_path), File(f), save=False)
                             img.save()
@@ -139,6 +149,13 @@ class Command(BaseCommand):
                 if VaultMedia.objects.filter(source_id=asset.drive_id, source_type="drive").exists():
                     skipped += 1
                     continue
+
+                # Cross-source deduplication: check SHA-256
+                file_sha = sha256_file(asset.download_path)
+                if VaultMedia.objects.filter(sha256=file_sha).exists():
+                    skipped += 1
+                    continue
+
                 media_type = "video" if mime in VIDEO_MIMES else "audio"
                 if dry_run:
                     self.stdout.write(f"  [DRY] {media_type}: {asset.name} ({mime})")
@@ -152,6 +169,7 @@ class Command(BaseCommand):
                                 type=media_type,
                                 source_type="drive",
                                 source_id=asset.drive_id,
+                                sha256=file_sha,
                             )
                             vm.file.save(os.path.basename(asset.download_path), File(f), save=False)
                             vm.save()
@@ -223,6 +241,13 @@ class Command(BaseCommand):
                 if VaultImage.objects.filter(source_id=source_id, source_type="gmail").exists():
                     skipped += 1
                     continue
+
+                # Cross-source deduplication: check SHA-256
+                file_sha = sha256_file(att.local_path)
+                if VaultImage.objects.filter(sha256=file_sha).exists():
+                    skipped += 1
+                    continue
+
                 if dry_run:
                     self.stdout.write(f"  [DRY] gmail image: {att.filename} ({mime})")
                     images += 1
@@ -235,6 +260,7 @@ class Command(BaseCommand):
                                 source_type="gmail",
                                 source_id=source_id,
                                 source_email=att.message.account_email,
+                                sha256=file_sha,
                             )
                             img.file.save(os.path.basename(att.local_path), File(f), save=False)
                             img.save()
@@ -247,6 +273,13 @@ class Command(BaseCommand):
                 if VaultMedia.objects.filter(source_id=source_id, source_type="gmail").exists():
                     skipped += 1
                     continue
+
+                # Cross-source deduplication: check SHA-256
+                file_sha = sha256_file(att.local_path)
+                if VaultMedia.objects.filter(sha256=file_sha).exists():
+                    skipped += 1
+                    continue
+
                 media_type = "video" if mime in VIDEO_MIMES else "audio"
                 if dry_run:
                     self.stdout.write(f"  [DRY] gmail {media_type}: {att.filename} ({mime})")
@@ -261,6 +294,7 @@ class Command(BaseCommand):
                                 source_type="gmail",
                                 source_id=source_id,
                                 source_email=att.message.account_email,
+                                sha256=file_sha,
                             )
                             vm.file.save(os.path.basename(att.local_path), File(f), save=False)
                             vm.save()
