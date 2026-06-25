@@ -51,7 +51,6 @@ nav:
       - State Machine: states.md
       - Data Model: data-model.md
   - API Reference: api.md
-  - Operations: operations.md
   - Deployment:
       - Docker: deployment.md
   - Development:

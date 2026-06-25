@@ -64,15 +64,12 @@ def htmx_gmail_progress(request):
     filled = int(pct / 5)
     bar = "=" * filled + "-" * (20 - filled)
 
-    # Disk usage — DISK_USAGE_PATH overrides the volume path reported
-    # (Docker on WSL2 may report the host's large virtual disk, not the Windows OS disk)
-    from decouple import config as _cfg
-    disk_path = _cfg("DISK_USAGE_PATH", default=str(settings.MEDIA_ROOT))
+    # Disk usage
     gmail_dir = os.path.join(settings.MEDIA_ROOT, "gmail")
     disk_total = disk_used = disk_free = gmail_size = 0
     disk_pct = 0
     try:
-        disk_total, disk_used, disk_free = shutil.disk_usage(disk_path)
+        disk_total, disk_used, disk_free = shutil.disk_usage(settings.MEDIA_ROOT)
         disk_pct = round(disk_used / max(disk_total, 1) * 100, 1)
         if os.path.exists(gmail_dir):
             gmail_size = sum(

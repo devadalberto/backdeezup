@@ -527,17 +527,13 @@ backdeezup/
 
 ---
 
-## Troubleshooting
+## AI agent collaboration
 
-| Symptom | Check | Fix |
-|---|---|---|
-| Stack won't start after reboot | `docker compose ps` | `make up` |
-| Gmail 403 / token expired | `docker compose logs --tail=20 web \| grep 403` | `rm secrets/google_token.json && make auth` |
-| Cleanup rules ran but 0 affected | Check audit log at `/admin/google_gmail_backup/cleanupauditlog/` | Rule's `gmail_query` may not match — rebuild via rule builder |
-| Celery tasks not running | `make celery-status` | `docker compose restart celery celerybeat` |
-| TLS cert not trusted | Browser shows NET::ERR_CERT_AUTHORITY_INVALID | `make gen-certs` then install to OS trust store |
-| CSRF 403 on login | New hostname/port not in CSRF_TRUSTED_ORIGINS | Add `https://<host>:<port>` to `CSRF_TRUSTED_ORIGINS` in `.env`, then `make up` |
-| Progress bar stuck at "Loading..." | HTMX library not loading | Hard refresh (`Ctrl+Shift+R`) |
+All AI agents (Claude, Gemini, Codex) use:
+- **`shared_context.md`** — single source of truth; update after every material change  
+- **`graphify-out/`** — codebase knowledge graph; run `graphify update .` after code changes  
+- **Memory files** — `C:\Users\Administrator\.claude\projects\...\memory\`  
+- Install graphify: `uv tool install graphifyy` (CLI: `graphify`)
 
 ---
 
