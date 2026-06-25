@@ -17,14 +17,14 @@ CLIENT_SECRETS = config("GOOGLE_CLIENT_SECRETS", default="secrets/google_client.
 TOKEN_FILE_ENC = config("GOOGLE_TOKEN_FILE", default="secrets/google_token.json")
 
 
-def gmail_service():
-    creds = _load_creds()
+def gmail_service(email: str | None = None):
+    creds = _load_creds(email)
     if not creds:
         log.warning("gmail_service: no credentials found — run make auth")
         return None
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())
-        _save_creds(creds)
+        _save_creds(creds, email)
     scopes = getattr(creds, "scopes", None) or []
     if scopes and "https://www.googleapis.com/auth/gmail.modify" not in scopes:
         log.error("gmail_service: token missing gmail.modify scope — delete token and re-run make auth. Current scopes: %s", scopes)
@@ -297,3 +297,42 @@ def extract_attachment_metadata(msg: dict) -> list:
             "size": body.get("size", 0),
         })
     return results
+
+
+# ── Restore actions ───────────────────────────────────────────────────────────
+
+def restore_to_gmail(gmail_message) -> tuple[bool, str]:
+    """Restore a SOFT_DELETED message to Gmail inbox by re-uploading the .eml file.
+
+    Returns (success: bool, new_gmail_id: str).
+    Note: Gmail inserts as a NEW message with a new ID — original thread context is lost.
+    Only works if raw_path exists on disk.
+    """
+    import io
+    from googleapiclient.http import MediaIoBaseUpload
+
+    if not gmail_message.raw_path or not os.path.exists(gmail_message.raw_path):
+        return False, "No .eml file on disk — cannot restore"
+
+    svc = gmail_service()
+    if not svc:
+        return False, "Not authenticated"
+
+    try:
+        with open(gmail_message.raw_path, "rb") as f:
+            eml_bytes = f.read()
+
+        media = MediaIoBaseUpload(
+            io.BytesIO(eml_bytes),
+            mimetype="message/rfc822",
+            resumable=False,
+        )
+        result = svc.users().messages().insert(
+            userId="me",
+            body={"labelIds": ["INBOX"]},
+            media_body=media,
+        ).execute()
+        new_id = result.get("id", "")
+        return True, new_id
+    except Exception as exc:
+        return False, str(exc)

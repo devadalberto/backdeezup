@@ -34,7 +34,7 @@ class GmailMessageAdmin(admin.ModelAdmin):
                        "downloaded_at", "last_attempt_at", "sha256", "raw_path",
                        "deleted_at", "deletion_source", "metadata_snapshot"]
     date_hierarchy = "date"
-    actions = ["action_trash", "action_reconcile"]
+    actions = ["action_trash", "action_reconcile", "action_restore_to_gmail"]
 
     @admin.action(description="Trash selected in Gmail (requires gmail.modify scope)")
     def action_trash(self, request, queryset):
@@ -86,6 +86,30 @@ class GmailMessageAdmin(admin.ModelAdmin):
                     msg.save(update_fields=["state", "deleted_at", "deletion_source", "metadata_snapshot"])
                     reconciled += 1
         self.message_user(request, f"Reconciled {reconciled} message(s) — marked as soft-deleted.")
+
+    @admin.action(description="Restore selected to Gmail inbox (re-upload .eml)")
+    def action_restore_to_gmail(self, request, queryset):
+        from .services_gmail import restore_to_gmail
+        from django.utils import timezone
+        ok = failed = 0
+        for msg in queryset.filter(state=GmailMessage.STATE_SOFT_DELETED):
+            success, result = restore_to_gmail(msg)
+            if success:
+                # Mark as VERIFIED with a note — new gmail_id stored in error field temporarily
+                msg.state = GmailMessage.STATE_VERIFIED
+                msg.deleted_at = None
+                msg.deletion_source = ""
+                msg.error = f"restored:{result}"  # new_gmail_id
+                msg.save(update_fields=["state", "deleted_at", "deletion_source", "error"])
+                ok += 1
+            else:
+                failed += 1
+        self.message_user(
+            request,
+            f"Restored {ok} message(s) to Gmail inbox. {failed} failed. "
+            f"Note: restored messages have new Gmail IDs — original thread context is lost.",
+            level="warning" if failed else "success",
+        )
 
 
 @admin.register(ProtectedSender)

@@ -29,6 +29,10 @@ class GmailSyncState(models.Model):
     updated_at          = models.DateTimeField(auto_now=True)
     last_error          = models.TextField(blank=True, default="")
     last_error_at       = models.DateTimeField(blank=True, null=True)
+    token_path = models.CharField(
+        max_length=512, blank=True, default="",
+        help_text="Path to per-account OAuth token. Blank = use default GOOGLE_TOKEN_FILE.",
+    )
 
     def __str__(self) -> str:
         return self.email

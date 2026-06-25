@@ -30,11 +30,22 @@ MIME_ALLOWLIST = [
 ]
 
 
-def _load_creds() -> Optional[Credentials]:
-    if not os.path.exists(TOKEN_FILE_ENC):
+def _token_path_for_email(email: str | None = None) -> str:
+    """Return per-account token path. Falls back to TOKEN_FILE_ENC for single-account setup."""
+    if not email:
+        return TOKEN_FILE_ENC
+    import hashlib
+    h = hashlib.sha256(email.lower().encode()).hexdigest()[:8]
+    token_dir = os.path.dirname(TOKEN_FILE_ENC)
+    return os.path.join(token_dir, f"google_token_{h}.json")
+
+
+def _load_creds(email: str | None = None) -> Optional[Credentials]:
+    token_path = _token_path_for_email(email)
+    if not os.path.exists(token_path):
         return None
     try:
-        with open(TOKEN_FILE_ENC) as f:
+        with open(token_path) as f:
             data = json.load(f)
         token_json = get_fernet().decrypt(data["payload"].encode()).decode()
         return Credentials.from_authorized_user_info(json.loads(token_json), SCOPES)
@@ -42,7 +53,7 @@ def _load_creds() -> Optional[Credentials]:
         return None
 
 
-def _save_creds(creds: Credentials) -> None:
+def _save_creds(creds: Credentials, email: str | None = None) -> None:
     """
     Atomically write the encrypted token file.
     Uses write-to-temp-then-rename to prevent partial writes from corrupting
@@ -50,7 +61,8 @@ def _save_creds(creds: Credentials) -> None:
     Sets file permissions to 0o600 (owner read/write only).
     """
     import tempfile
-    token_dir = os.path.dirname(TOKEN_FILE_ENC)
+    token_path = _token_path_for_email(email)
+    token_dir = os.path.dirname(token_path)
     os.makedirs(token_dir, exist_ok=True)
     wrapped = {"payload": get_fernet().encrypt(creds.to_json().encode()).decode()}
     # Write to a sibling temp file, then atomically rename
@@ -59,7 +71,7 @@ def _save_creds(creds: Credentials) -> None:
         with os.fdopen(fd, "w") as f:
             json.dump(wrapped, f, indent=2)
         os.chmod(tmp_path, 0o600)  # owner read/write only — never world-readable
-        os.replace(tmp_path, TOKEN_FILE_ENC)  # atomic on POSIX
+        os.replace(tmp_path, token_path)  # atomic on POSIX
     except Exception:
         try:
             os.unlink(tmp_path)
@@ -110,17 +122,17 @@ def start_oauth_local() -> str:
         return "ERROR: No authorization code found in the URL."
 
     flow.fetch_token(authorization_response=redirect_response)
-    _save_creds(flow.credentials)
+    _save_creds(flow.credentials, email=None)
     return "OAuth completed and token saved."
 
 
-def drive_service():
-    creds = _load_creds()
+def drive_service(email: str | None = None):
+    creds = _load_creds(email)
     if not creds:
         return None
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())
-        _save_creds(creds)
+        _save_creds(creds, email)
     return build("drive", "v3", credentials=creds)
 
 
@@ -142,14 +154,14 @@ def list_media_files(page_size: int = 200, page_token: str | None = None):
     return (res.get("files", []), res.get("nextPageToken"))
 
 
-def photos_service():
+def photos_service(email: str | None = None):
     """Google Photos Library API client."""
-    creds = _load_creds()
+    creds = _load_creds(email)
     if not creds:
         return None
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())
-        _save_creds(creds)
+        _save_creds(creds, email)
     return build("photoslibrary", "v1", credentials=creds, static_discovery=False)
 
 
