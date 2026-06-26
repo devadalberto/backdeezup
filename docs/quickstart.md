@@ -1,118 +1,124 @@
 # Quick Start
 
-Get BackDeezUp running locally in five minutes.
+Everything runs in Docker. You do **not** need Python, uv, or anything else installed locally.
 
 ---
 
 ## Prerequisites
 
-- Python 3.12+
-- [uv](https://docs.astral.sh/uv/#installation) installed
-- A Google Cloud project with Drive and Photos APIs enabled
-- OAuth 2.0 Desktop App credentials (JSON file)
+- Docker + Docker Compose (that's it)
+- A Google Cloud project with a Desktop App OAuth client (type `installed`, not `web`)
 
 ---
 
-## 1. Clone and install
+## 1. Clone and configure
 
 ```bash
 git clone https://github.com/devadalberto/backdeezup.git
 cd backdeezup
-uv sync
-```
-
----
-
-## 2. Configure environment
-
-```bash
 cp .env.sample .env
 ```
 
-Minimum required values in `.env`:
+Open `.env` and fill in:
 
 ```env
+# Generate with: python3 -c "import secrets; print(secrets.token_urlsafe(50))"
+DJANGO_SECRET_KEY=<long random string>
+
+# Generate with: python3 -c "import base64,os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())"
 GOOGLE_ENCRYPTION_KEY=<44-char Fernet key>
-GOOGLE_CLIENT_SECRETS=secrets/google_client.json
 ```
 
-Generate a Fernet key:
+Everything else can stay as the defaults for now.
 
-```bash
-python3 -c "import base64, os; print(base64.urlsafe_b64encode(os.urandom(32)).decode())"
-```
-
-!!! warning "Keep your encryption key"
-    `GOOGLE_ENCRYPTION_KEY` encrypts your OAuth token. If you lose it, you will need to re-authenticate.
+!!! tip "Don't have Python to generate those keys?"
+    Run it inside the container after you build: `docker compose run --rm web python3 -c "import secrets; print(secrets.token_urlsafe(50))"`
 
 ---
 
-## 3. Place Google credentials
+## 2. Place Google credentials
+
+Download your Desktop App OAuth JSON from Google Cloud Console and copy it:
 
 ```bash
 mkdir -p secrets
 cp ~/Downloads/client_secret_*.json secrets/google_client.json
 ```
 
----
-
-## 4. Migrate and start
-
-=== "Bash"
-
-    ```bash
-    ./dev.sh migrate
-    ./dev.sh dev
-    ```
-
-=== "PowerShell"
-
-    ```powershell
-    .\dev.ps1 migrate
-    .\dev.ps1 dev
-    ```
-
-Server starts at **http://localhost:8844**.
-
----
-
-## 5. Authenticate with Google
-
-Open **http://localhost:8844/api/docs** and call `POST /auth/connect`. A browser window opens for the Google OAuth flow. After approving, the encrypted token is saved to `secrets/google_token.json`.
-
----
-
-## 6. Run the pipeline
+The file must be type `installed` (Desktop App). Verify with:
 
 ```bash
-# Discover media
-curl -X POST http://localhost:8844/api/sync/discover-photos
-
-# Download
-curl -X POST "http://localhost:8844/api/sync/download?limit=20"
-
-# Import (hash + copy)
-curl -X POST "http://localhost:8844/api/sync/import?limit=20"
-
-# Verify both proofs
-curl -X POST "http://localhost:8844/api/sync/verify?limit=50"
-
-# Queue for deletion
-curl -X POST "http://localhost:8844/api/sync/mark-delete?limit=100"
-
-# Execute deletion (trash mode by default)
-curl -X POST "http://localhost:8844/api/sync/commit-delete"
+python3 -c "import json; d=json.load(open('secrets/google_client.json')); print(list(d.keys())[0])"
+# Must print: installed
 ```
-
-!!! tip
-    All endpoints are available interactively at **http://localhost:8844/api/docs**.
 
 ---
 
-## 7. Browse the admin
+## 3. Generate TLS certificates
 
 ```bash
-./dev.sh superuser   # create an admin account
+make gen-certs
 ```
 
-Visit **http://localhost:8844/admin** to browse and manage assets.
+This creates `nginx/certs/server.crt` and `server.key` for local HTTPS. Trust the cert in your browser once to stop the warning.
+
+---
+
+## 4. Pre-flight check
+
+```bash
+make preflight
+```
+
+Must show all OK. Fix anything it reports before continuing.
+
+---
+
+## 5. Build and start
+
+```bash
+make build && make up && make migrate && make superuser
+```
+
+All 6 containers start. `make superuser` prompts for your admin username/password.
+
+---
+
+## 6. Authenticate with Google
+
+```bash
+make auth
+```
+
+This prints a URL. Open it in your browser, approve access, then copy the full redirect URL (it'll look like `http://localhost/?code=...`) and paste it back.
+
+---
+
+## 7. Seed rules and run initial backup
+
+```bash
+make seed-rules        # loads 15 cleanup rules (all disabled by default — review before enabling)
+make gmail-discover    # finds all your Gmail message IDs
+make gmail-loop        # downloads emails (runs until queue is empty)
+make docs-run          # discovers and downloads Google Drive documents
+make photos-run        # discovers and downloads Google Photos
+```
+
+---
+
+## 8. Browse
+
+Open **https://localhost:8445** (or your server's IP + port 8445).
+
+| URL | What |
+|-----|------|
+| `/admin/gmail/dashboard/` | Gmail backup progress |
+| `/admin/gmail/ops/` | Cleanup rules + empty trash |
+| `/vault/gallery/` | Photos and videos |
+| `/documents/<id>/` | Documents |
+| `/cms/` | Wagtail CMS |
+
+---
+
+!!! note "Celery Beat takes over from here"
+    After the initial run, Celery Beat handles daily incremental sync, reconciliation, and cleanup automatically. You don't need to run any commands manually again.
