@@ -116,9 +116,10 @@ class Command(BaseCommand):
                 _, created = DriveAsset.objects.get_or_create(
                     drive_id=drive_id,
                     defaults=dict(
-                        name=it.get("filename", ""),
+                        name=it.get("filename", it.get("name", "")),
                         mime_type=it.get("mimeType", ""),
-                        size_bytes=0,
+                        size_bytes=int(it.get("size", 0) or 0),
+                        md5_checksum=it.get("md5Checksum", ""),
                     ),
                 )
                 if created:

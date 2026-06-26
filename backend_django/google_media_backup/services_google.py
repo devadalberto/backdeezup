@@ -15,7 +15,8 @@ from .utils import get_fernet
 SCOPES = [
     "https://www.googleapis.com/auth/drive.readonly",
     "https://www.googleapis.com/auth/drive",
-    "https://www.googleapis.com/auth/photoslibrary.readonly",
+    # photoslibrary.readonly removed: Google blocks it for unverified apps regardless
+    # of publishing status. Photos are accessible via Drive API (spaces=drive) instead.
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.modify",
     "https://mail.google.com/",
@@ -154,27 +155,37 @@ def list_media_files(page_size: int = 200, page_token: str | None = None):
     return (res.get("files", []), res.get("nextPageToken"))
 
 
-def photos_service(email: str | None = None):
-    """Google Photos Library API client."""
-    creds = _load_creds(email)
-    if not creds:
-        return None
-    if creds.expired and creds.refresh_token:
-        creds.refresh(Request())
-        _save_creds(creds, email)
-    return build("photoslibrary", "v1", credentials=creds, static_discovery=False)
+def list_photos_items(page_size: int = 500, page_token: str | None = None):
+    """Return photo/video items via Drive API.
 
-
-def list_photos_items(page_size: int = 200, page_token: str | None = None):
-    """Return mediaItems from Google Photos Library."""
-    svc = photos_service()
+    photoslibrary.readonly is blocked for unverified apps.
+    Google Photos images are accessible via Drive API (spaces=drive, image/* + video/*).
+    Returns items in Photos-compatible format: {id, filename, mimeType}.
+    """
+    svc = drive_service()
     if not svc:
         return ([], None)
-    res = svc.mediaItems().list(
-        pageSize=min(int(page_size or 100), 100),  # Photos API max is 100
+    q = "(mimeType contains 'image/' or mimeType contains 'video/') and trashed=false"
+    res = svc.files().list(
+        pageSize=min(int(page_size or 500), 500),
         pageToken=page_token,
+        q=q,
+        fields="nextPageToken, files(id,name,mimeType,size,md5Checksum)",
+        spaces="drive",
+        corpora="user",
     ).execute()
-    return (res.get("mediaItems", []) or [], res.get("nextPageToken"))
+    # Translate to Photos-compatible format so callers don't need to change
+    items = [
+        {
+            "id": f["id"],
+            "filename": f.get("name", ""),
+            "mimeType": f.get("mimeType", ""),
+            "size": f.get("size", 0),
+            "md5Checksum": f.get("md5Checksum", ""),
+        }
+        for f in res.get("files", [])
+    ]
+    return (items, res.get("nextPageToken"))
 
 
 _COMMON_MIME_LIST = [
@@ -321,26 +332,23 @@ def list_drive_files(page_size: int = 200, page_token: str | None = None, media_
         return list_common_files(page_size=page_size, page_token=page_token)
 
 
-def download_photos_item(media_item_id: str, out_path: str) -> bool:
-    """Download a Google Photos item via its baseUrl (NOT Drive files().get_media())."""
+def download_photos_item(drive_file_id: str, out_path: str) -> bool:
+    """Download a photo/video via Drive API.
+
+    Previously used Photos Library API baseUrl — replaced with Drive download
+    since photoslibrary scope is blocked for unverified apps.
+    Drive IDs are used directly (no photos: prefix stripping needed here).
+    """
+    return download_file(drive_file_id, out_path)
+
+
+def _download_photos_item_legacy(media_item_id: str, out_path: str) -> bool:
+    """Legacy Photos Library API download — kept for reference only. DO NOT USE."""
     import requests
-    svc = photos_service()
-    if not svc:
-        return False
     try:
-        item = svc.mediaItems().get(mediaItemId=media_item_id).execute()
-        base_url = item.get("baseUrl")
-        if not base_url:
-            return False
-        mime = item.get("mimeType", "")
-        suffix = "=dv" if mime.startswith("video/") else "=d"
-        resp = requests.get(base_url + suffix, stream=True, timeout=120)
-        resp.raise_for_status()
-        os.makedirs(os.path.dirname(out_path), exist_ok=True)
-        with open(out_path, "wb") as f:
-            for chunk in resp.iter_content(chunk_size=65536):
-                f.write(chunk)
-        return True
+        import requests as _req
+        # This would need photos_service() which requires photoslibrary scope
+        raise NotImplementedError("photoslibrary scope blocked — use download_photos_item() via Drive")
     except Exception:
         try:
             if os.path.exists(out_path):
