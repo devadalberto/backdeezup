@@ -6,11 +6,11 @@ Day-to-day operations guide. Everything here can be run by a human with `make` c
 
 ## Daily Operations (Celery handles automatically)
 
-These run on schedule via Celery Beat. Manual trigger if needed:
+These run on schedule via Celery Beat. **Gmail incremental sync runs automatically every 6 hours** — no manual command needed for normal operation. Manual trigger if needed for other tasks:
 
 | Task | Schedule | Manual command |
 |------|----------|----------------|
-| Gmail incremental sync | Every 6h | `make gmail-incremental` |
+| Gmail incremental sync | Every 6h | (automatic via Celery) |
 | Apply protected senders | Every 6h | (runs with sync) |
 | Cleanup rules | 3x/day (06/12/18) | `make cleanup-run` |
 | Gmail reconciliation | Daily 03:00 UTC | `make gmail-reconcile` |
@@ -98,7 +98,7 @@ make photos-run LIMIT=500
 ```bash
 make docs-progress
 make photos-progress
-make progress           # overall Drive/Photos stats
+make progress           # Drive/Photos pipeline stats (media only, not Gmail)
 ```
 
 ### Delete from Google (after backup verified)

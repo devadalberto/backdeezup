@@ -108,3 +108,41 @@ Override per request with `?force=true` (use with caution).
 | `hard` | Permanently deletes from Google Drive | No |
 
 Set via `DRIVE_DELETE_MODE` in `.env`.
+
+---
+
+## Gmail Message States
+
+Gmail messages go through a separate state machine:
+
+DISCOVERED → DOWNLOADED → VERIFIED → TRASHED → SOFT_DELETED → DELETED
+
+### State diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> DISCOVERED
+    DISCOVERED --> DOWNLOADED
+    DOWNLOADED --> VERIFIED
+    VERIFIED --> TRASHED : cleanup rule
+    VERIFIED --> SOFT_DELETED : user deleted in Gmail
+    TRASHED --> DELETED : trash emptied
+    SOFT_DELETED --> DELETED : 90-day retention purge
+```
+
+### State reference
+
+| State | Meaning |
+|-------|---------|
+| DISCOVERED | Message ID found in Gmail, not yet downloaded |
+| DOWNLOADED | .eml file saved to disk |
+| VERIFIED | .eml file confirmed on disk with SHA-256 |
+| TRASHED | Moved to Gmail trash by cleanup rule |
+| SOFT_DELETED | Gone from Gmail (user deleted or trash emptied), .eml backup retained |
+| DELETED | Purged from DB after 90-day retention period, metadata preserved in snapshot |
+
+### Notes
+
+- **SOFT_DELETED retention** — messages are kept for 90 days, then purged to DELETED
+- **metadata_snapshot** — JSON field freezes subject/from/to/date/labels/size at deletion time
+- **Restore-to-Gmail** — possible from SOFT_DELETED if .eml file still exists on disk

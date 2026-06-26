@@ -1,5 +1,8 @@
 # Contributing
 
+!!! info "For users, not developers"
+    These instructions are for **contributors** developing the code. If you just want to use BackDeezUp, follow the [Quick Start](quickstart.md) instead — no local Python needed.
+
 Contributions are welcome. This project is worked on by Claude, Gemini CLI, and Codex in parallel alongside human contributors.
 
 ---
@@ -13,6 +16,9 @@ uv sync
 cp .env.sample .env
 ./dev.sh migrate
 ```
+
+!!! note "Local development only"
+    `./dev.sh` and `.\dev.ps1` are for local development with `uv` package manager. For production deployment, use Docker and `make` targets — see [Operations Manual](operations.md).
 
 ---
 
@@ -94,6 +100,20 @@ The `shared_context.md` file is the canonical ground truth shared between Claude
 - New models are added
 - API endpoints change
 - Tech stack changes
+
+---
+
+## Local dev vs. production
+
+**Local development (these docs):**
+- Use `uv` package manager to install dependencies locally
+- Run `./dev.sh` or `.\dev.ps1` for development tasks
+- Test with `./dev.sh test`
+
+**Production deployment:**
+- Use Docker containers — no Python locally needed
+- Use `make` targets for all operations (see [Operations Manual](operations.md))
+- Deploy with `make up` and manage with `make restart`, `make redeploy`, etc.
 
 ---
 

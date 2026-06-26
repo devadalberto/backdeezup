@@ -9,14 +9,14 @@ BackDeezUp is an API-first Django application. The Django-Ninja layer is the pri
 ```mermaid
 flowchart LR
     GD[(Google Drive / Photos)]
-    API[Django-Ninja API port 8844]
+    API[Django-Ninja API port 8445 HTTPS]
     DB[(Postgres / SQLite)]
     FS[Local Storage media/]
     AD[Django Admin]
     SW[Swagger UI /api/docs]
 
     GD -->|OAuth 2.0| API
-    SW -->|HTTP| API
+    SW -->|HTTPS| API
     API -->|state transitions| DB
     API -->|binary + SHA-256 copy| FS
     AD -->|read / manage| DB
@@ -159,19 +159,23 @@ erDiagram
 
 ```mermaid
 flowchart TD
-    Browser -->|port 8844| Nginx
-    Nginx -->|proxy_pass| Gunicorn
+    Browser -->|port 8844<br/>redirects to 8445| Nginx
+    Nginx -->|port 8445<br/>HTTPS proxy_pass| Gunicorn
     Gunicorn --> Django
     Django --> Postgres
     Django --> FS2[media/ volume]
     Django -->|OAuth| Google
+    Django -->|tasks| CeleryW[Celery Worker]
+    CeleryW --> Redis[(Redis)]
+    CeleryBeat[Celery Beat] -->|tasks| Redis
 
-    subgraph Docker Compose
+    subgraph Docker Compose [6 Containers]
         Nginx
         Gunicorn
         Django
         Postgres
-        Redis[(Redis future use)]
+        Redis
+        CeleryW
     end
 ```
 
@@ -187,7 +191,7 @@ flowchart TD
 | `google_media_backup/utils.py` | `sha256_file`, `deterministic_path`, `copy_into_media`, `get_fernet` |
 | `google_media_backup/admin.py` | Django admin + ops console link |
 | `config/settings.py` | All settings via python-decouple |
-| `docker-compose.yml` | Postgres + Redis + Gunicorn + Nginx |
+| `docker-compose.yml` | 6 containers: web, nginx, db, redis, celery, celerybeat |
 
 ---
 

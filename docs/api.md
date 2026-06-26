@@ -1,10 +1,16 @@
 # API Reference
 
-Base URL: `http://localhost:8844/api`
+Base URL: `https://localhost:8445/api`
 
-Interactive Swagger UI: **http://localhost:8844/api/docs**
+Interactive Swagger UI: **https://localhost:8445/api/docs** (also at `https://localhost:8445/api/gmail/docs` for Gmail endpoints)
 
 All endpoints return JSON. Pipeline endpoints return a `run_id` (UUID) for audit purposes.
+
+!!! note "Self-signed certificate"
+    The API uses a self-signed certificate for local development. When using curl, add the `-k` flag to skip certificate verification:
+    ```bash
+    curl -k https://localhost:8445/api/docs
+    ```
 
 ---
 

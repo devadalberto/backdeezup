@@ -11,7 +11,7 @@ BackDeezUp uses Google OAuth 2.0. One authentication flow covers all services �
 - Containers must be running (`make up`)
 
 !!! warning "OAuth client type MUST be Desktop app"
-    Web application clients block restricted scopes (`photoslibrary.readonly`, `gmail.modify`) unless HTTPS redirect URIs are used. Always create a **Desktop app** OAuth client, not a Web application.
+    Sensitive scopes like `gmail.modify` require verification for public distribution, but self-hosted use does not. Always create a **Desktop app** OAuth client, not a Web application.
 
     In Google Cloud Console: **APIs & Services → Credentials → + Create Credentials → OAuth client ID → Desktop app**
 
@@ -42,10 +42,10 @@ The token includes these Google scopes:
 | Scope | Purpose |
 |---|---|
 | `drive.readonly` | Read Drive files |
-| `drive` | Move Drive files to trash |
-| `photoslibrary.readonly` | Read Google Photos |
+| `drive` | Manage Drive files (needed for trash/delete) |
 | `gmail.readonly` | Read Gmail messages |
-| `gmail.modify` | Add/remove labels, move to trash |
+| `gmail.modify` | Move to trash, label |
+| `https://mail.google.com/` | Permanent delete from trash |
 
 ---
 

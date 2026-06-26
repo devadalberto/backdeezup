@@ -2,9 +2,26 @@
 
 ---
 
-## Option A — uv (recommended)
+## Option A — Docker (recommended)
 
-[uv](https://docs.astral.sh/uv/) is a Rust-based Python package manager — 10-100x faster than pip with automatic virtual environment management.
+Requires [Docker Desktop](https://docs.docker.com/get-docker/) and Docker Compose.
+
+```bash
+git clone https://github.com/devadalberto/backdeezup.git
+cd backdeezup
+docker compose build
+docker compose up -d
+docker compose exec web python backend_django/manage.py migrate
+docker compose exec web python backend_django/manage.py createsuperuser
+```
+
+See [Deployment](deployment.md) for full production setup.
+
+---
+
+## Option B — uv (For contributors/development only — NOT for production use)
+
+[uv](https://docs.astral.sh/uv/) is a Rust-based Python package manager — 10-100x faster than pip with automatic virtual environment management. **Only recommended for local development; use Docker for production deployments.**
 
 ### Install uv
 
@@ -34,23 +51,6 @@ Verify:
 uv run python backend_django/manage.py --version
 # 6.x.x
 ```
-
----
-
-## Option B — Docker
-
-Requires [Docker Desktop](https://docs.docker.com/get-docker/).
-
-```bash
-git clone https://github.com/devadalberto/backdeezup.git
-cd backdeezup
-docker compose build
-docker compose up -d
-docker compose exec web python backend_django/manage.py migrate
-docker compose exec web python backend_django/manage.py createsuperuser
-```
-
-See [Deployment](deployment.md) for full production setup.
 
 ---
 
@@ -91,7 +91,6 @@ Add these scopes to your consent screen:
 |---|---|
 | `https://www.googleapis.com/auth/drive.readonly` | Read Drive files |
 | `https://www.googleapis.com/auth/drive` | Move files to trash |
-| `https://www.googleapis.com/auth/photoslibrary.readonly` | Read Photos items |
 
 !!! note "Test users"
     While in testing mode, add your Google account under **OAuth consent screen > Test users**.

@@ -113,7 +113,7 @@ cp /path/to/client_secret_*.json secrets/google_client.json
 ```bash
 make build
 make up
-make ps      # verify all 4 containers are Up
+make ps      # verify all 6 containers are Up
 ```
 
 ### 4. Initialise database and create superuser
@@ -125,7 +125,9 @@ make superuser
 
 ### 5. Authenticate with Google
 
-Open **http://localhost:8844/api/docs** → `POST /auth/connect`
+Open **https://localhost:8445/api/docs** → `POST /auth/connect`
+
+(Note: port 8844 HTTP redirects to 8445 HTTPS)
 
 Complete the OAuth flow in your browser. The encrypted token is saved to `secrets/google_token.json`.
 
@@ -232,7 +234,7 @@ New-NetFirewallRule -DisplayName "BackDeezUp 8844" -Direction Inbound -Protocol 
 - [ ] `POSTGRES_PASSWORD` is not the sample value
 - [ ] `GOOGLE_ENCRYPTION_KEY` backed up securely
 - [ ] `secrets/google_client.json` in place
-- [ ] `make ps` — all 4 containers `Up`
+- [ ] `make ps` — all 6 containers `Up`
 - [ ] `make migrate` — all migrations applied
 - [ ] Superuser created (`make superuser`)
 - [ ] OAuth completed (`POST /auth/connect`)
