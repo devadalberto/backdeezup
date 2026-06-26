@@ -20,12 +20,13 @@ PHASE 3 -- Gmail cleanup (DONE)
   16 rules executed, 11,946 messages permanently deleted from trash.
   Gmail freed from 10.71 GB → 9.78 GB. Backup guard fixed to 100%.
 
-PHASE 4 -- Google Photos backup + delete
-  Fix list_drive_files() bug. Unblock OAuth (user deletes 1ql0o9aj).
-  Download all ~2,015 photos locally. Import to Wagtail vault.
-  Delete from Google to free 0.43 GB.
-  Make targets: photos-discover, photos-download, photos-run, photos-delete.
-  Celery Beat: nightly download at 02:00 UTC.
+PHASE 4 -- Google Photos backup via Drive API (REPLANNED)
+  photoslibrary.readonly scope is blocked regardless of app verification — do not chase it.
+  Google Photos images are accessible via Drive API (spaces=drive) — no extra scope needed.
+  Rewrite list_photos_items() and download_photos_item() to use drive_service() instead.
+  Re-discover photos as drive: prefixed IDs (not photos:), clear stale photos: records.
+  Download all ~3,500+ images. Import to Wagtail vault. Delete from Google to free 0.43 GB.
+  No console.google.com changes required.
 
 PHASE 5 -- Drive documents backup + Wagtail library (DONE)
   480 docs discovered, 469 imported to VaultDocument.

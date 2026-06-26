@@ -290,43 +290,91 @@ NOTES:
   - All actions default to dry_run=True -- must explicitly pass dry_run=False
 
 ----------------------------------------------------------------
-PHASE 4 -- Unblock Photos pipeline
+PHASE 4 -- Google Photos backup via Drive API (REPLANNED)
 ----------------------------------------------------------------
 
-Step 1. Delete old web client from Google Auth Platform:
-  Browser: https://console.cloud.google.com/auth/clients
-  Find client ID: 1ql0o9aj
-  Delete it. (This client blocks photoslibrary.readonly scope from working.)
+PROBLEM: photoslibrary.readonly scope returns 403 even with valid token and published app.
+Root cause: Google's sensitive scope enforcement blocks it for unverified apps regardless
+of publishing status. Not a propagation delay — confirmed after 48h+ of waiting.
 
-Step 2. Delete existing OAuth token (it lacks the Photos scope):
-  rm /home/saitama/repos/github/devadalberto/backdeezup/secrets/google_token.json
-  Or: docker compose exec web rm /app/secrets/google_token.json
+SOLUTION: Drive API already has access to Google Photos images (spaces=drive).
+3,500+ images confirmed visible. No console.google.com changes required. No new scope needed.
 
-Step 3. Re-authenticate with all scopes:
-  make auth
-  Follow the URL -> browser -> copy full redirect URL -> paste back.
-  Required scopes: drive, drive.readonly, gmail.readonly, gmail.modify,
-                   https://mail.google.com/, photoslibrary.readonly
+APPROACH:
+  - Abandon photoslibrary scope entirely for this project
+  - Remove photoslibrary.readonly from SCOPES list in services_google.py
+  - Rewrite list_photos_items() to use drive API (mimeType contains 'image/')
+  - Rewrite download_photos_item() to use download_file() from Drive
+  - Re-discover: existing photos: prefixed DB records get cleared, replaced with drive: IDs
+  - Everything else (download, verify, import to Wagtail, delete) reuses existing pipeline
 
-Step 4. Verify Photos scope included:
+Step 1. Remove photoslibrary.readonly from SCOPES in services_google.py
+  File: backend_django/google_media_backup/services_google.py
+  Remove the line: "https://www.googleapis.com/auth/photoslibrary.readonly",
+  Keep all Drive and Gmail scopes as-is.
+
+Step 2. Rewrite list_photos_items() to use Drive API
+  File: backend_django/google_media_backup/services_google.py
+  New implementation:
+    def list_photos_items(page_size=200, page_token=None):
+        svc = drive_service()
+        if not svc:
+            return ([], None)
+        q = "(mimeType contains 'image/' or mimeType contains 'video/') and trashed=false"
+        res = svc.files().list(
+            pageSize=min(page_size, 500),
+            pageToken=page_token,
+            q=q,
+            fields="nextPageToken, files(id,name,mimeType,size,md5Checksum)",
+            spaces="drive",
+            corpora="user",
+        ).execute()
+        # Translate to Photos-compatible format (id, filename, mimeType)
+        items = [
+            {"id": f["id"], "filename": f.get("name",""), "mimeType": f.get("mimeType","")}
+            for f in res.get("files", [])
+        ]
+        return (items, res.get("nextPageToken"))
+
+Step 3. Rewrite download_photos_item() to use Drive download
+  File: backend_django/google_media_backup/services_google.py
+  New implementation:
+    def download_photos_item(drive_id: str, out_path: str) -> bool:
+        return download_file(drive_id, out_path)
+  (Drive files download identically to regular Drive media)
+
+Step 4. Clear stale photos: records from DB
   docker compose exec web python manage.py shell -c "
-    import json
-    t = json.load(open('/app/secrets/google_token.json'))
-    print(t.get('scopes', t.get('scope', 'NO SCOPE KEY')))"
-  Must include photoslibrary.readonly.
+    from google_media_backup.models import DriveAsset
+    n = DriveAsset.objects.filter(drive_id__startswith='photos:').delete()
+    print('Deleted stale photos: records:', n)"
+  These used Photos Library IDs which are different from Drive IDs.
 
-Step 5. Discover Photos media:
-  make discover  (runs Drive + Photos discovery)
-  Check /admin/google_media_backup/mediaitem/ for new items.
+Step 5. Re-discover photos via new Drive-based pipeline
+  make photos-discover   (now uses Drive API)
+  Expected: 3,500+ images discovered with drive: prefixed IDs... wait, actually
+  these will be regular drive IDs (no prefix) since they're Drive files.
+  Check /admin/google_media_backup/driveasset/ — filter by image/* MIME types.
 
-Step 6. Download Photos media:
-  make download
-  Monitor: /admin/ops/
+Step 6. Download, verify, import
+  make photos-download LIMIT=500
+  make photos-run        (runs full pipeline)
+  make import-media      (imports to Wagtail VaultImage)
+
+Step 7. Remove photoslibrary.readonly from .env.sample and update README
+  Clean up any references to the blocked scope.
+
+VERIFICATION:
+  make photos-progress   # shows DISCOVERED/DOWNLOADED/VERIFIED counts
+  Visit /vault/gallery/  # photos visible in Wagtail
+  one.google.com/storage # check if Photos size dropped after delete step
 
 NOTES:
-  - DO NOT add photoslibrary.readonly back to OAuth until old client 1ql0o9aj is deleted.
-  - Desktop app client only: client ID 486053539237-c454bqj13or711a74tfc8t493qlna64d
-  - NEVER use web client type for OAuth in this project.
+  - Drive API sees ALL photos (originals, not compressed), including videos
+  - Drive IDs and Photos Library IDs are DIFFERENT — cannot mix old photos: records with new
+  - The existing 2,015 photos: records have no download_path — safe to delete and re-discover
+  - Re-authentication NOT required — current token has drive.readonly already
+  - Delete from Google still works via trash_or_delete(drive_id, mode="trash")
 
 ----------------------------------------------------------------
 PHASE 5 -- Drive documents backup + Wagtail library
