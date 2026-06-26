@@ -90,6 +90,42 @@ PHASE 15 -- Webhooks + deduplication (grill items 14, 17)
   17. Cross-source SHA-256 dedup → check MediaItem.sha256 before creating duplicate VaultImage
 
 ================================================================
+MULTI-PROVIDER EMAIL ARCHITECTURE (v2.0 roadmap)
+Supports: multiple Google accounts, Outlook, Yahoo, generic IMAP
+Architecture: Provider Adapter Pattern — EmailProvider base class per provider
+================================================================
+
+PHASE 16 -- Data model: provider-aware foundation
+  Rename GmailSyncState → EmailSyncState (add provider + cursor fields).
+  Add unique_together (email, provider). Migrate last_history_id → cursor.
+  Rename GmailMessage → EmailMessage, account_email → FK to EmailSyncState.
+  Backward compatible: existing google rows keep working.
+
+PHASE 17 -- Provider abstraction layer
+  Create email_providers/ package with base.py + google.py (wraps services_gmail.py).
+  google.py: thin adapter, reuses all existing service functions.
+  Add outlook.py (Microsoft Graph), imap.py (stdlib imaplib, covers Yahoo + generic).
+  registry.py: get_provider(sync_state) → EmailProvider dispatch.
+
+PHASE 18 -- Parameterize Celery tasks
+  All tasks accept sync_state_id param. Fan-out pattern for multiple accounts.
+  Fix data leakage: reconcile + error tracking scoped per account.
+
+PHASE 19 -- Query compiler abstraction
+  Extract GmailQueryCompiler, add OutlookQueryCompiler, IMAPQueryCompiler.
+  apply_rule() dispatches to provider-specific compiler.
+  CleanupRule gets provider_filter field (blank = all providers).
+
+PHASE 20 -- Multi-account OAuth + admin UI
+  make auth EMAIL=user@gmail.com (existing flow, now saves email-scoped token)
+  make auth EMAIL=user@outlook.com PROVIDER=outlook (new)
+  Admin: provider column, per-account last_error, auth trigger action.
+
+PHASE 21 -- FOSS multi-provider release
+  README: support matrix (Gmail ✓, Outlook ✓, Yahoo ✓, IMAP ✓).
+  Tag v2.0.0.
+
+================================================================
 TOOLS
   make preflight          -- ALWAYS run first
   make test-full          -- lint + tests (before every PR/merge)
