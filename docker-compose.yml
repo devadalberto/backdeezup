@@ -33,7 +33,7 @@ services:
       - staticfiles:/app/staticfiles
       - ./secrets:/app/backend_django/secrets:rw
     ports:
-      - "18444:18444"
+      - "8845:18444"
     depends_on:
       db:
         condition: service_healthy
