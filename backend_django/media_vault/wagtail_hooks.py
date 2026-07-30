@@ -9,11 +9,26 @@ from django.utils.html import format_html
 from wagtail import hooks
 from wagtail.snippets.models import register_snippet
 from wagtail.snippets.views.snippets import SnippetViewSet, SnippetViewSetGroup, IndexView as SnippetIndexView
+from wagtail.images.views.images import IndexView as ImagesIndexView
 
 from .models import MediaDecision, VaultDocument, VaultImage, VaultMedia
 
 LIMIT_CHOICES = [20, 50, 100, 200]
-DEFAULT_LIMIT = 50
+DEFAULT_LIMIT = 30  # Wagtail default
+
+# Patch Wagtail's images IndexView to honour ?limit= from the request
+_orig_images_paginate_by = ImagesIndexView.get_paginate_by
+
+def _patched_images_paginate_by(self, queryset):
+    try:
+        val = int(self.request.GET.get("limit", 0))
+        if val in LIMIT_CHOICES:
+            return val
+    except (TypeError, ValueError):
+        pass
+    return _orig_images_paginate_by(self, queryset)
+
+ImagesIndexView.get_paginate_by = _patched_images_paginate_by
 
 
 # ── Matrix theme + listing controls injection ─────────────────────────────────
@@ -39,18 +54,12 @@ def listing_controls_js():
 class LimitableIndexView(SnippetIndexView):
     def get_paginate_by(self, queryset):
         try:
-            limit = int(self.request.GET.get("limit", DEFAULT_LIMIT))
-            if limit in LIMIT_CHOICES:
-                return limit
+            val = int(self.request.GET.get("limit", 0))
+            if val in LIMIT_CHOICES:
+                return val
         except (TypeError, ValueError):
             pass
         return DEFAULT_LIMIT
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx["limit_choices"] = LIMIT_CHOICES
-        ctx["current_limit"] = self.get_paginate_by(None)
-        return ctx
 
 
 # ── SnippetViewSets for review workflow ───────────────────────────────────────
