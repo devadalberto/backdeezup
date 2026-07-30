@@ -8,9 +8,12 @@ from django.templatetags.static import static
 from django.utils.html import format_html
 from wagtail import hooks
 from wagtail.snippets.models import register_snippet
-from wagtail.snippets.views.snippets import SnippetViewSet, SnippetViewSetGroup
+from wagtail.snippets.views.snippets import SnippetViewSet, SnippetViewSetGroup, IndexView as SnippetIndexView
 
 from .models import MediaDecision, VaultDocument, VaultImage, VaultMedia
+
+LIMIT_CHOICES = [20, 50, 100, 200]
+DEFAULT_LIMIT = 50
 
 
 # ── Matrix theme injection ────────────────────────────────────────────────────
@@ -23,6 +26,25 @@ def matrix_admin_css():
     )
 
 
+# ── Per-page limit IndexView ──────────────────────────────────────────────────
+
+class LimitableIndexView(SnippetIndexView):
+    def get_paginate_by(self, queryset):
+        try:
+            limit = int(self.request.GET.get("limit", DEFAULT_LIMIT))
+            if limit in LIMIT_CHOICES:
+                return limit
+        except (TypeError, ValueError):
+            pass
+        return DEFAULT_LIMIT
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["limit_choices"] = LIMIT_CHOICES
+        ctx["current_limit"] = self.get_paginate_by(None)
+        return ctx
+
+
 # ── SnippetViewSets for review workflow ───────────────────────────────────────
 
 class VaultImageViewSet(SnippetViewSet):
@@ -33,6 +55,7 @@ class VaultImageViewSet(SnippetViewSet):
     list_filter = ["keep", "source_type"]
     search_fields = ["title", "source_id"]
     ordering = ["-imported_at"]
+    index_view_class = LimitableIndexView
 
 
 class VaultMediaViewSet(SnippetViewSet):
