@@ -12,15 +12,15 @@
     var current = parseInt(getParam("limit") || DEFAULT, 10);
     var wrap = document.createElement("div");
     wrap.className = "w-limit-control";
-    wrap.style.cssText = "display:flex;align-items:center;gap:0.5rem;padding:0.4rem 1.5rem;";
+    wrap.style.cssText = "display:inline-flex;align-items:center;gap:0.5rem;padding:0.4rem 1.5rem;";
 
     var label = document.createElement("label");
     label.textContent = "Per page:";
-    label.htmlFor = "w-limit-select-" + id_suffix;
+    label.htmlFor = "w-limit-" + id_suffix;
     label.style.cssText = "font-size:0.8125rem;white-space:nowrap;color:var(--w-color-text-label,#ccc);";
 
     var sel = document.createElement("select");
-    sel.id = "w-limit-select-" + id_suffix;
+    sel.id = "w-limit-" + id_suffix;
     sel.style.cssText = [
       "background:var(--w-color-surface-menus,#1a1a2e)",
       "color:var(--w-color-text-label,#00ff41)",
@@ -52,32 +52,39 @@
   }
 
   function injectControls() {
-    document.querySelectorAll(".w-limit-control").forEach(function (el) { el.remove(); });
+    // Remove any previously injected controls (handles HTMX swaps)
+    document.querySelectorAll(".w-limit-control, .w-pagination-top").forEach(function (el) { el.remove(); });
 
-    var idx = 0;
+    // Find the listing container (image grid, table, or generic list)
+    var listing = document.querySelector("ul.listing, table.listing, div.listing");
+    // Find the bottom pagination nav
+    var nav = document.querySelector("nav.pagination");
 
-    // Inject ABOVE the listing (image grid, table, or list)
-    var listingTargets = [
-      "ul.listing",       // image grid
-      "table.listing",    // table listings
-      "div.listing",      // generic listing
-    ];
-    listingTargets.forEach(function (sel) {
-      document.querySelectorAll(sel).forEach(function (el) {
-        var top = buildDropdown("top-" + idx++);
-        el.parentNode.insertBefore(top, el);
+    if (!listing && !nav) return;
+
+    // -- TOP: dropdown + cloned pagination above the listing --
+    var anchor = listing || nav;
+    var topRow = document.createElement("div");
+    topRow.className = "w-pagination-top";
+    topRow.style.cssText = "display:flex;align-items:center;flex-wrap:wrap;gap:0.5rem;padding:0.25rem 0;";
+    topRow.appendChild(buildDropdown("top"));
+
+    if (nav) {
+      var navClone = nav.cloneNode(true);
+      navClone.style.flex = "1";
+      // fix cloned links -- they already have correct hrefs, just strip aria-current duplication
+      navClone.querySelectorAll("[aria-current]").forEach(function (el) {
+        el.removeAttribute("aria-current");
       });
-    });
+      topRow.appendChild(navClone);
+    }
 
-    // Inject ABOVE and BELOW each pagination nav
-    document.querySelectorAll("nav.pagination").forEach(function (nav) {
-      // above
-      var above = buildDropdown("above-" + idx++);
-      nav.parentNode.insertBefore(above, nav);
-      // below
-      var below = buildDropdown("below-" + idx++);
-      nav.parentNode.insertBefore(below, nav.nextSibling);
-    });
+    anchor.parentNode.insertBefore(topRow, anchor);
+
+    // -- BOTTOM: dropdown below the pagination nav --
+    if (nav) {
+      nav.parentNode.insertBefore(buildDropdown("bottom"), nav.nextSibling);
+    }
   }
 
   document.addEventListener("DOMContentLoaded", injectControls);
