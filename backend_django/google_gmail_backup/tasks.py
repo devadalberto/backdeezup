@@ -114,6 +114,26 @@ def task_gmail_incremental_sync(self):
         return {"added": added, "soft_deleted": soft_deleted, "restored": restored}
 
     except Exception as exc:
+        from googleapiclient.errors import HttpError as GHttpError
+        if isinstance(exc, GHttpError) and exc.resp.status == 404:
+            # historyId expired (Gmail only keeps ~7 days). Reset to current and skip this cycle.
+            log.warning("task_gmail_incremental_sync: historyId expired (404), resetting cursor from Gmail profile")
+            try:
+                from .services_gmail import gmail_service
+                from .models import GmailSyncState
+                svc = gmail_service()
+                profile = svc.users().getProfile(userId="me").execute()
+                new_id = str(profile.get("historyId", "0"))
+                email = profile.get("emailAddress", "")
+                state = GmailSyncState.objects.filter(email=email).first()
+                if state:
+                    state.last_history_id = new_id
+                    state.last_error = ""
+                    state.save()
+                    log.info("task_gmail_incremental_sync: cursor reset to %s", new_id)
+            except Exception as reset_exc:
+                log.error("task_gmail_incremental_sync: failed to reset cursor: %s", reset_exc)
+            return {"skipped": True, "reason": "historyId expired, cursor reset"}
         log.error("task_gmail_incremental_sync failed: %s", exc)
         _record_task_failure("incremental_sync", exc)
         raise self.retry(exc=exc)
