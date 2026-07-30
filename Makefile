@@ -3,7 +3,7 @@ DJ    := backend_django/manage.py
 
 .PHONY: help \
         preflight \
-        build up down restart logs ps \
+        build up down restart logs ps check-services \
         migrate superuser shell check fix-user-migration gmail-empty-trash gmail-empty-trash-dry \
         gen-certs \
         auth \
@@ -51,6 +51,7 @@ help:
 	@echo "    make redeploy           pull + build + down + up + migrate"
 	@echo "    make logs               Tail all logs"
 	@echo "    make ps                 Show container status"
+	@echo "    make check-services     Post-boot health check (state, restart policy, ports, HTTP)"
 	@echo ""
 	@echo "  Django"
 	@echo "    make auth               Google OAuth — prints URL, paste code back (headless)"
@@ -126,6 +127,57 @@ logs:
 
 ps:
 	docker compose ps
+
+check-services:
+	@echo "=== backdeezup post-boot health check ==="
+	@PASS=0; FAIL=0; WARN=0; \
+	check() { \
+		label="$$1"; result="$$2"; \
+		if [ "$$result" = "ok" ]; then echo "  PASS  $$label"; PASS=$$((PASS+1)); \
+		elif [ "$$result" = "warn" ]; then echo "  WARN  $$3"; WARN=$$((WARN+1)); \
+		else echo "  FAIL  $$label — $$3"; FAIL=$$((FAIL+1)); fi; \
+	}; \
+	\
+	if ! docker info >/dev/null 2>&1; then \
+		echo "  FAIL  Docker daemon not running"; exit 1; \
+	fi; \
+	echo "  PASS  Docker daemon running"; \
+	\
+	for svc in db redis web celery celerybeat nginx; do \
+		state=$$(docker inspect backdeezup-$${svc}-1 --format '{{.State.Status}}' 2>/dev/null || echo missing); \
+		policy=$$(docker inspect backdeezup-$${svc}-1 --format '{{.HostConfig.RestartPolicy.Name}}' 2>/dev/null || echo missing); \
+		if [ "$$state" = "running" ] || [ "$$state" = "healthy" ]; then \
+			stateok="ok"; statemsg=""; \
+		else \
+			stateok="fail"; statemsg="state=$$state"; \
+		fi; \
+		if [ "$$policy" = "unless-stopped" ]; then \
+			policyok="ok"; policymsg=""; \
+		else \
+			policyok="fail"; policymsg="restart=$$policy (expected unless-stopped)"; \
+		fi; \
+		check "$$svc running ($$state)" "$$stateok" "$$statemsg"; \
+		check "$$svc restart policy" "$$policyok" "$$policymsg"; \
+	done; \
+	\
+	for port in 8845 8844; do \
+		if python3 -c "import socket; s=socket.socket(); s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1); s.bind(('0.0.0.0',$$port)); s.close()" 2>/dev/null; then \
+			check "port $$port bound" "warn" "port $$port is NOT bound — Windows port exclusion may be blocking it (see GOALS.md Phase R1)"; \
+		else \
+			check "port $$port bound" "ok" ""; \
+		fi; \
+	done; \
+	\
+	http_code=$$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://localhost:8844/ 2>/dev/null); \
+	if [ "$$http_code" = "200" ] || [ "$$http_code" = "301" ] || [ "$$http_code" = "302" ]; then \
+		check "HTTP :8844/ (nginx) responds ($$http_code)" "ok" ""; \
+	else \
+		check "HTTP :8844/ (nginx) responds" "fail" "got HTTP $$http_code (port 8845 direct has WSL2 bug — nginx on 8844 is the real access path)"; \
+	fi; \
+	\
+	echo ""; \
+	echo "  Result: $$PASS passed, $$WARN warnings, $$FAIL failed"; \
+	[ "$$FAIL" -eq 0 ]
 
 # ── Django ────────────────────────────────────────────────────────────────────
 auth:
