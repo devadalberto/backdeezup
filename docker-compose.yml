@@ -47,7 +47,7 @@ services:
 
   celery:
     build: .
-    command: celery -A celery_app worker -l info -c 2 -Q default --without-heartbeat
+    command: celery -A celery_app worker -l info -c 2 -Q default,celery --without-heartbeat
     env_file: .env
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
