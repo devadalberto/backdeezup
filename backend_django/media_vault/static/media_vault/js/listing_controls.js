@@ -8,19 +8,19 @@
     return new URLSearchParams(window.location.search).get(name);
   }
 
-  function buildDropdown(position) {
+  function buildDropdown(id_suffix) {
     var current = parseInt(getParam("limit") || DEFAULT, 10);
     var wrap = document.createElement("div");
-    wrap.className = "w-limit-control w-limit-control--" + position;
-    wrap.style.cssText = "display:flex;align-items:center;gap:0.5rem;padding:0.5rem 1.5rem;";
+    wrap.className = "w-limit-control";
+    wrap.style.cssText = "display:flex;align-items:center;gap:0.5rem;padding:0.4rem 1.5rem;";
 
     var label = document.createElement("label");
     label.textContent = "Per page:";
-    label.htmlFor = "w-limit-select-" + position;
+    label.htmlFor = "w-limit-select-" + id_suffix;
     label.style.cssText = "font-size:0.8125rem;white-space:nowrap;color:var(--w-color-text-label,#ccc);";
 
     var sel = document.createElement("select");
-    sel.id = "w-limit-select-" + position;
+    sel.id = "w-limit-select-" + id_suffix;
     sel.style.cssText = [
       "background:var(--w-color-surface-menus,#1a1a2e)",
       "color:var(--w-color-text-label,#00ff41)",
@@ -52,20 +52,34 @@
   }
 
   function injectControls() {
-    // Avoid double-injection on HTMX partial swaps
     document.querySelectorAll(".w-limit-control").forEach(function (el) { el.remove(); });
 
+    var idx = 0;
+
+    // Inject ABOVE the listing (image grid, table, or list)
+    var listingTargets = [
+      "ul.listing",       // image grid
+      "table.listing",    // table listings
+      "div.listing",      // generic listing
+    ];
+    listingTargets.forEach(function (sel) {
+      document.querySelectorAll(sel).forEach(function (el) {
+        var top = buildDropdown("top-" + idx++);
+        el.parentNode.insertBefore(top, el);
+      });
+    });
+
+    // Inject ABOVE and BELOW each pagination nav
     document.querySelectorAll("nav.pagination").forEach(function (nav) {
-      var top = buildDropdown("top");
-      var bottom = buildDropdown("bottom");
-      nav.parentNode.insertBefore(top, nav);
-      nav.parentNode.insertBefore(bottom, nav.nextSibling);
+      // above
+      var above = buildDropdown("above-" + idx++);
+      nav.parentNode.insertBefore(above, nav);
+      // below
+      var below = buildDropdown("below-" + idx++);
+      nav.parentNode.insertBefore(below, nav.nextSibling);
     });
   }
 
-  // Initial load
   document.addEventListener("DOMContentLoaded", injectControls);
-
-  // HTMX partial swap (Wagtail uses HTMX for search/filter results)
   document.addEventListener("htmx:afterSwap", injectControls);
 })();
