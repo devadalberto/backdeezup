@@ -16,13 +16,21 @@ LIMIT_CHOICES = [20, 50, 100, 200]
 DEFAULT_LIMIT = 50
 
 
-# ── Matrix theme injection ────────────────────────────────────────────────────
+# ── Matrix theme + listing controls injection ─────────────────────────────────
 
 @hooks.register("insert_global_admin_css")
 def matrix_admin_css():
     return format_html(
         '<link rel="stylesheet" href="{}">',
         static("media_vault/css/matrix_wagtail.css"),
+    )
+
+
+@hooks.register("insert_global_admin_js")
+def listing_controls_js():
+    return format_html(
+        '<script src="{}"></script>',
+        static("media_vault/js/listing_controls.js"),
     )
 
 
