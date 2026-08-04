@@ -134,7 +134,7 @@ def trash_message(msg_id: str, user_id: str = "me") -> bool:
         return True
     except HttpError as exc:
         if exc.resp.status == 429:
-            log.warning("Gmail quota exceeded trashing %s: %s", msg_id, exc)
+            log.warning("Gmail quota exceeded (429) trashing %s — will retry with exponential backoff: %s", msg_id, exc)
         else:
             log.warning("Failed to trash message %s (HTTP %s): %s", msg_id, exc.resp.status, exc)
         return False

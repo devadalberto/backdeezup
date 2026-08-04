@@ -3,6 +3,7 @@ Celery tasks for Gmail pipeline and cleanup.
 These are the direct replacements for the APScheduler jobs in scheduler.py.
 """
 import logging
+import random
 
 from celery import shared_task
 
@@ -134,6 +135,11 @@ def task_gmail_incremental_sync(self):
             except Exception as reset_exc:
                 log.error("task_gmail_incremental_sync: failed to reset cursor: %s", reset_exc)
             return {"skipped": True, "reason": "historyId expired, cursor reset"}
+        if isinstance(exc, GHttpError) and exc.resp.status == 429:
+            # Quota exceeded: exponential backoff
+            backoff = min(60 * (2 ** self.request.retries) + random.uniform(0, 30), 600)
+            log.warning("task_gmail_incremental_sync: quota exceeded (429), retrying in %.1fs (attempt %d)", backoff, self.request.retries + 1)
+            raise self.retry(exc=exc, countdown=int(backoff))
         log.error("task_gmail_incremental_sync failed: %s", exc)
         _record_task_failure("incremental_sync", exc)
         raise self.retry(exc=exc)
@@ -148,6 +154,12 @@ def task_apply_protected_senders(self):
         log.info("task_apply_protected_senders: %d affected", audit.affected_count)
         return {"affected": audit.affected_count}
     except Exception as exc:
+        from googleapiclient.errors import HttpError as GHttpError
+        if isinstance(exc, GHttpError) and exc.resp.status == 429:
+            # Quota exceeded: exponential backoff
+            backoff = min(60 * (2 ** self.request.retries) + random.uniform(0, 30), 600)
+            log.warning("task_apply_protected_senders: quota exceeded (429), retrying in %.1fs (attempt %d)", backoff, self.request.retries + 1)
+            raise self.retry(exc=exc, countdown=int(backoff))
         log.error("task_apply_protected_senders failed: %s", exc)
         raise self.retry(exc=exc)
 
@@ -162,6 +174,12 @@ def task_run_cleanup_rules(self):
         log.info("task_run_cleanup_rules: %d total affected across %d rules", total, len(results))
         return {"affected": total, "rules_run": len(results)}
     except Exception as exc:
+        from googleapiclient.errors import HttpError as GHttpError
+        if isinstance(exc, GHttpError) and exc.resp.status == 429:
+            # Quota exceeded: exponential backoff
+            backoff = min(60 * (2 ** self.request.retries) + random.uniform(0, 30), 600)
+            log.warning("task_run_cleanup_rules: quota exceeded (429), retrying in %.1fs (attempt %d)", backoff, self.request.retries + 1)
+            raise self.retry(exc=exc, countdown=int(backoff))
         log.error("task_run_cleanup_rules failed: %s", exc)
         raise self.retry(exc=exc)
 
@@ -272,6 +290,12 @@ def task_gmail_reconcile(self):
                 "list_pages": pages, "targeted_checks": len(missing_ids)}
 
     except Exception as exc:
+        from googleapiclient.errors import HttpError as GHttpError
+        if isinstance(exc, GHttpError) and exc.resp.status == 429:
+            # Quota exceeded: exponential backoff
+            backoff = min(60 * (2 ** self.request.retries) + random.uniform(0, 30), 600)
+            log.warning("task_gmail_reconcile: quota exceeded (429), retrying in %.1fs (attempt %d)", backoff, self.request.retries + 1)
+            raise self.retry(exc=exc, countdown=int(backoff))
         log.error("task_gmail_reconcile failed: %s", exc)
         _record_task_failure("task_gmail_reconcile", exc)
         raise self.retry(exc=exc)

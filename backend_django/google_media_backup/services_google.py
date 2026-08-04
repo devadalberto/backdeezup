@@ -266,6 +266,10 @@ def download_file(file_id: str, out_path: str) -> bool:
         except HttpError as e:
             _cleanup_partial(out_path)
             if e.resp.status in (429, 500, 503):
+                if e.resp.status == 429:
+                    log.warning("download_file: quota exceeded (429) on file_id=%s attempt=%d — will retry: %s", file_id, attempt + 1, e)
+                else:
+                    log.warning("download_file: HTTP %s on file_id=%s attempt=%d: %s", e.resp.status, file_id, attempt + 1, e)
                 time.sleep(2 ** attempt)
                 continue
             return False
@@ -301,6 +305,10 @@ def download_or_export_file(file_id: str, mime_type: str, out_path: str) -> bool
         except HttpError as e:
             _cleanup_partial(out_path)
             if e.resp.status in (429, 500, 503):
+                if e.resp.status == 429:
+                    log.warning("download_or_export_file: quota exceeded (429) on file_id=%s attempt=%d — will retry: %s", file_id, attempt + 1, e)
+                else:
+                    log.warning("download_or_export_file: HTTP %s on file_id=%s attempt=%d: %s", e.resp.status, file_id, attempt + 1, e)
                 time.sleep(2 ** attempt)
                 continue
             if e.resp.status == 403 and "exportSizeLimit" in str(e):
