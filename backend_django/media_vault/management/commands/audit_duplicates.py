@@ -99,8 +99,13 @@ class Command(BaseCommand):
 
             for variant_type in sorted(group.keys()):
                 for img in group[variant_type]:
-                    # Mark as deletable if it's a variant (not original)
-                    keep = variant_type == "original" or has_original is False
+                    # Keep original images; mark variants as deletable only if an original exists
+                    # If no original exists, keep all variants (they're the best we have)
+                    if variant_type == "original":
+                        keep = True
+                    else:
+                        # It's a variant (mini/thumb/largepv)
+                        keep = not has_original  # Keep if NO original exists
 
                     if not keep:
                         total_deletable += 1
