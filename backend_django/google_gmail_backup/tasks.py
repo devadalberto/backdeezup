@@ -12,6 +12,32 @@ from .schemas import snapshot_from_message
 log = logging.getLogger(__name__)
 
 
+def _acquire_lock(task_name: str, ttl_seconds: int = 7200) -> bool:
+    """Acquire a Redis lock for a task. Returns False if already running.
+
+    Lock key includes the date so it auto-expires at end of day.
+    If Redis is down, fail open — don't block tasks.
+    """
+    try:
+        from django.core.cache import cache
+        import datetime
+        key = f"celery:lock:{task_name}:{datetime.date.today().isoformat()}"
+        return cache.add(key, "1", ttl_seconds)
+    except Exception:
+        return True  # fail open -- don't block tasks if Redis is down
+
+
+def _release_lock(task_name: str) -> None:
+    """Release a Redis lock for a task."""
+    try:
+        from django.core.cache import cache
+        import datetime
+        key = f"celery:lock:{task_name}:{datetime.date.today().isoformat()}"
+        cache.delete(key)
+    except Exception:
+        pass
+
+
 def _record_task_failure(task_name: str, exc: Exception) -> None:
     """Record task failure on all GmailSyncState rows and fire Sentry if configured."""
     try:
@@ -148,6 +174,9 @@ def task_gmail_incremental_sync(self):
 @shared_task(bind=True, max_retries=2, default_retry_delay=60, name="google_gmail_backup.tasks.task_apply_protected_senders")
 def task_apply_protected_senders(self):
     """Star + label messages from protected senders."""
+    if not _acquire_lock("apply_protected_senders"):
+        log.info("task_apply_protected_senders: already queued/running, skipping duplicate")
+        return {"skipped": True, "reason": "duplicate"}
     try:
         from .services_rules import apply_protected_sender_rules
         audit = apply_protected_sender_rules()
@@ -162,11 +191,16 @@ def task_apply_protected_senders(self):
             raise self.retry(exc=exc, countdown=int(backoff))
         log.error("task_apply_protected_senders failed: %s", exc)
         raise self.retry(exc=exc)
+    finally:
+        _release_lock("apply_protected_senders")
 
 
 @shared_task(bind=True, max_retries=2, default_retry_delay=60, name="google_gmail_backup.tasks.task_run_cleanup_rules")
 def task_run_cleanup_rules(self):
     """Run all enabled cleanup rules."""
+    if not _acquire_lock("cleanup_rules"):
+        log.info("task_run_cleanup_rules: already queued/running, skipping duplicate")
+        return {"skipped": True, "reason": "duplicate"}
     try:
         from .services_rules import run_all_enabled_rules
         results = run_all_enabled_rules(dry_run=False, actor_label="celery")
@@ -182,6 +216,8 @@ def task_run_cleanup_rules(self):
             raise self.retry(exc=exc, countdown=int(backoff))
         log.error("task_run_cleanup_rules failed: %s", exc)
         raise self.retry(exc=exc)
+    finally:
+        _release_lock("cleanup_rules")
 
 
 @shared_task(name="google_gmail_backup.tasks.task_gmail_download_batch")
@@ -206,6 +242,9 @@ def task_gmail_reconcile(self):
     against local DB — avoids per-message API calls (was 25,000 calls → ~7h runtime).
     Only calls messages.get() for IDs that exist locally but not in Gmail list.
     """
+    if not _acquire_lock("gmail_reconcile"):
+        log.info("task_gmail_reconcile: already queued/running, skipping duplicate")
+        return {"skipped": True, "reason": "duplicate"}
     try:
         from .services_gmail import gmail_service
         from .models import GmailMessage
@@ -299,6 +338,8 @@ def task_gmail_reconcile(self):
         log.error("task_gmail_reconcile failed: %s", exc)
         _record_task_failure("task_gmail_reconcile", exc)
         raise self.retry(exc=exc)
+    finally:
+        _release_lock("gmail_reconcile")
 
 
 def _mark_soft_deleted(gmail_id: str, source: str, now) -> None:
