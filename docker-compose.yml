@@ -116,4 +116,6 @@ services:
 volumes:
   pgdata:
   media:
+    external: true
+    name: backdeezup_media
   staticfiles:
