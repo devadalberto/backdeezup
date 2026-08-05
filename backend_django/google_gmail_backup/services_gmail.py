@@ -135,6 +135,10 @@ def trash_message(msg_id: str, user_id: str = "me") -> bool:
     except HttpError as exc:
         if exc.resp.status == 429:
             log.warning("Gmail quota exceeded (429) trashing %s — will retry with exponential backoff: %s", msg_id, exc)
+        elif exc.resp.status == 400 and 'failedPrecondition' in str(exc):
+            # Message already permanently deleted on Gmail's side -- mark locally and move on
+            log.debug("Message %s already gone (400 failedPrecondition) -- treating as success", msg_id)
+            return True
         else:
             log.warning("Failed to trash message %s (HTTP %s): %s", msg_id, exc.resp.status, exc)
         return False
@@ -157,7 +161,12 @@ def batch_trash_messages(msg_ids: list, user_id: str = "me") -> int:
         ).execute()
         return len(msg_ids)
     except HttpError as exc:
-        log.warning("batchModify trash failed (HTTP %s): %s", exc.resp.status, exc)
+        if exc.resp.status == 400 and 'failedPrecondition' in str(exc):
+            # Some/all messages already permanently deleted -- partial success, treat as OK
+            log.debug("batchModify trash: some messages already gone (400 failedPrecondition), treating batch as partial success")
+            return len(msg_ids)
+        else:
+            log.warning("batchModify trash failed (HTTP %s): %s", exc.resp.status, exc)
         return 0
     except Exception as exc:
         log.error("Unexpected error in batch trash: %s", exc)
@@ -173,7 +182,12 @@ def delete_message_permanent(msg_id: str, user_id: str = "me") -> bool:
         svc.users().messages().delete(userId=user_id, id=msg_id).execute()
         return True
     except HttpError as exc:
-        log.warning("Failed to permanently delete %s (HTTP %s): %s", msg_id, exc.resp.status, exc)
+        if exc.resp.status == 400 and 'failedPrecondition' in str(exc):
+            # Message already permanently deleted on Gmail's side -- treat as success
+            log.debug("Message %s already gone (400 failedPrecondition) -- treating permanent delete as success", msg_id)
+            return True
+        else:
+            log.warning("Failed to permanently delete %s (HTTP %s): %s", msg_id, exc.resp.status, exc)
         return False
     except Exception as exc:
         log.error("Unexpected error deleting message %s: %s", msg_id, exc)
