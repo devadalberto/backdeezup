@@ -1183,7 +1183,9 @@ VERIFICATION:
 
 ================================================================
 V2 UX + TRUST UPGRADES -- Phases 22-49 (DONE -- runbooks removed, hygiene)
-Source: propmt_v2_upgrades_suggested (repo root). Written 2026-09-26.
+Originally sourced from a suggestions prompt (repo root, `propmt_v2_upgrades_suggested`,
+written 2026-09-26) -- deleted 2026-09-27 once every phase it inspired was implemented;
+see git history on this file/GOALS.md if you need its original text.
 ================================================================
 
 All of Tracks A-D (Phases 22-49) are implemented and committed:

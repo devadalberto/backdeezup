@@ -127,9 +127,11 @@ PHASE 21 -- FOSS multi-provider release
   Tag v2.0.0.
 
 ================================================================
-V2 UX + TRUST UPGRADES (source: propmt_v2_upgrades_suggested, repo root)
+V2 UX + TRUST UPGRADES (DONE -- source prompt cleared once implemented; see
+  CHANGELOG.md for what shipped, per phase)
 Goal: appliance-grade experience for non-technical users.
-Rules for EVERY phase below (full text: GOALS_TODOS.md "V2 GUARDRAILS"):
+Rules that applied to EVERY phase below (guardrails, now historical -- see
+  GOALS_TODOS.md's pointer note where the full text used to live):
   additive only; new behavior behind env/setting with default = today's behavior;
   no state-machine / two-proof-deletion changes; additive migrations only;
   one phase = one commit; make test-full green + baseline URL codes unchanged.
