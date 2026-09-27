@@ -94,7 +94,7 @@ License: MIT
 
 ## Knowledge graph
 
-**[graphify](https://github.com/graphify-dev/graphify)** *(if applicable)*
+**[graphify](https://github.com/Graphify-Labs/graphify)**
 AST-based codebase knowledge graph used to map relationships between modules, functions, and classes. Enables AI agents to navigate the codebase without redundant file scanning.
 
 ---

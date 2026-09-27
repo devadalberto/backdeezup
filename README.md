@@ -2,6 +2,7 @@
 
 > Self-hosted Google Drive, Gmail & Photos backup. Because cloud storage isn't a backup, it's a subscription to anxiety.
 
+[![CI](https://github.com/devadalberto/backdeezup/actions/workflows/ci.yml/badge.svg)](https://github.com/devadalberto/backdeezup/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/django-6.0%2B-green)](https://www.djangoproject.com/)
 [![Celery](https://img.shields.io/badge/celery-5.x-brightgreen)](https://docs.celeryq.dev/)
