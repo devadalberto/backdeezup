@@ -391,6 +391,14 @@
     "mtime": 1790487097.757864,
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/core/errors.py": {
+    "mtime": 1790489265.5552623,
+    "hash": "30ff3261cf269aa7f552d49a41ad9451"
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/core/tests_errors.py": {
+    "mtime": 1790489278.4656832,
+    "hash": "ba082411dd4d4c7ef84b489d01889cea"
+  },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/core/tests_timezone.py": {
     "mtime": 1790489166.7778633,
     "hash": "8856cea93ae8c6fb998bc745d944796a"
