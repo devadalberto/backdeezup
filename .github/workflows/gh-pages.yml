@@ -1,14 +1,26 @@
-name: Build Docs
+name: Build and Deploy Docs
 
-# GitHub Pages requires a public repo on the free plan.
-# This workflow builds the docs and uploads them as an artifact instead.
-# To serve docs locally: ./dev.sh docs  (port 8001)
-# To serve docs on the server: see docs/deployment.md
+# Publishes docs/ (built with MkDocs Material) to GitHub Pages on every push to
+# main. Pages source is set to "GitHub Actions" (build_type: workflow) in repo
+# settings -- this workflow is the thing that actually publishes it, nothing
+# else does. Live at: https://devadalberto.github.io/backdeezup
+#
+# To preview locally instead: uv run mkdocs serve
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deployment at a time; a newer push wins over an in-flight one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -26,9 +38,28 @@ jobs:
       - name: Build docs
         run: mkdocs build --clean
 
-      - name: Upload docs artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: docs-site
           path: site/
-          retention-days: 30
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # Self-healing: re-asserts Pages is enabled (build_type: workflow) on every
+      # run. A previous attempt at this (v0.4.0) relied on this alone without ever
+      # actually deploying anything, silently regressed, and the whole workflow got
+      # replaced by an artifact-only fallback for a long time -- keep this AND the
+      # actual deploy step below working together this time.
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

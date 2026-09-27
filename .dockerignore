@@ -7,3 +7,6 @@ staticfiles
 site
 graphify-out
 backups
+*prompt*
+*Prompt*
+*propmt*

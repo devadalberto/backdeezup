@@ -30,3 +30,9 @@ GOALS_TODOS.md
 TODO.md
 shared_context.md
 backend_django/graphify-out/
+
+# AI prompt/session-history dumps -- never commit these anywhere in the repo
+# (matches the typo'd "propmt_..." variant that actually showed up here too)
+*prompt*
+*Prompt*
+*propmt*

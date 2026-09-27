@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Removed `docs/backdeezup-prompts-2026-05-19.md` (an old raw session-prompt dump,
+  never referenced from anywhere) and added `*prompt*`/`*propmt*` patterns to
+  `.gitignore`/`.dockerignore` so files like it don't get committed or shipped
+  in the image again.
 - **Phase 39** — `web` and `nginx` compose ports now bind `127.0.0.1` by default (was
   `0.0.0.0`); override with `BIND_ADDR=0.0.0.0` in `.env` to restore LAN access.
   `WEB_PORT`/`NGINX_HTTP_PORT`/`NGINX_HTTPS_PORT` env vars added (same 8845/8844/8445
