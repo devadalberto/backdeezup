@@ -141,41 +141,41 @@ Already covered elsewhere (do NOT duplicate): multi-account = Phases 14, 16-20;
   container limits = 12.
 ================================================================
 
-TRACK A -- Make it usable
-PHASE 22 -- TIME_ZONE from env (default unchanged America/Los_Angeles)
-PHASE 23 -- Human-readable error mapper (utility only, no task changes)
-PHASE 24 -- System health page /health/ (read-only)
-PHASE 25 -- Unified dashboard /dashboard/ (read-only, reuses htmx_stats + progress)
-PHASE 26 -- Per-item status labels + Backup / Browse / Cleanup nav grouping
-PHASE 27 -- Dashboard action buttons (enqueue existing Celery tasks)
-PHASE 28 -- Browser-based OAuth (start, callback, scopes, reconnect, disconnect)
-PHASE 29 -- Setup wizard part 1: first-run detect, admin account, validators
-PHASE 30 -- Setup wizard part 2: services, storage, schedule, test backup
+TRACK A -- Make it usable (DONE)
+PHASE 22 -- TIME_ZONE from env (default unchanged America/Los_Angeles) (DONE)
+PHASE 23 -- Human-readable error mapper (utility only, no task changes) (DONE)
+PHASE 24 -- System health page /health/ (read-only) (DONE)
+PHASE 25 -- Unified dashboard /dashboard/ (read-only, reuses htmx_stats + progress) (DONE)
+PHASE 26 -- Per-item status labels + Backup / Browse / Cleanup nav grouping (DONE)
+PHASE 27 -- Dashboard action buttons (enqueue existing Celery tasks) (DONE)
+PHASE 28 -- Browser-based OAuth (start, callback, scopes, reconnect, disconnect) (DONE)
+PHASE 29 -- Setup wizard part 1: first-run detect, admin account, validators (DONE)
+PHASE 30 -- Setup wizard part 2: services, storage, schedule, test backup (DONE)
 
-TRACK B -- Make it trustworthy
-PHASE 31 -- Verification report + "backed up = VERIFIED" + scheduled integrity check
-PHASE 32 -- Storage warnings + disk precheck + auto-pause (guard ON by default)
-PHASE 33 -- Notifications (webhook / email / Slack / Discord, off by default)
-PHASE 34 -- Cleanup safeguards (required dry run, exact-count confirm, global pause)
-PHASE 35 -- Cleanup undo (untrash) + "protect this sender" button
-PHASE 36 -- Export to ZIP / TAR
-PHASE 37 -- Restore to local dir + conflict handling + "Can I restore?" test
-PHASE 38 -- PostgreSQL backup / restore targets + docs
+TRACK B -- Make it trustworthy (DONE)
+PHASE 31 -- Verification report + "backed up = VERIFIED" + scheduled integrity check (DONE)
+PHASE 32 -- Storage warnings + disk precheck + auto-pause (guard ON by default) (DONE)
+PHASE 33 -- Notifications (webhook / email / Slack / Discord, off by default) (DONE)
+PHASE 34 -- Cleanup safeguards (required dry run, exact-count confirm, global pause) (DONE)
+PHASE 35 -- Cleanup undo (untrash) + "protect this sender" button (DONE)
+PHASE 36 -- Export to ZIP / TAR (DONE)
+PHASE 37 -- Restore to local dir + conflict handling + "Can I restore?" test (DONE)
+PHASE 38 -- PostgreSQL backup / restore targets + docs (DONE)
 
-TRACK C -- Make it robust
-PHASE 39 -- Compose: web + beat healthchecks, bind 127.0.0.1 default (BIND_ADDR), config check
-PHASE 40 -- Pin uv image + .dockerignore review
-PHASE 41 -- Non-root container user (ON by default)
-PHASE 42 -- Resumable downloads + checkpointing
-PHASE 43 -- Max-concurrency setting + per-provider rate-limit knob
-PHASE 44 -- CI: vulnerability scan + SBOM
+TRACK C -- Make it robust (DONE)
+PHASE 39 -- Compose: web + beat healthchecks, bind 127.0.0.1 default (BIND_ADDR), config check (DONE)
+PHASE 40 -- Pin uv image + .dockerignore review (DONE)
+PHASE 41 -- Non-root container user (ON by default) (DONE)
+PHASE 42 -- Resumable downloads + checkpointing (DONE)
+PHASE 43 -- Max-concurrency setting + per-provider rate-limit knob (DONE)
+PHASE 44 -- CI: vulnerability scan + SBOM (DONE)
 
-TRACK D -- Make it distributable (docs first, packaging last)
-PHASE 45 -- README rewrite around user tasks + platform / hardware matrix
-PHASE 46 -- Disaster-recovery + upgrade guide + generated config reference
-PHASE 47 -- Prebuilt images + versioned release workflow
-PHASE 48 -- Optional Caddy HTTPS compose profile
-PHASE 49 -- One-line installer + upgrade script
+TRACK D -- Make it distributable (docs first, packaging last) (DONE)
+PHASE 45 -- README rewrite around user tasks + platform / hardware matrix (DONE)
+PHASE 46 -- Disaster-recovery + upgrade guide + generated config reference (DONE)
+PHASE 47 -- Prebuilt images + versioned release workflow (DONE)
+PHASE 48 -- Optional Caddy HTTPS compose profile (DONE)
+PHASE 49 -- One-line installer + upgrade script (DONE -- final phase of this roadmap)
 
 NOT PHASED (backlog, needs a user decision first): restore to a different Google
 account, restore into Drive, per-rule cleanup schedules, NAS packages, animated
