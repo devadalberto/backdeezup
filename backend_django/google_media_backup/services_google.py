@@ -1,16 +1,25 @@
 import io
 import json
+import logging
 import os
 from typing import Optional
 
 from decouple import config
-from google.auth.transport.requests import Request
+from google.auth.transport.requests import AuthorizedSession, Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 
 from .utils import get_fernet
+
+log = logging.getLogger(__name__)
+
+# Phase 42 -- files above this size use HTTP Range-based resumable download
+# (append to an existing .part file across retries/restarts) instead of the
+# plain whole-file retry below. Small files are untouched.
+RESUME_MIN_MB = config("RESUME_MIN_MB", cast=int, default=50)
+RESUME_MIN_BYTES = RESUME_MIN_MB * 1024 * 1024
 
 SCOPES = [
     "https://www.googleapis.com/auth/drive.readonly",
@@ -127,13 +136,22 @@ def start_oauth_local() -> str:
     return "OAuth completed and token saved."
 
 
-def drive_service(email: str | None = None):
+def _authed_creds(email: str | None = None):
+    """Load + refresh credentials (shared by drive_service and the raw-HTTP
+    resumable downloader, which cannot go through googleapiclient's build())."""
     creds = _load_creds(email)
     if not creds:
         return None
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())
         _save_creds(creds, email)
+    return creds
+
+
+def drive_service(email: str | None = None):
+    creds = _authed_creds(email)
+    if not creds:
+        return None
     return build("drive", "v3", credentials=creds)
 
 
@@ -247,9 +265,84 @@ def _cleanup_partial(path: str) -> None:
         pass
 
 
-def download_file(file_id: str, out_path: str) -> bool:
+def _download_file_resumable(file_id: str, out_path: str) -> bool:
+    """HTTP Range resumable download for files >= RESUME_MIN_MB (Phase 42).
+
+    Appends to an existing out_path (a ".part" file, by convention of the
+    callers below) instead of restarting from byte 0, so a killed worker or a
+    dropped connection resumes on the next attempt/retry rather than
+    re-downloading the whole file. The .part file is deliberately never
+    deleted here on failure -- that's what makes resume possible.
+    """
+    import time
+
+    import requests
+
+    creds = _authed_creds()
+    if not creds:
+        return False
+    session = AuthorizedSession(creds)
+    url = f"https://www.googleapis.com/drive/v3/files/{file_id}?alt=media"
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+
+    for attempt in range(4):
+        existing = os.path.getsize(out_path) if os.path.exists(out_path) else 0
+        headers = {"Range": f"bytes={existing}-"} if existing else {}
+        try:
+            with session.get(url, headers=headers, stream=True, timeout=60) as resp:
+                if resp.status_code == 416:
+                    # Range not satisfiable at this offset -- file on disk is
+                    # already complete (a previous attempt finished after
+                    # writing the bytes but before returning True).
+                    return True
+                if resp.status_code not in (200, 206):
+                    if resp.status_code in (429, 500, 503):
+                        log.warning(
+                            "_download_file_resumable: HTTP %s on file_id=%s attempt=%d — will retry",
+                            resp.status_code, file_id, attempt + 1,
+                        )
+                        time.sleep(2 ** attempt)
+                        continue
+                    log.warning("_download_file_resumable: HTTP %s on file_id=%s — giving up", resp.status_code, file_id)
+                    return False
+                # A server that ignores Range returns 200 with the full body --
+                # fall back to overwrite so we don't duplicate the prefix.
+                mode = "ab" if existing and resp.status_code == 206 else "wb"
+                with open(out_path, mode) as fh:
+                    for chunk in resp.iter_content(chunk_size=1024 * 1024):
+                        if chunk:
+                            fh.write(chunk)
+            return True
+        except requests.exceptions.RequestException as exc:
+            log.warning(
+                "_download_file_resumable: network error on file_id=%s attempt=%d: %s — .part preserved for resume",
+                file_id, attempt + 1, exc,
+            )
+            time.sleep(2 ** attempt)
+            continue
+    return False
+
+
+def download_file(file_id: str, out_path: str, size_hint: int | None = None) -> bool:
+    """Download one Drive file. Phase 43: gated by a Redis concurrency slot
+    (MAX_CONCURRENT_DOWNLOADS) and rate limit (GOOGLE_API_MAX_RPS) around
+    whichever branch actually talks to Google -- both are soft/best-effort
+    (fail open if Redis is unreachable) and default to today's already-in-
+    effect behavior (see core.ratelimit)."""
+    from core import ratelimit
+
+    if size_hint is not None and size_hint > RESUME_MIN_BYTES:
+        with ratelimit.download_slot():
+            return _download_file_resumable(file_id, out_path)
+
+    with ratelimit.download_slot():
+        return _download_file_plain(file_id, out_path)
+
+
+def _download_file_plain(file_id: str, out_path: str) -> bool:
     import time
     from googleapiclient.errors import HttpError
+
     svc = drive_service()
     if not svc:
         return False
@@ -279,13 +372,28 @@ def download_file(file_id: str, out_path: str) -> bool:
     return False
 
 
-def download_or_export_file(file_id: str, mime_type: str, out_path: str) -> bool:
-    """Download a file, or export it if it's a Google native format (Docs/Sheets/Slides)."""
-    import time
-    from googleapiclient.errors import HttpError
+def download_or_export_file(file_id: str, mime_type: str, out_path: str, size_hint: int | None = None) -> bool:
+    """Download a file, or export it if it's a Google native format (Docs/Sheets/Slides).
+
+    size_hint (Phase 42) only affects the plain-download branch below --
+    Google's own export (Docs/Sheets/Slides -> PDF/xlsx/csv) is bounded by
+    Google's export size limits already handled via the exportSizeLimit
+    fallback, so it keeps the existing whole-file retry path untouched.
+    Phase 43: the export branch is gated by the same Redis concurrency/rate
+    limit as download_file (see core.ratelimit).
+    """
+    from core import ratelimit
 
     if mime_type not in GOOGLE_EXPORT_MAP:
-        return download_file(file_id, out_path)
+        return download_file(file_id, out_path, size_hint=size_hint)
+
+    with ratelimit.download_slot():
+        return _export_file_plain(file_id, mime_type, out_path)
+
+
+def _export_file_plain(file_id: str, mime_type: str, out_path: str) -> bool:
+    import time
+    from googleapiclient.errors import HttpError
 
     export_mime, _ = GOOGLE_EXPORT_MAP[mime_type]
     svc = drive_service()
@@ -340,14 +448,14 @@ def list_drive_files(page_size: int = 200, page_token: str | None = None, media_
         return list_common_files(page_size=page_size, page_token=page_token)
 
 
-def download_photos_item(drive_file_id: str, out_path: str) -> bool:
+def download_photos_item(drive_file_id: str, out_path: str, size_hint: int | None = None) -> bool:
     """Download a photo/video via Drive API.
 
     Previously used Photos Library API baseUrl — replaced with Drive download
     since photoslibrary scope is blocked for unverified apps.
     Drive IDs are used directly (no photos: prefix stripping needed here).
     """
-    return download_file(drive_file_id, out_path)
+    return download_file(drive_file_id, out_path, size_hint=size_hint)
 
 
 def _download_photos_item_legacy(media_item_id: str, out_path: str) -> bool:

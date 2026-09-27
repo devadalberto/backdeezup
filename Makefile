@@ -3,7 +3,7 @@ DJ    := backend_django/manage.py
 
 .PHONY: help \
         preflight \
-        build up down restart logs ps check-services \
+        build up down restart logs ps check-services compose-check fix-perms \
         migrate superuser shell check fix-user-migration gmail-empty-trash gmail-empty-trash-dry \
         gen-certs \
         auth \
@@ -53,6 +53,10 @@ help:
 	@echo "    make logs               Tail all logs"
 	@echo "    make ps                 Show container status"
 	@echo "    make check-services     Post-boot health check (state, restart policy, ports, HTTP)"
+	@echo "    make compose-check      Validate docker-compose.yml (docker compose config -q)"
+	@echo "    make fix-perms          One-shot chown of media/staticfiles volumes to uid 10001"
+	@echo "                            (run ONCE before first start of a non-root image on an"
+	@echo "                            existing install -- see docs/deployment.md)"
 	@echo ""
 	@echo "  Django"
 	@echo "    make auth               Google OAuth — prints URL, paste code back (headless)"
@@ -132,6 +136,16 @@ logs:
 
 ps:
 	docker compose ps
+
+compose-check:
+	docker compose config -q && echo "OK: docker-compose.yml is valid"
+
+fix-perms:
+	@echo "Chowning media/ and staticfiles/ volumes to uid:gid 10001 (the non-root"
+	@echo "container user, Phase 41). Safe to re-run. Run this ONCE before the first"
+	@echo "start of the non-root image on an existing install, then 'make up'."
+	docker compose run --rm --no-deps --user root --entrypoint sh web -c \
+		"chown -R 10001:10001 /app/media /app/staticfiles && echo 'fix-perms: done'"
 
 check-services:
 	@echo "=== backdeezup post-boot health check ==="

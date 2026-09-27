@@ -172,7 +172,7 @@ def sync_download(request, limit: int = 20):
         hint = a.drive_id.replace('/','_')[:32]
         tmp = deterministic_path(a.name, hint, kind=kind) + ".part"
         final = deterministic_path(a.name, hint, kind=kind)
-        if download_file(a.drive_id, tmp) and os.path.exists(tmp):
+        if download_file(a.drive_id, tmp, size_hint=a.size_bytes) and os.path.exists(tmp):
             os.replace(tmp, final)
             a.download_path = final; a.downloaded_at = timezone.now(); a.state='DOWNLOADED'; a.error=None
             a.save(update_fields=['download_path','downloaded_at','state','error']); count += 1

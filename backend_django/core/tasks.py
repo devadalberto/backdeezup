@@ -39,12 +39,44 @@ def _sample_ids(queryset, n):
     return random.sample(ids, min(n, len(ids)))
 
 
+PART_MAX_AGE_DAYS = 7
+
+
+def _cleanup_stale_part_files(root, max_age_days=PART_MAX_AGE_DAYS):
+    """Delete .part files under root older than max_age_days (Phase 42).
+
+    Age is the only safety check: a .part file an active download is still
+    writing to has a fresh mtime and is never touched, regardless of how this
+    is scheduled. Missing/unreadable root is a no-op, not an error.
+    """
+    import time
+
+    if not os.path.isdir(root):
+        return []
+    cutoff = time.time() - max_age_days * 86400
+    removed = []
+    for dirpath, _dirnames, filenames in os.walk(root):
+        for name in filenames:
+            if not name.endswith(".part"):
+                continue
+            path = os.path.join(dirpath, name)
+            try:
+                if os.path.getmtime(path) < cutoff:
+                    os.remove(path)
+                    removed.append(path)
+            except OSError:
+                pass
+    return removed
+
+
 @shared_task(name="core.tasks.task_integrity_check")
 def task_integrity_check(sample_size=None):
     """Re-hash a random sample of already-backed-up files against their stored
-    checksum (Phase 31). READ-ONLY: only reads DriveAsset/GmailMessage files and
-    stored checksums, and WRITES only its own IntegrityRun row -- it never
-    flips DriveAsset.state or GmailMessage.state.
+    checksum (Phase 31), and remove stale download .part files older than
+    PART_MAX_AGE_DAYS (Phase 42). Otherwise READ-ONLY: only reads
+    DriveAsset/GmailMessage files and stored checksums, and writes only its
+    own IntegrityRun row -- it never flips DriveAsset.state or
+    GmailMessage.state.
     """
     from django.conf import settings
     from django.utils import timezone
@@ -104,7 +136,13 @@ def task_integrity_check(sample_size=None):
             )
         except Exception:
             pass
-    return {"integrity_run_id": run.pk, "sampled": sampled, "ok": ok, "missing": missing, "mismatched": mismatched}
+
+    stale_part_files = _cleanup_stale_part_files(settings.MEDIA_ROOT)
+
+    return {
+        "integrity_run_id": run.pk, "sampled": sampled, "ok": ok, "missing": missing, "mismatched": mismatched,
+        "stale_part_files_removed": len(stale_part_files),
+    }
 
 
 @shared_task(name="core.tasks.task_run_export")

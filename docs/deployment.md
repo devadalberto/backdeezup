@@ -187,6 +187,7 @@ Or step by step:
 git pull origin main
 make build
 make down
+make fix-perms   # only needed once, the first time you build a non-root image (Phase 41+)
 make up
 make migrate
 ```
@@ -204,6 +205,56 @@ make down               # stop everything
 ```
 
 ---
+
+## Non-root container (Phase 41)
+
+The image runs as a fixed non-root user (`appuser`, uid/gid `10001`) by default —
+this is the shipped default, not an opt-in. `--build-arg NONROOT=0` at `make build`
+time is the escape hatch back to the old root image, for environments where the
+volume-permission migration below is not possible.
+
+**Upgrading an existing install:** the `media` and `staticfiles` Docker volumes were
+created under the old root image and are root-owned. Run this **once**, before the
+first `make up` with the new image:
+```bash
+make build
+make fix-perms   # chowns media/ + staticfiles/ volumes to uid:gid 10001
+make up
+```
+Skipping `fix-perms` on an existing install is safe to attempt — the entrypoint
+checks that `MEDIA_ROOT` is writable before doing anything else and fails with a
+clear message (rather than a confusing traceback partway through startup) if it
+isn't. Nothing is auto-chowned silently.
+
+**Fresh installs** need no extra step — brand-new named volumes are populated from
+the image the first time they're mounted, so they come up already owned by
+`appuser`.
+
+**Host-mounted `secrets/` directory:** unlike `media`/`staticfiles` (Docker-managed
+volumes, fixed by `fix-perms`), `./secrets` is a bind mount of a directory on the
+Docker host, so its permissions come from the host filesystem, not the image. If
+Google OAuth token refresh fails with a permission error after upgrading, `chown -R
+10001:10001 secrets/` on the host (or `chmod` it group-writable) fixes it the same
+way `fix-perms` does for the two named volumes.
+
+## Bind address (Phase 39)
+
+As of Phase 39, `web` and `nginx` publish their ports on `127.0.0.1` by default
+(previously `0.0.0.0`) — localhost/loopback access only. This is a breaking
+change for any deployment that relied on reaching the container ports directly
+from another machine on the LAN (the `wsl-proxy` / `netsh portproxy` path below
+still works, since that forwards *into* WSL first, but the compose-published
+port itself is no longer reachable from outside the Docker host unless you
+override it).
+
+To restore the old LAN-reachable behavior, set in `.env`:
+```bash
+BIND_ADDR=0.0.0.0
+```
+`WEB_PORT` (8845), `NGINX_HTTP_PORT` (8844), `NGINX_HTTPS_PORT` (8445) are also
+overridable but keep their existing defaults. Run `make up` (not `restart`)
+after changing `.env` so the new bind takes effect. Validate the compose file
+with `make compose-check` any time you edit these.
 
 ## WSL2 external access (Windows Server only)
 
@@ -231,6 +282,8 @@ New-NetFirewallRule -DisplayName "BackDeezUp 8844" -Direction Inbound -Protocol 
 - [ ] `DJANGO_SECRET_KEY` is a long random string
 - [ ] `ALLOWED_HOSTS` includes your server IP/hostname
 - [ ] `CSRF_TRUSTED_ORIGINS` includes your server URL with port
+- [ ] `BIND_ADDR=0.0.0.0` set in `.env` if the app must be reachable from outside the Docker host (default `127.0.0.1` is loopback-only)
+- [ ] `make fix-perms` run once if upgrading an existing install to the non-root image (Phase 41)
 - [ ] `POSTGRES_PASSWORD` is not the sample value
 - [ ] `GOOGLE_ENCRYPTION_KEY` backed up securely
 - [ ] `secrets/google_client.json` in place

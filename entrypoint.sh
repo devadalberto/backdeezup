@@ -1,6 +1,32 @@
 #!/bin/bash
 set -e
 
+echo "[entrypoint] Checking media directory is writable..."
+python -c "
+import os
+import sys
+
+sys.path.insert(0, os.getcwd())
+from core.errors import humanize_error
+
+media_root = os.environ.get('MEDIA_ROOT', '/app/media')
+probe = os.path.join(media_root, '.write_test')
+try:
+    os.makedirs(media_root, exist_ok=True)
+    with open(probe, 'w') as fh:
+        fh.write('ok')
+    os.remove(probe)
+except OSError as exc:
+    err = humanize_error(exc)
+    print(f\"[entrypoint] {err['title']}: {err['hint']}\", file=sys.stderr)
+    print(
+        '[entrypoint] Phase 41 note: on an existing install upgrading to the '
+        \"non-root image, run 'make fix-perms' once, then retry.\",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+"
+
 echo "[entrypoint] Collecting static files..."
 python manage.py collectstatic --noinput
 

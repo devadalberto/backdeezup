@@ -79,7 +79,8 @@ def test_verification_page_renders_real_data(staff_client, tmp_path):
 
 
 @pytest.mark.django_db
-def test_task_integrity_check_flags_missing_and_mismatch_without_touching_state(tmp_path):
+def test_task_integrity_check_flags_missing_and_mismatch_without_touching_state(tmp_path, settings):
+    settings.MEDIA_ROOT = str(tmp_path)  # Phase 42 stale-.part scan walks MEDIA_ROOT
     ok_path = tmp_path / "ok.bin"
     ok_path.write_bytes(b"hello")
     ok_md5 = hashlib.md5(b"hello").hexdigest()
@@ -103,7 +104,8 @@ def test_task_integrity_check_flags_missing_and_mismatch_without_touching_state(
 
 
 @pytest.mark.django_db
-def test_task_integrity_check_creates_integrity_run_row(tmp_path):
+def test_task_integrity_check_creates_integrity_run_row(tmp_path, settings):
+    settings.MEDIA_ROOT = str(tmp_path)
     path = tmp_path / "x.bin"
     path.write_bytes(b"content")
     _gmail_message(1, "VERIFIED", path=str(path), sha=hashlib.sha256(b"content").hexdigest())
@@ -117,7 +119,8 @@ def test_task_integrity_check_creates_integrity_run_row(tmp_path):
 
 
 @pytest.mark.django_db
-def test_integrity_check_notifies_only_when_problems_found(tmp_path):
+def test_integrity_check_notifies_only_when_problems_found(tmp_path, settings):
+    settings.MEDIA_ROOT = str(tmp_path)
     ok_path = tmp_path / "ok.bin"
     ok_path.write_bytes(b"hello")
     ok_md5 = hashlib.md5(b"hello").hexdigest()

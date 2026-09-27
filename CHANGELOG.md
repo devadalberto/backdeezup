@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Phase 39** — `web` and `nginx` compose ports now bind `127.0.0.1` by default (was
+  `0.0.0.0`); override with `BIND_ADDR=0.0.0.0` in `.env` to restore LAN access.
+  `WEB_PORT`/`NGINX_HTTP_PORT`/`NGINX_HTTPS_PORT` env vars added (same 8845/8844/8445
+  defaults). Added `web` healthcheck (TCP probe on the gunicorn port) and `celerybeat`
+  healthcheck (`pgrep` for the beat process); both were previously unmonitored.
+  New `make compose-check` target (`docker compose config -q`). See `docs/deployment.md`.
+- **Phase 40** — pinned the `uv` build stage from `ghcr.io/astral-sh/uv:latest` to
+  `:0.12.19` (the version `:latest` resolved to as of 2026-09-27, confirmed via the
+  GHCR manifest API). Added `graphify-out` and `backups` to `.dockerignore`. Verified
+  with a full `docker build`: image size unchanged (1.99GB).
+- **Phase 41** — the image now runs as a fixed non-root user (`appuser`, uid/gid
+  `10001`) by default. `--build-arg NONROOT=0` restores the old root image. New
+  `make fix-perms` target chowns the `media`/`staticfiles` volumes for existing
+  installs upgrading in place (never done silently). Entrypoint now checks
+  `MEDIA_ROOT` is writable before doing anything else and fails with a clear,
+  `humanize_error`-derived message if not. See `docs/deployment.md`.
+- **Phase 42** — Drive downloads of files >= `RESUME_MIN_MB` (default 50MB) now
+  resume via HTTP Range instead of restarting from byte 0 after a dropped
+  connection or a killed worker; the existing `.part`-then-atomic-rename convention
+  is unchanged, so this needed no changes to any caller's error handling. Smaller
+  files, and Google Docs/Sheets/Slides exports, keep the exact previous whole-file
+  retry path. The weekly integrity task (Phase 31) now also removes `.part` files
+  older than 7 days (never a fresh one — that's the safety margin, not a lock).
+- **Phase 43** — two new soft, Redis-backed throttles on Drive downloads:
+  `MAX_CONCURRENT_DOWNLOADS` (default 2, matching today's effective worker
+  concurrency: `celery -c 2`) caps how many downloads run at once; `GOOGLE_API_MAX_RPS`
+  (default 0, disabled) caps download calls per second. Both fail open if Redis is
+  unreachable, and neither touches the existing 429/5xx exponential backoff
+  (Phases 10-11). New `core/ratelimit.py`; wired into `services_google.py`'s three
+  download entry points, the single choke point since Phase 42.
+- **Phase 44** — CI: new `trivy-fs` job (filesystem/dependency vulnerability scan,
+  SARIF, report-only) and a new SBOM step in the existing `trivy` job (`syft` via
+  `anchore/sbom-action`, SPDX JSON, uploaded as the `sbom-spdx` build artifact).
+  Both the new `trivy-fs` scan and the existing `trivy` image scan stay report-only
+  (`exit-code: "0"`) until each has one clean run in this repo's own Actions
+  history — do not flip either to fail-on-CRITICAL pre-emptively.
+
 ## [0.10.0] - 2026-05-16
 
 ### Added

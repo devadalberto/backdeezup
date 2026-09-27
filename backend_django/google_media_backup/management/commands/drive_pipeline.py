@@ -164,7 +164,7 @@ class Command(BaseCommand):
             final = deterministic_path(asset.name, hint, kind=kind)
             tmp = final + ".part"
             try:
-                if download_photos_item(raw_id, tmp) and os.path.exists(tmp):
+                if download_photos_item(raw_id, tmp, size_hint=asset.size_bytes) and os.path.exists(tmp):
                     os.replace(tmp, final)
                     asset.download_path = final
                     asset.downloaded_at = timezone.now()
@@ -233,7 +233,7 @@ class Command(BaseCommand):
                 final = base + ext
             tmp = final + ".part"
             try:
-                if download_or_export_file(asset.drive_id, asset.mime_type, tmp) and os.path.exists(tmp):
+                if download_or_export_file(asset.drive_id, asset.mime_type, tmp, size_hint=asset.size_bytes) and os.path.exists(tmp):
                     os.replace(tmp, final)
                     asset.download_path = final
                     asset.downloaded_at = timezone.now()
@@ -342,7 +342,7 @@ class Command(BaseCommand):
             tmp = deterministic_path(asset.name, hint, kind=kind) + ".part"
             final = deterministic_path(asset.name, hint, kind=kind)
             try:
-                if download_file(asset.drive_id, tmp) and os.path.exists(tmp):
+                if download_file(asset.drive_id, tmp, size_hint=asset.size_bytes) and os.path.exists(tmp):
                     # Size integrity check: verify downloaded bytes match Drive API size
                     actual_size = os.path.getsize(tmp)
                     if asset.size_bytes > 0 and actual_size != asset.size_bytes:

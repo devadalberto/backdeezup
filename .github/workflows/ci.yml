@@ -17,9 +17,16 @@ env:
 # test         ─────────────────────────────────────── PR gate (container)
 # sast-bandit  ─────────────────────────────────────── SAST, SARIF upload
 # sast-safety  ─────────────────────────────────────── dep CVE scan
-# trivy        ────── needs lint+test ─────────────── image scan, SARIF
+# trivy-fs     ─────────────────────────────────────── Phase 44: fs vuln scan, SARIF (report-only)
+# trivy        ────── needs lint+test ─────────────── image scan, SARIF (report-only) + SBOM artifact
 # compose-smoke────── needs lint+test ─────────────── full 6-container stack
 # playwright   ────── needs compose-smoke ──────────── E2E (admin + API docs)
+#
+# Phase 44 note: trivy-fs and the trivy job's image scan are both report-only
+# (exit-code 0) by design -- switch each to `exit-code: "1"` + `severity:
+# CRITICAL` only after observing one clean run of each in this repo's own
+# Actions history. Don't flip it pre-emptively; a report-only run doesn't
+# prove there are zero CRITICAL findings today.
 
 jobs:
 
@@ -114,7 +121,32 @@ jobs:
           path: safety-report.json
           retention-days: 30
 
-  # ── 5. trivy ──────────────────────────────────────────────────────────────
+  # ── 5a. trivy-fs (Phase 44) ──────────────────────────────────────────────────
+  trivy-fs:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-fs.sarif
+          exit-code: "0"
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH,MEDIUM
+
+      - name: Upload Trivy fs SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-fs.sarif
+          category: trivy-fs
+
+  # ── 5b. trivy (image scan + SBOM, Phase 44 adds the SBOM step) ───────────────
   trivy:
     runs-on: ubuntu-latest
     needs: [lint, test]
@@ -141,6 +173,21 @@ jobs:
         with:
           sarif_file: trivy.sarif
           category: trivy
+
+      - name: Generate SBOM (SPDX JSON) with syft
+        uses: anchore/sbom-action@v0
+        with:
+          image: backdeezup:ci
+          format: spdx-json
+          output-file: sbom.spdx.json
+          upload-artifact: false
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-spdx
+          path: sbom.spdx.json
+          retention-days: 30
 
   # ── 6. compose-smoke ──────────────────────────────────────────────────────
   compose-smoke:

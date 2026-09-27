@@ -80,7 +80,7 @@ def task_photos_download_batch(self, limit=50):
             final = deterministic_path(asset.name, hint, kind=kind)
             tmp = final + ".part"
             try:
-                if download_photos_item(raw_id, tmp) and os.path.exists(tmp):
+                if download_photos_item(raw_id, tmp, size_hint=asset.size_bytes) and os.path.exists(tmp):
                     os.replace(tmp, final)
                     asset.download_path = final
                     asset.downloaded_at = timezone.now()
@@ -218,7 +218,7 @@ def task_docs_download_batch(self, limit=100):
                 final = base + ext
             tmp = final + ".part"
             try:
-                if download_or_export_file(asset.drive_id, asset.mime_type, tmp) and os.path.exists(tmp):
+                if download_or_export_file(asset.drive_id, asset.mime_type, tmp, size_hint=asset.size_bytes) and os.path.exists(tmp):
                     os.replace(tmp, final)
                     asset.download_path = final
                     asset.downloaded_at = timezone.now()

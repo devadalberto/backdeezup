@@ -36,12 +36,18 @@ services:
       - staticfiles:/app/staticfiles
       - ./secrets:/app/backend_django/secrets:rw
     ports:
-      - "0.0.0.0:8845:18444"
+      - "${BIND_ADDR:-127.0.0.1}:${WEB_PORT:-8845}:18444"
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8000), 3).close()"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     deploy:
       resources:
         limits:
@@ -94,6 +100,12 @@ services:
         condition: service_healthy
       web:
         condition: service_started
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "celery_app beat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
     deploy:
       resources:
         limits:
@@ -109,8 +121,8 @@ services:
       - media:/app/media:ro
       - staticfiles:/app/staticfiles:ro
     ports:
-      - "0.0.0.0:8844:80"
-      - "0.0.0.0:8445:443"
+      - "${BIND_ADDR:-127.0.0.1}:${NGINX_HTTP_PORT:-8844}:80"
+      - "${BIND_ADDR:-127.0.0.1}:${NGINX_HTTPS_PORT:-8445}:443"
     depends_on:
       - web
 
