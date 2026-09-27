@@ -1,7 +1,11 @@
 {% for entry in audit_log %}
 <tr>
   <td>{{ entry.rule_name }}</td>
-  <td><code style="color:var(--gt)">{{ entry.action }}</code></td>
+  <td>
+    {% if entry.action == "trash" %}<code style="color:var(--gt)">Trash</code>
+    {% elif entry.action == "permanent_delete" %}<code style="color:var(--gr)">Permanent Delete</code>
+    {% else %}<code style="color:var(--gt)">{{ entry.action }}</code>{% endif %}
+  </td>
   <td>{% if entry.dry_run %}<span class="tag tag-dry">dry</span>{% else %}<b>REAL</b>{% endif %}</td>
   <td>{{ entry.affected_count }}</td>
   <td>{{ entry.actor_label }}</td>
@@ -9,11 +13,18 @@
     {% if entry.status == "OK" or entry.status == "DRY_RUN" %}<span class="tag tag-ok">{{ entry.status }}</span>
     {% elif entry.status == "ERROR" %}<span class="tag tag-err">ERROR</span>
     {% elif entry.status == "RUNNING" %}<span class="tag" style="background:#2a2000;color:var(--gy);border:1px solid var(--gy);">RUNNING</span>
+    {% elif entry.status == "PAUSED" %}<span class="tag" style="background:#2a2000;color:var(--gy);border:1px solid var(--gy);">PAUSED</span>
     {% else %}<span class="tag">{{ entry.status }}</span>{% endif %}
   </td>
   <td>{{ entry.started_at|date:"M d H:i:s" }}</td>
   <td>{% if entry.finished_at %}{{ entry.started_at|timesince:entry.finished_at }}{% else %}—{% endif %}</td>
+  <td>
+    {% if entry.action == "trash" and not entry.dry_run and not entry.undone_at %}
+    <button class="btn btn-sm btn-warn" onclick="undoAuditLog({{ entry.id }}, this)">Undo</button>
+    {% elif entry.undone_at %}<span style="color:var(--gd);font-size:11px">undone</span>
+    {% else %}—{% endif %}
+  </td>
 </tr>
 {% empty %}
-<tr><td colspan="8" style="color:var(--gd);padding:8px">No audit entries yet.</td></tr>
+<tr><td colspan="9" style="color:var(--gd);padding:8px">No audit entries yet.</td></tr>
 {% endfor %}

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System health — BackDeezUp</title>
+<style>
+:root{--g0:#000;--g1:#0d0d0d;--gb:#1e3a1e;--gx:#00ff41;--gm:#00c832;--gd:#008f1f;--gr:#ff3131;--gy:#ffb300;--fw:#e0ffe0;--ga:#002e0b;--muted:#3a5c3a;}
+body{background:var(--g0);color:var(--fw);font-family:'Courier New',monospace;margin:0;padding:24px;}
+a{color:var(--gm);text-decoration:none;}
+h1{color:var(--gx);letter-spacing:2px;margin:0 0 4px;}
+.overall{margin:8px 0 20px;font-size:14px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead tr{background:var(--gb);}
+th{padding:8px 10px;color:var(--gx);text-align:left;letter-spacing:1px;}
+td{padding:8px 10px;border-bottom:1px solid var(--gb);}
+tr:hover td{background:var(--g1);}
+.badge{display:inline-block;min-width:44px;text-align:center;padding:2px 8px;border-radius:3px;font-weight:bold;color:#000;}
+.ok{background:var(--gx);} .warn{background:var(--gy);} .fail{background:var(--gr);}
+.chip{display:inline-block;padding:1px 8px;font-size:10px;border-radius:9px;border:1px solid var(--gd);color:var(--fw);white-space:nowrap;}
+.chip-ok{color:var(--gx);border-color:var(--gx);background:rgba(0,255,65,.08);}
+.chip-warn{color:var(--gy);border-color:var(--gy);background:rgba(255,179,0,.08);}
+.chip-fail{color:var(--gr);border-color:var(--gr);background:rgba(255,49,49,.08);}
+.chip-muted{color:var(--muted);border-color:var(--muted);}
+.subnav{display:flex;gap:8px;margin:0 0 16px;}
+.subnav a{border:1px solid var(--ga);border-radius:3px;padding:5px 14px;font-size:12px;letter-spacing:1px;color:var(--gm);}
+.subnav a.active{border-color:var(--gx);color:var(--gx);}
+</style>
+</head>
+<body>
+{% include 'core/partials/nav.html' %}
+<h1>SYSTEM HEALTH</h1>
+<div class="overall">Overall: <span class="badge {{ overall }}">{{ overall|upper }}</span>
+  &nbsp;·&nbsp;<a href="{% url 'health_json' %}">JSON</a>
+  &nbsp;·&nbsp;<a href="{% url 'landing' %}">Home</a></div>
+{% if storage_guard.level == "pause" %}
+  <div class="overall"><span class="badge fail">STORAGE GUARD</span>
+    &nbsp;{{ storage_guard.used_pct }}% used (&gt;= {{ storage_guard.pause_pct }}% pause threshold) &middot;
+    {{ storage_guard.free_gb }} GB free &middot; downloads refused until space is freed.
+    {% if not storage_guard.enabled %} Guard disabled (STORAGE_GUARD_ENABLED=0) -- not enforced.{% endif %}</div>
+{% elif storage_guard.level == "warn" %}
+  <div class="overall"><span class="badge warn">STORAGE</span>
+    &nbsp;{{ storage_guard.used_pct }}% used (&gt;= {{ storage_guard.warn_pct }}% warn threshold) &middot;
+    {{ storage_guard.free_gb }} GB free &middot; est. {{ storage_guard.days_remaining }} days remaining.</div>
+{% endif %}
+<table>
+  <thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead>
+  <tbody>
+  {% for c in checks %}
+    <tr><td>{{ c.label }}</td><td><span class="badge {{ c.status }}">{{ c.status|upper }}</span></td><td>{{ c.detail }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{% if job %}
+<span class="{% if job.status == 'DONE' %}msg-ok{% elif job.status == 'ERROR' %}msg-err{% else %}small{% endif %}">
+  Job #{{ job.id }} ({{ job.item_count }} items, {{ job.format }}): <b>{{ job.status }}</b>
+  {% if job.status == 'DONE' %}
+    &middot; <a href="/dashboard/export/{{ job.id }}/?download=1">Download</a>
+  {% elif job.status == 'ERROR' %}
+    &middot; {{ job.error }}
+  {% endif %}
+</span>
+{% endif %}

@@ -10,6 +10,7 @@ import os
 
 from celery import Celery
 from celery.schedules import crontab
+from django.conf import settings as django_settings
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
@@ -41,4 +42,40 @@ app.conf.beat_schedule = {
         "options": {"expires": 300},
     },
 }
+
+# Phase 31 — weekly sampled integrity re-hash. Read-only, so default ON; set
+# INTEGRITY_CHECK_ENABLED=0 to disable.
+if getattr(django_settings, "INTEGRITY_CHECK_ENABLED", True):
+    app.conf.beat_schedule["integrity-check"] = {
+        "task": "core.tasks.task_integrity_check",
+        "schedule": crontab(minute=0, hour=3, day_of_week=1),
+        "options": {"expires": 3600},
+    }
+
+# Phase 33 — stale-backup notification. Off by default (NOTIFY_STALE_BACKUP_HOURS=0).
+if getattr(django_settings, "NOTIFY_STALE_BACKUP_HOURS", 0):
+    app.conf.beat_schedule["check-backup-freshness"] = {
+        "task": "core.tasks.task_check_backup_freshness",
+        "schedule": crontab(minute=15, hour="*"),
+        "options": {"expires": 900},
+    }
+
+# Phase 37 — weekly "can I restore a file?" smoke test. Off by default
+# (RESTORE_SMOKE_TEST_ENABLED=0); the dashboard button runs it on demand either way.
+if getattr(django_settings, "RESTORE_SMOKE_TEST_ENABLED", False):
+    app.conf.beat_schedule["restore-smoke-test"] = {
+        "task": "core.tasks.task_restore_smoke_test",
+        "schedule": crontab(minute=30, hour=4, day_of_week=1),
+        "options": {"expires": 3600},
+    }
+
+# Phase 38 — weekly Postgres dump + prune. Off by default (DB_BACKUP_ENABLED=0);
+# `make db-backup` / `make db-restore` work regardless of this flag.
+if getattr(django_settings, "DB_BACKUP_ENABLED", False):
+    app.conf.beat_schedule["db-backup"] = {
+        "task": "core.tasks.task_db_backup",
+        "schedule": crontab(minute=0, hour=4, day_of_week=0),
+        "options": {"expires": 3600},
+    }
+
 app.conf.timezone = "America/Los_Angeles"

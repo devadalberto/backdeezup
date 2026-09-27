@@ -323,7 +323,8 @@ class Command(BaseCommand):
         import time
         from django.utils import timezone
         from google_media_backup.models import DriveAsset
-        from google_media_backup.services_google import download_file, deterministic_path
+        from google_media_backup.services_google import download_file
+        from google_media_backup.utils import deterministic_path
 
         qs = list(DriveAsset.objects.filter(state="DISCOVERED").order_by("discovered_at")[:limit])
         if not qs:

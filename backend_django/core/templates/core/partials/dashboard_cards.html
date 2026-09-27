@@ -1,0 +1,137 @@
+{% if storage_guard.level == "pause" %}
+  <div class="card" style="border-color:var(--gr);margin-bottom:12px;">
+    <span class="stat-badge badge-fail">STORAGE GUARD: PAUSED</span>
+    <div class="small">{{ storage_guard.used_pct }}% used (&gt;= {{ storage_guard.pause_pct }}% pause threshold) &middot;
+      {{ storage_guard.free_gb }} GB free &middot; downloads refused until space is freed.
+      {% if not storage_guard.enabled %} Guard is disabled (STORAGE_GUARD_ENABLED=0) -- not enforced.{% endif %}</div>
+  </div>
+{% elif storage_guard.level == "warn" %}
+  <div class="card" style="border-color:var(--gy);margin-bottom:12px;">
+    <span class="stat-badge badge-running">STORAGE WARNING</span>
+    <div class="small">{{ storage_guard.used_pct }}% used (&gt;= {{ storage_guard.warn_pct }}% warn threshold) &middot;
+      {{ storage_guard.free_gb }} GB free &middot; est. {{ storage_guard.days_remaining }} days remaining.</div>
+  </div>
+{% endif %}
+
+<div class="grid">
+
+  <div class="card">
+    <div class="stat-label">Backup status</div>
+    {% if backup.error %}<div class="err">{{ backup.error }}</div>{% else %}
+      {% if backup.running %}<div class="stat-value" style="font-size:1.3rem;color:var(--gy);">&#9654; Running</div>
+        <span class="stat-badge badge-running">{{ backup.running }} run(s) in progress</span>
+      {% elif backup.latest_status == "OK" %}<div class="stat-value" style="font-size:1.3rem;">&#10003; OK</div>
+      {% elif backup.latest_status %}<div class="stat-value" style="font-size:1.3rem;color:var(--gr);">{{ backup.latest_status }}</div>
+      {% else %}<div class="stat-value" style="font-size:1.3rem;">&#8212;</div><div class="small">No run recorded</div>{% endif %}
+      {% if backup.latest_at %}<div class="small">Latest run {{ backup.latest_at|date:"M d H:i" }}</div>{% endif %}
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="stat-label">Last successful backup</div>
+    {% if backup.error %}<div class="err">{{ backup.error }}</div>
+    {% elif backup.last_ok_at %}
+      <div class="stat-value" style="font-size:1.3rem;">{{ backup.last_ok_at|date:"M d H:i" }}</div>
+      <div class="small">Duration {{ backup.last_ok_duration }}</div>
+    {% else %}<div class="stat-value" style="font-size:1.3rem;">&#8212;</div><div class="small">None yet</div>{% endif %}
+  </div>
+
+  <div class="card">
+    <div class="stat-label">Items per source</div>
+    {% if sources.error %}<div class="err">{{ sources.error }}</div>{% else %}
+      <div class="small" style="color:var(--fw)">Drive &nbsp; {{ sources.drive }}</div>
+      <div class="small" style="color:var(--fw)">Gmail &nbsp; {{ sources.gmail }}</div>
+      <div class="small" style="color:var(--fw)">Vault &nbsp; {{ sources.vault_images }} images &middot; {{ sources.vault_media }} videos</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="stat-label">Verified</div>
+    {% if verified.error %}<div class="err">{{ verified.error }}</div>{% else %}
+      <div class="stat-value">{{ verified.total }}</div>
+      <div class="small">Drive {{ verified.drive }} &middot; Gmail {{ verified.gmail }}</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="stat-label">Storage</div>
+    {% if storage.error %}<div class="err">{{ storage.error }}</div>{% else %}
+      <div class="stat-value" style="font-size:1.3rem;">{{ storage.free }} free</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:{{ storage.used_pct }}%"></div></div>
+      <div class="small">{{ storage.used }} used of {{ storage.total }} ({{ storage.used_pct }}%)</div>
+      <div class="small">Est. {{ storage_guard.days_remaining }} days remaining</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="stat-label">Next scheduled run</div>
+    {% if next_run.error %}<div class="err">{{ next_run.error }}</div>
+    {% elif next_run %}
+      <div class="stat-value" style="font-size:1.3rem;">{{ next_run.when|date:"M d H:i T" }}</div>
+      <div class="small">{{ next_run.name }}</div>
+    {% else %}<div class="stat-value" style="font-size:1.3rem;">--</div><div class="small">No enabled schedule</div>{% endif %}
+  </div>
+
+  <div class="card">
+    <div class="stat-label">Account connection</div>
+    {% if connection.error %}<div class="err">{{ connection.error }}</div>{% else %}
+      <span class="stat-badge {% if connection.status == 'ok' %}badge-ok{% elif connection.status == 'warn' %}badge-running{% else %}badge-fail{% endif %}">{{ connection.status|upper }}</span>
+      <div class="small">{{ connection.detail }}</div>
+      {% for email in connection.accounts %}<div class="small" style="color:var(--fw)">{{ email }}</div>{% endfor %}
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="stat-label">Cleanup</div>
+    {% if cleanup.error %}<div class="err">{{ cleanup.error }}</div>{% else %}
+      <div class="stat-value" style="font-size:1.3rem;">{{ cleanup.enabled }} enabled</div>
+      <div class="small">{{ cleanup.disabled }} disabled{% if cleanup.running %} &middot; {{ cleanup.running }} running{% endif %}</div>
+      <div class="small">Last run {% if cleanup.last_run_at %}{{ cleanup.last_run_at|date:"M d H:i" }}{% else %}--{% endif %}</div>
+    {% endif %}
+  </div>
+
+</div>
+
+<div class="section-label">&#9608; Run progress</div>
+<div class="card">
+  {% if progress.error %}<div class="err">{{ progress.error }}</div>{% else %}
+    {% if progress.paused %}<span class="stat-badge badge-running">JOBS PAUSED</span>{% endif %}
+    {% if progress.run %}
+      <div>Latest run: <b>{{ progress.run.status }}</b> &middot; started {{ progress.run.started_at|date:"M d H:i" }}</div>
+      <div class="small" style="color:var(--fw)">{{ progress.run.done }} done &middot;
+        {% if progress.run.skipped is not None %}{{ progress.run.skipped }}{% else %}--{% endif %} skipped &middot;
+        {{ progress.run.failed }} failed &middot; ETA {% if progress.run.eta %}{{ progress.run.eta }}{% else %}--{% endif %}</div>
+    {% else %}<div class="small">No run recorded.</div>{% endif %}
+  {% endif %}
+</div>
+
+<div class="section-label">&#9608; Recent items</div>
+<div class="card">
+  {% if items.error %}<div class="err">{{ items.error }}</div>
+  {% elif items.rows %}
+    <table>
+      <thead><tr><th>Discovered</th><th>Source</th><th>Item</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for r in items.rows %}
+        <tr><td>{{ r.when|date:"M d H:i" }}</td><td>{{ r.source }}</td><td>{{ r.name|truncatechars:60 }}</td>
+            <td><span class="chip chip-{{ r.chip.kind }}">{{ r.chip.label }}</span></td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}<div class="small">No items yet.</div>{% endif %}
+</div>
+
+<div class="section-label">&#9608; Recent errors (last {{ errors.window_days|default:7 }} days)</div>
+<div class="card">
+  {% if errors.error %}<div class="err">{{ errors.error }}</div>
+  {% elif errors.rows %}
+    <table>
+      <thead><tr><th>When</th><th>Source</th><th>What happened</th><th>What to do</th></tr></thead>
+      <tbody>
+      {% for e in errors.rows %}
+        <tr><td>{{ e.when|date:"M d H:i" }}</td><td>{{ e.source }}</td><td>{{ e.title }}</td><td>{{ e.hint }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}<div class="small">No errors recorded.</div>{% endif %}
+</div>

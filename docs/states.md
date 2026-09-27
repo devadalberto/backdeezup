@@ -146,3 +146,34 @@ stateDiagram-v2
 - **SOFT_DELETED retention** — messages are kept for 90 days, then purged to DELETED
 - **metadata_snapshot** — JSON field freezes subject/from/to/date/labels/size at deletion time
 - **Restore-to-Gmail** — possible from SOFT_DELETED if .eml file still exists on disk
+
+---
+
+## Success definition — "backed up" (Phase 31)
+
+An item counts as backed up only once it has been through `VERIFIED` — i.e. it
+was downloaded, checksummed, and confirmed to still exist on disk. A state
+that comes *after* `VERIFIED` in either machine still counts, because it can
+only be reached by having passed through `VERIFIED` first; those later states
+describe what happened to the *source* copy (Drive/Gmail), not the local
+backup.
+
+- `DriveAsset` backed up: `VERIFIED`, `DELETE_PENDING`, `DELETED`
+- `GmailMessage` backed up: `VERIFIED`, `TRASHED`, `SOFT_DELETED`, `DELETED`
+
+In code this is `core.verification.DRIVE_BACKED_UP_STATES` /
+`GMAIL_BACKED_UP_STATES` — the single source of truth the dashboard and the
+`/dashboard/verification/` report both read from. `DISCOVERED`, `DOWNLOADED`
+and (Drive-only) `IMPORTED` never count, even though a file may already sit on
+disk at those states — it hasn't been checksum-confirmed yet.
+
+The `/dashboard/verification/` report additionally shows, per source: items
+whose stored path no longer exists on disk (a live check, one `os.path.exists`
+per backed-up item), the oldest verified timestamp, and the result of the
+latest scheduled integrity check. That check (`core.tasks.task_integrity_check`,
+weekly via Celery Beat, gated by `INTEGRITY_CHECK_ENABLED`, default on) samples
+`INTEGRITY_CHECK_SAMPLE_SIZE` (default 200) backed-up items, re-hashes the file
+on disk (MD5 for Drive assets, SHA-256 for Gmail messages — matching whichever
+checksum each model already stores) and compares it to the stored value. It
+only reads files and writes its own `IntegrityRun` row; it never changes
+`state` on the item it checked.

@@ -58,6 +58,25 @@ def _from_text_markers(text, low):
             "The saved sign-in token no longer works. Reconnect the Google account.",
             "invalid_grant",
         )
+    if "redirect_uri_mismatch" in low:
+        return _result(
+            "Redirect URL not registered with Google",
+            "The address this app used does not match a Redirect URI in the Google Cloud Console client. "
+            "Add it there, or connect from the URL the client was set up with.",
+            "redirect_uri_mismatch",
+        )
+    if "access_denied" in low:
+        return _result(
+            "Google sign-in was cancelled",
+            "Access was denied or cancelled on Google's consent screen. Try connecting again and approve every permission.",
+            "access_denied",
+        )
+    if "mismatching_state" in low or "state not equal" in low:
+        return _result(
+            "Sign-in session expired or was reused",
+            "The connect link is single-use and expires quickly. Start over from the Connect button.",
+            "mismatching_state",
+        )
     if "exportsizelimit" in low:
         return _result(
             "File is too large for Google to export",

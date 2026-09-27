@@ -147,6 +147,29 @@ def trash_message(msg_id: str, user_id: str = "me") -> bool:
         return False
 
 
+def untrash_message(msg_id: str, user_id: str = "me") -> bool:
+    """Restore a single message from Gmail trash. Logs errors instead of silently returning False.
+
+    Only works within Gmail's trash retention window (~30 days) -- after that, or for
+    permanently deleted messages, Gmail returns 404 and this returns False.
+    """
+    svc = gmail_service()
+    if not svc:
+        return False
+    try:
+        svc.users().messages().untrash(userId=user_id, id=msg_id).execute()
+        return True
+    except HttpError as exc:
+        if exc.resp.status == 404:
+            log.warning("Cannot untrash %s: not found (past retention window or permanently deleted)", msg_id)
+        else:
+            log.warning("Failed to untrash message %s (HTTP %s): %s", msg_id, exc.resp.status, exc)
+        return False
+    except Exception as exc:
+        log.error("Unexpected error untrashing message %s: %s", msg_id, exc)
+        return False
+
+
 def batch_trash_messages(msg_ids: list, user_id: str = "me") -> int:
     """Trash multiple messages using Gmail batchModify. Returns count of successful trashes."""
     if not msg_ids:

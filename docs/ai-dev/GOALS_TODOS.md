@@ -1179,3 +1179,408 @@ VERIFICATION:
   # Import the same image from two sources
   # VaultImage count should be 1, not 2
   DATABASE_URL="" uv run pytest -m integration -q
+
+
+================================================================
+V2 UX + TRUST UPGRADES -- Phases 22-49
+Source: propmt_v2_upgrades_suggested (repo root). Written 2026-09-26.
+================================================================
+
+----------------------------------------------------------------
+V2 GUARDRAILS -- apply to EVERY phase 22-49
+----------------------------------------------------------------
+  1. ADDITIVE ONLY. New modules / urls / templates / settings. Never rename or remove an
+     existing route, model field, make target, Celery task name or env var.
+  2. FLAG + SAME DEFAULT. Any behavior change sits behind an env var or setting whose
+     default reproduces today's behavior. USER-APPROVED EXCEPTIONS (2026-09-26), each has
+     an env override that restores the old behavior: Phase 39 (bind 127.0.0.1),
+     Phase 41 (non-root ON), Phase 32 (storage guard ON), Phase 34 (safeguards ON).
+  3. UNTOUCHED: DriveAsset / GmailMessage state transitions and the two-proof deletion
+     guard. New code READS states; it never advances them.
+  4. MIGRATIONS: additive only (new table, or nullable / defaulted column). No data
+     rewrite, no column drop or rename.
+  5. NEW VIEWS: is_staff only, CSRF on every POST, no secrets in templates or logs.
+  6. ONE PHASE = ONE COMMIT (plus its tests). Revert = `git revert <sha>`.
+  7. BASELINE (do once at the start of each phase, save to scratchpad):
+       make test-full                      # must be green BEFORE you start
+       for u in / /admin/ /admin/ops/ /admin/reports/ /admin/gmail/dashboard/ \
+                /api/gmail/progress/ /vault/ ; do
+         printf '%s ' "$u"; curl -sk -o /dev/null -w '%{http_code}\n' https://localhost:8445$u
+       done                                # record codes (paths: verify in config/urls.py)
+  8. GATE (end of each phase): make test-full green + the same URL loop prints the same
+     codes + the new URL returns 200 with real data (not just HTTP 200 -- check content).
+  9. Every phase ships its own tests (unit + one Django test-client view test where a
+     view is added). External APIs mocked, per Phase 6 conventions.
+ 10. If the gate fails: STOP, revert the phase commit, report. No "fix forward".
+ 11. After code changes: `graphify update .` and commit graphify-out/.
+
+----------------------------------------------------------------
+TRACK A -- MAKE IT USABLE
+----------------------------------------------------------------
+
+PHASE 22 -- TIME_ZONE from env
+  Size: XS.  Risk: none.
+  backend_django/config/settings.py:141 hardcodes 'America/Los_Angeles'.
+  Change to: TIME_ZONE = os.environ.get("TIME_ZONE", "America/Los_Angeles")
+  Add TIME_ZONE to .env.example / docs/configuration.md.
+  Do NOT touch USE_TZ (already True) or Celery Beat crontab tz without checking:
+  grep -n "timezone\|CELERY_TIMEZONE" backend_django/config/settings.py backend_django/celery_app.py
+  If CELERY_TIMEZONE is separate, leave it alone and note it in docs.
+  Verify: unset TIME_ZONE -> `manage.py shell -c "from django.conf import settings; print(settings.TIME_ZONE)"`
+  prints America/Los_Angeles; TIME_ZONE=Europe/Berlin prints Europe/Berlin.
+
+PHASE 23 -- Human-readable error mapper
+  Size: S.  Risk: none (nothing calls it yet except its own tests).
+  New: backend_django/core/errors.py
+    humanize_error(exc_or_text) -> {"title", "hint", "code"}
+    Maps: HttpError 401/403 (token / scope / API not enabled), 404, 429 (quota),
+    exportSizeLimit, failedPrecondition, invalid_grant (revoked / expired token),
+    ConnectionError / OperationalError (DB / Redis down), OSError ENOSPC (disk full),
+    PermissionError (media dir). Unknown -> generic title + raw text kept in "code".
+  Pure function, no Django imports needed. Do NOT edit tasks / services to use it here.
+  Tests: one parametrized test per mapping + unknown fallback.
+
+PHASE 24 -- System health page
+  Size: S.  Risk: low (read-only).
+  New: core/health.py (checks) + view in core/views.py + template core/templates/.
+  URL: path("health/", ...) in config/urls.py (staff only). Also /health/json/.
+  Checks, each returns ok / warn / fail + one-line detail via humanize_error:
+    database (SELECT 1), migrations (unapplied count), redis (ping),
+    celery worker (inspect ping, 2s timeout), beat (last heartbeat -- see below),
+    queue depth (redis LLEN), failed tasks (RunLog / task errors last 24h),
+    storage (shutil.disk_usage on MEDIA_ROOT), OAuth token present + expiry,
+    app version (VERSION file), write test on media dir (create + delete temp file).
+  Beat heartbeat: do NOT change Beat schedule; read django-celery-beat / RunLog last
+  run time if available, else report "unknown".
+  Never let one failing check break the page: wrap each in try/except -> "fail".
+  Verify: page 200, JSON parses, stop redis container -> redis row = fail, page still 200.
+
+PHASE 25 -- Unified dashboard (read-only)
+  Size: M.  Risk: low.
+  New view + template at path("dashboard/", ...). Existing pages stay untouched.
+  Reuse: core.views.htmx_stats, google_gmail_backup.htmx_views.htmx_gmail_progress,
+  admin_ops / reports query helpers. Import them; do not copy or edit them.
+  Cards (source of each number must be a DB query -- no invented values):
+    backup status, last successful backup (+ duration), items per source
+    (Gmail / Drive / Photos), verified count, storage used / free, recent errors
+    (humanize_error), next scheduled run (Beat, shown in TIME_ZONE), account
+    connection state, cleanup state (rules enabled / paused / last run).
+  HTMX refresh every 30s on the cards, reusing the existing htmx pattern.
+  Landing page "/" gets ONE extra link to /dashboard/ -- nothing else changes.
+  Verify: numbers equal a direct psql / manage.py shell count for 3 cards.
+
+PHASE 26 -- Per-item status labels + Backup / Browse / Cleanup navigation
+  Size: S.  Risk: low (display only).
+  New: core/labels.py -- one dict mapping existing State values to user labels:
+    DISCOVERED -> Discovered, DOWNLOADED -> Downloaded, VERIFIED -> Verified,
+    IMPORTED -> Imported, DELETE_PENDING -> Deletion pending, DELETED -> Deleted remotely,
+    plus "Safe to delete remotely" = VERIFIED with both proofs true (read the existing
+    guard, do not re-implement it), "Failed" from the existing error field.
+  Confirm the real State enums first: google_media_backup/models.py:45 and
+  google_gmail_backup/models.py:50. Use only labels whose states exist.
+  Add label chips to the dashboard tables; add a 3-link nav (Backup = /dashboard/,
+  Browse = /vault/, Cleanup = /admin/gmail/dashboard/) as an include shared by the new
+  pages only.
+  Verify: label for each real state renders; unknown state renders raw value, no crash.
+
+PHASE 27 -- Dashboard action buttons
+  Size: M.  Risk: medium -- launches jobs. Keep the surface small.
+  POST-only endpoints under /dashboard/actions/<name>/ that call .delay() on EXISTING
+  Celery tasks (find names with: grep -n "@shared_task\|@app.task" -r backend_django).
+  Actions: Gmail backup, Drive backup, Photos backup, verify files, import media,
+  retry failed, pause / resume all.
+  NOT in this phase: Execute cleanup (Phase 34 owns its confirmation flow). Preview
+  cleanup may call the existing dry-run only.
+  Guards: staff + CSRF; Redis lock per action (reuse the E4 lock helper from commit
+  cacae26) so double-clicks do not double-enqueue; return task id.
+  Pause = set a Redis / DB flag "jobs_paused" that the new buttons respect; do NOT
+  revoke running tasks or edit Beat.
+  Progress shown via existing progress endpoints; "N done / skipped / failed" from
+  RunLog. ETA only if a rate is computable, else "--".
+  Verify: click each action on a dry stack, task appears in celery logs once; second
+  click within lock window says "already running".
+
+PHASE 28 -- Browser-based OAuth
+  Size: M.  Risk: medium -- auth. CLI flow (make auth) MUST keep working.
+  Existing: config/urls.py:79 oauth_callback at /api/oauth/callback.
+  Read services_google.py auth helpers first (graphify: services_google.py hub).
+  Add /dashboard/connect/ -> builds the Google auth URL (same client secrets, same
+  scopes as the CLI), stores state in session, redirects. Extend oauth_callback to also
+  handle the session-state path; leave the existing CLI path behavior identical.
+  Pages: scope list with one-line reason per scope, connection status + token expiry,
+  Reconnect, Disconnect (deletes the stored token after confirm; never touches data).
+  Errors go through humanize_error (redirect_uri_mismatch, access_denied, invalid_grant).
+  Same token storage as today -- no storage change here (see Phase 10 item 1).
+  Do not add multi-account UI (Phases 14 / 16-20).
+  Verify: connect from browser end-to-end; then `make auth` still works; Disconnect then
+  health page shows OAuth = fail with guidance.
+
+PHASE 29 -- Setup wizard part 1
+  Size: M.  Risk: medium -- security-sensitive. Must be impossible after setup.
+  New app module core/setup/ . Route /setup/ .
+  First-run = no superuser exists AND no SetupState row with completed=True.
+  New tiny model SetupState(completed bool, step str, updated_at) -- additive migration.
+  Existing installs (a superuser already exists): wizard is never reachable, /setup/
+  redirects to /dashboard/. This is the regression guard -- test it explicitly.
+  Steps in this phase: (1) welcome + validators, (2) create local admin account.
+  Validators (reuse Phase 24 checks): DB, Redis, Celery, media write, disk space, TLS
+  reachable, OAuth client file present, redirect URI matches request host.
+  Each failing validator shows humanize_error text and a Recheck button.
+  Account creation: Django password validators, then lock the wizard step.
+  Verify: fresh DB -> wizard reachable; after admin created -> /setup/ redirects;
+  existing DB -> never reachable.
+
+PHASE 30 -- Setup wizard part 2
+  Size: M.  Risk: low-medium.
+  Steps 3-6 on top of Phase 29: choose services (Gmail / Drive / Photos) -> connect
+  Google (Phase 28 flow) -> storage location (validated writable; display only if the
+  media volume is fixed by compose) -> schedule (writes the SAME Beat entries the seed
+  uses; presets daily / weekly; time in TIME_ZONE) -> run a small test backup
+  (limit ~10 items via existing task with a limit arg; if the task has none, add an
+  optional arg defaulting to unlimited) -> "Backup is working" screen only when the
+  test items reach VERIFIED (Phase 31 definition; until then, DOWNLOADED + sha256).
+  CLI workflow stays: wizard is optional.
+  Verify: run wizard on a scratch DB with mocked Google -> completed=True, dashboard
+  loads; rerun /setup/ -> redirect.
+
+----------------------------------------------------------------
+TRACK B -- MAKE IT TRUSTWORTHY
+----------------------------------------------------------------
+
+PHASE 31 -- Verification report + success definition + integrity check
+  Size: M.  Risk: low (read-only + one new task).
+  Definition (in code + docs): an item counts as "backed up" only if state >= VERIFIED
+  (download + checksum + persisted file exists). Dashboard and wizard use this.
+  New report /dashboard/verification/: verified count, items with missing file on disk,
+  items with checksum mismatch, oldest verified, per source.
+  New Celery task task_integrity_check: samples N files (setting, default 200), re-hashes
+  vs stored sha256, records result in a new IntegrityRun table. It only READS files and
+  WRITES its own table -- never flips item state.
+  Add Beat entry weekly, gated by INTEGRITY_CHECK_ENABLED (default True is fine: it is
+  read-only).
+  Verify: corrupt one copied test file in a scratch volume -> report flags it.
+
+PHASE 32 -- Storage warnings + disk precheck + auto-pause
+  Size: S-M.  Risk: medium (can block jobs). DEFAULT ON (user decision 2026-09-26).
+  New core/storage.py: usage(), free_gb(), estimated_days_remaining (free / avg daily
+  growth from RunLog; show "--" if unknown).
+  Settings: STORAGE_WARN_PCT=85, STORAGE_PAUSE_PCT=95, STORAGE_GUARD_ENABLED=True
+  (set False to restore today's behavior).
+  Warn: dashboard + health banner. Guard (on by default): the Phase 27 buttons and a
+  wrapper check at the start of download tasks refuse to start below free-space floor.
+  Wrapper must be a pre-check that returns early with a logged reason -- no change to
+  task bodies.
+  Verify: STORAGE_PAUSE_PCT=1 in a test -> task returns "paused: low disk"; flag off ->
+  behavior identical to today. With the guard on and real disk usage below the threshold,
+  the existing tasks run exactly as before (add a test for this).
+
+PHASE 33 -- Notifications
+  Size: M.  Risk: low if failures are swallowed.
+  New core/notify.py: send(event, title, body) -> fan out to configured channels:
+  generic webhook (JSON POST), Slack + Discord (webhook URLs), SMTP email.
+  All off unless env set (NOTIFY_WEBHOOK_URL, NOTIFY_SLACK_URL, ...). A send failure
+  is logged, never raised.
+  Events wired one at a time, each a one-line call at an existing failure / result site
+  (no logic change): backup task failure (Phase 10 on_failure handler if present),
+  OAuth revoked (invalid_grant), disk low (Phase 32), no successful backup in
+  N hours (new Beat check), cleanup executed, integrity check found problems (Phase 31).
+  Rate-limit duplicates: same event key at most once per hour (Redis SETNX + TTL).
+  Verify: point webhook at a local `python -m http.server` / nc, trigger each event.
+
+PHASE 34 -- Cleanup safeguards
+  Size: M.  Risk: medium -- touches the deletion flow, so wrap, do not rewrite.
+  Read first: google_gmail_backup/services_rules.py (apply_rule), admin_views.py,
+  gmail_rule_builder, CleanupRule model (action / enabled fields).
+  Add, all opt-out-free but non-breaking:
+    - Rule gets nullable last_dry_run_at + last_dry_run_count (additive migration).
+    - New "Execute" UI path refuses until a dry run exists and is < 24h old; shows
+      "This rule will move N messages ... to Gmail Trash" (N from the dry run) and
+      requires typing the number or ticking a confirm box.
+    - Label Trash vs permanent delete wherever the action is displayed.
+    - Global pause: setting/DB flag CLEANUP_PAUSED; the run-all-enabled task and the new
+      Execute path check it and no-op with a log line.
+    - Per-rule "never delete messages with attachments" -> an extra condition appended
+      to the compiled query via the existing RuleCondition model (no compiler edits).
+  ON by default (user decision 2026-09-26): the dry-run-required + exact-count confirm
+  apply to the NEW Execute UI path. Env CLEANUP_REQUIRE_DRY_RUN=0 disables the check.
+  Existing make cleanup-run and Beat runs of already-enabled rules are NOT blocked by
+  the dry-run requirement (that would silently stop scheduled cleanup); they only
+  honor CLEANUP_PAUSED. Say so in docs.
+  Verify: Execute without dry run -> refused; with dry run -> confirm screen shows the
+  same count as the dry run; CLEANUP_PAUSED=1 -> run-all no-ops.
+
+PHASE 35 -- Cleanup undo + protect sender button
+  Size: S-M.  Risk: medium.
+  Undo: from CleanupAuditLog rows of one run, call Gmail users.messages.untrash for ids
+  still in Trash. Only works for Trash actions inside Gmail's retention window; permanent
+  deletes are shown as "not restorable". Failures reported per message, never abort.
+  Requires the audit log to hold message ids -- confirm in models.py:336 first; if it
+  does not, this phase becomes: store ids (additive) and undo applies from then on.
+  Protect: button on a message / sender row -> get_or_create ProtectedSender
+  (models.py:174). Idempotent.
+  Verify: run a rule on a test label, undo, messages back in INBOX; protect a sender,
+  rerun rule, sender's mail untouched.
+
+PHASE 36 -- Export to ZIP / TAR
+  Size: M.  Risk: low (read-only on stored files).
+  Extend google_gmail_backup/exports.py (exists) + a media export.
+  New endpoint /dashboard/export/ with format (zip|tar), scope (selection | source |
+  everything). Stream with a generator; never build the archive in memory. For large
+  scopes, run as a Celery task writing to MEDIA_ROOT/exports/ and show a download link;
+  exports/ excluded from backup discovery.
+  Gmail as .eml per message. Include a manifest.json (paths + sha256).
+  Verify: export 20 items, unzip, sha256 in manifest == sha256sum of files.
+
+PHASE 37 -- Restore to local dir + conflict handling + restore test
+  Size: M.  Risk: low (writes only to the chosen local dir).
+  New core/restore.py: restore_items(items, dest_dir, on_conflict="skip|overwrite|rename|compare").
+  compare = skip when sha256 equal, else rename. dest must be inside an allow-listed
+  root (RESTORE_ROOT setting, default MEDIA_ROOT/restores) -- reject path traversal.
+  Preserve mtime and folder structure from stored metadata where available.
+  "Can I restore a file?" button: picks a random VERIFIED item, restores it to a temp
+  dir, compares sha256, shows pass / fail, stores result in the Phase 31 IntegrityRun
+  table. Optional weekly Beat entry (off by default).
+  Restore to Gmail = Phase 14, not here. Restore to Drive / other account = backlog.
+  Verify: each conflict mode on a pre-existing file; traversal attempt ("../") rejected.
+
+PHASE 38 -- PostgreSQL backup / restore
+  Size: S.  Risk: none to app.
+  Makefile: db-backup (pg_dump -Fc via docker compose exec db, to ./backups/ with
+  timestamp), db-restore FILE=... (asks confirmation, refuses without FILE), targets
+  added to `make help`. ./backups/ into .gitignore.
+  Optional Beat task gated by DB_BACKUP_ENABLED (default False) keeping last N dumps.
+  Docs: docs/operations.md section incl. a tested restore into a scratch DB.
+  Verify: db-backup -> restore into a throwaway DB -> row counts equal.
+
+----------------------------------------------------------------
+TRACK C -- MAKE IT ROBUST
+----------------------------------------------------------------
+
+PHASE 39 -- Compose healthchecks + env-driven ports
+  Size: S.  Risk: medium (compose edit). Docker Desktop is the only engine here.
+  docker-compose.yml facts (verified 2026-09-26): web ports "0.0.0.0:8845:18444";
+  nginx "0.0.0.0:8844:80" + "0.0.0.0:8445:443"; media volume is external: true;
+  db / redis / celery have healthchecks; web and celerybeat do not.
+  Do:
+    - web healthcheck -> curl /health/json/ (Phase 24) or a plain TCP check.
+    - celerybeat healthcheck -> process check (pgrep celery) -- no schedule change.
+    - Ports become ${BIND_ADDR:-127.0.0.1}:${WEB_PORT:-8845}:18444 style variables.
+      DEFAULT BIND = 127.0.0.1 (user decision 2026-09-26, as the source doc recommends).
+      Ports stay 8845 / 8844 / 8445. To expose on the LAN: BIND_ADDR=0.0.0.0 in .env.
+      WSL mirrored networking makes 127.0.0.1 reachable from the Windows browser
+      (CLAUDE.md, verified 2026-09-22); re-test that. Document the change in
+      CHANGELOG + docs/deployment.md (anything reaching the stack over the LAN breaks
+      until BIND_ADDR is set). Update URL_INDEX.md if it lists LAN URLs.
+    - `make compose-check` = docker compose config -q.
+  Baseline first: docker info --format '{{.Name}}' must print docker-desktop.
+  Verify: `docker compose config` diff shows only the added variables, healthchecks and
+  the 127.0.0.1 bind; all containers healthy; same URL loop from WSL AND from the
+  Windows browser; BIND_ADDR=0.0.0.0 reproduces the old bindings exactly (`docker compose
+  ps` port column).
+
+PHASE 40 -- Pin uv image + .dockerignore review
+  Size: XS.  Risk: low.
+  Dockerfile:16 uses ghcr.io/astral-sh/uv:latest -> pin to the exact version currently
+  on PATH in the image (docker run --rm <image> uv --version; do not guess a tag).
+  Review .dockerignore: exclude .git, graphify-out, docs build output, .env, media,
+  backups. Do not exclude anything the build COPYs -- confirm with a full build.
+  Base image digest pinning = release builds only (Phase 47), not dev.
+  Verify: docker compose build web succeeds; image size not larger than before.
+
+PHASE 41 -- Non-root container
+  Size: M.  Risk: HIGH (volume permissions) -> land last in Track C and test on a copy.
+  DEFAULT ON (user decision 2026-09-26: best practice). Ship as ON only if the gate
+  passes; if it fails, revert (Guardrail 10) and re-plan -- do not ship a half-working ON.
+  Add USER appuser (fixed uid/gid, e.g. 10001) in Dockerfile; chown app dir; entrypoint
+  must not need root. The external `media` and `staticfiles` volumes are root-owned
+  today: provide a one-shot `make fix-perms` (docker run --rm -v media:/m alpine chown)
+  and document it; do NOT auto-chown existing data silently in the entrypoint.
+  Build ARG NONROOT (default 1) keeps an escape hatch: --build-arg NONROOT=0 gives the
+  old root image. Add an upgrade note: run `make fix-perms` once BEFORE the first start
+  of the non-root image on an existing install, and have the entrypoint fail with a clear
+  message (humanize_error text) when the media dir is not writable.
+  Verify: web / celery / beat healthy; a download writes a file; collectstatic works;
+  entrypoint migrations run.
+
+PHASE 42 -- Resumable downloads + checkpointing
+  Size: M.  Risk: medium.
+  Only for large files (> RESUME_MIN_MB, default 50). Download to <name>.part, use HTTP
+  Range on retry, atomic rename when complete, THEN existing sha256 verification runs.
+  Small files keep the current code path untouched. Stale .part files older than 7 days
+  removed by the integrity task (Phase 31), never during a running download.
+  Verify: kill the worker mid-download on a large test file, restart, file completes with
+  a correct sha256 and no duplicate DB rows.
+
+PHASE 43 -- Max concurrency + rate-limit knob
+  Size: S.  Risk: low.
+  Settings MAX_CONCURRENT_DOWNLOADS (default = today's effective value; read it from the
+  current worker config, don't guess) and GOOGLE_API_MAX_RPS. Apply as a Redis
+  semaphore / token bucket inside the new Phase 27 launchers and, only if trivial, at
+  the existing per-item download call. Exponential backoff already in Phases 10-11 --
+  do not re-implement; reuse.
+  Expose the two settings read-only on the health page.
+  Verify: set concurrency 1, enqueue 5 downloads, worker log shows serial execution.
+
+PHASE 44 -- CI vulnerability scan + SBOM
+  Size: S.  Risk: none to runtime.
+  GitHub Actions job (extend existing workflow from Phase 6): trivy fs + trivy image
+  (non-blocking at first: report only), and syft SBOM (SPDX JSON) uploaded as a build
+  artifact. Switch to failing on CRITICAL only after one clean run.
+  Verify: workflow green on a branch; SBOM artifact present.
+
+----------------------------------------------------------------
+TRACK D -- MAKE IT DISTRIBUTABLE
+----------------------------------------------------------------
+
+PHASE 45 -- README rewrite around user tasks
+  Size: S.  Risk: none (docs only). Keep the old README as docs/dev-quickstart.md.
+  Outline: Install -> Connect Google -> Choose what to back up -> First backup ->
+  Verify -> Browse -> Restore -> Schedules -> Cleanup -> Upgrade -> Back up BackDeezUp
+  itself -> Troubleshoot. Add: supported-platform matrix, minimum hardware, storage
+  estimate formula (label as estimate; inputs = current item counts and sizes from the DB,
+  not invented), what is / is not backed up, backup vs sync vs archive vs cleanup.
+  Only describe features that exist at that commit; link to phase numbers otherwise.
+  Verify: every command in the README run once on a clean clone.
+
+PHASE 46 -- Disaster recovery + upgrade guide + config reference
+  Size: S.  Risk: none.
+  docs/disaster-recovery.md (uses Phase 38 + 37), docs/upgrading.md (backup DB ->
+  pull -> migrate -> health page), docs/configuration.md gets a table generated by a
+  small script (scripts/gen_config_ref.py) that greps os.environ.get in settings.py, so
+  it cannot drift. "Common mistakes" section from troubleshoot-log entries.
+  Verify: regenerate the table, `git diff` clean on second run.
+
+PHASE 47 -- Prebuilt images + versioned releases
+  Size: M.  Risk: low (CI only).
+  GitHub Actions: on tag vX.Y.Z build + push ghcr.io/<owner>/backdeezup:<tag> and
+  :latest, base image pinned by digest for release builds, VERSION file must equal tag
+  (job fails otherwise), CHANGELOG section attached to the release.
+  docker-compose.yml gains optional `image:` override via env; `build:` stays default.
+  Verify: tag a pre-release (vX.Y.Z-rc1) on a branch; pull and run the image.
+
+PHASE 48 -- Optional Caddy HTTPS profile
+  Size: S.  Risk: low (profile is opt-in).
+  compose profile "caddy": Caddy service in front of web, automatic HTTPS from
+  DOMAIN env; default `docker compose up` unchanged (nginx path stays the default).
+  Docs: when to use Caddy vs external reverse proxy.
+  Verify: default up = same containers as before; `--profile caddy` serves on a test
+  hostname (or internal CA locally).
+
+PHASE 49 -- One-line installer + upgrade script
+  Size: M.  Risk: medium -- writes on user machines. Prints every action; asks before
+  each destructive step; supports --dry-run.
+  scripts/install.sh: checks docker + compose, downloads compose file + .env template,
+  generates secrets locally (never printed in full), starts stack, prints the wizard
+  URL. scripts/upgrade.sh: db-backup (Phase 38) -> pull -> up -> migrate -> health check
+  -> automatic instructions to roll back if health fails.
+  Verify: run on a clean VM / WSL distro; run --dry-run and confirm no writes.
+
+----------------------------------------------------------------
+USER DECISIONS (2026-09-26) -- all resolved
+----------------------------------------------------------------
+  a. Phase 39: default bind 127.0.0.1 (as recommended); BIND_ADDR=0.0.0.0 restores LAN.
+  b. Phase 41: non-root ON by default (best practice); NONROOT=0 build arg is the escape.
+  c. Phases 32 / 34: guards ON by default; each has an env off-switch.
+  d. ORDER: multi-account (Phases 14, 16-20) runs AFTER Track B (Phases 31-38). Tracks C
+     and D are not blocked by it. Phases 28-30 assume a single account; when 14 / 16-20
+     land, the wizard / OAuth pages get an "add another account" follow-up phase.

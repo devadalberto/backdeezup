@@ -231,6 +231,15 @@ class CleanupRule(models.Model):
     last_run_dry        = models.BooleanField(default=True)
     last_affected_count = models.IntegerField(default=0)
     last_dry_run_count  = models.IntegerField(default=0)
+    last_dry_run_at     = models.DateTimeField(
+        blank=True, null=True,
+        help_text="Phase 34: Execute requires a dry run newer than this timestamp.",
+    )
+
+    never_delete_with_attachments = models.BooleanField(
+        default=False,
+        help_text="Phase 34: skip any message with an attachment, regardless of the query.",
+    )
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True,
@@ -369,6 +378,10 @@ class CleanupAuditLog(models.Model):
     finished_at = models.DateTimeField(blank=True, null=True)
     status      = models.CharField(max_length=20, default="OK")
     error_text  = models.TextField(blank=True, default="")
+    undone_at   = models.DateTimeField(
+        blank=True, null=True,
+        help_text="Phase 35: set once this Trash run has been undone. Prevents double-undo.",
+    )
 
     def __str__(self) -> str:
         prefix = "[DRY]" if self.dry_run else "[LIVE]"

@@ -59,6 +59,7 @@ services:
     volumes:
       - media:/app/media
       - ./secrets:/app/backend_django/secrets:rw
+      - ./backups:/app/backups
     depends_on:
       db:
         condition: service_healthy

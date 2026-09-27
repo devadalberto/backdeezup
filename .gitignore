@@ -8,6 +8,7 @@ __pycache__/
 secrets/*.json
 media/
 staticfiles/
+backups/
 site/
 dist/
 .DS_Store

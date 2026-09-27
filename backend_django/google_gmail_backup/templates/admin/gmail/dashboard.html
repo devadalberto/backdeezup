@@ -119,19 +119,45 @@ tbody td b{color:var(--gx);}
 <div class="card">
   <b>Top Senders</b>
   <table style="margin-top:10px">
-    <thead><tr><th>Sender</th><th>Messages</th><th>Est. Size</th></tr></thead>
+    <thead><tr><th>Sender</th><th>Messages</th><th>Est. Size</th><th>Protect</th></tr></thead>
     <tbody>
       {% for s in top_senders %}
       <tr>
         <td>{{ s.from_address }}</td>
         <td><b>{{ s.n }}</b></td>
         <td>{{ s.bytes|default:0|filesizeformat }}</td>
+        <td><button class="btn btn-sm" onclick="protectSender('{{ s.from_address|escapejs }}', this)">Protect</button></td>
       </tr>
-      {% empty %}<tr><td colspan="3" style="color:var(--gd);padding:12px">No data yet</td></tr>
+      {% empty %}<tr><td colspan="4" style="color:var(--gd);padding:12px">No data yet</td></tr>
       {% endfor %}
     </tbody>
   </table>
+  <p style="font-size:11px;color:var(--gd);margin-top:8px">
+    Protect = never trashed/starred/labeled/archived by any cleanup rule. Idempotent -- safe to click twice.
+  </p>
 </div>
+
+<script>
+function getCookie(name) {
+  const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return v ? v.pop() : '';
+}
+async function protectSender(email, btn) {
+  btn.disabled = true;
+  const original = btn.textContent;
+  try {
+    const res = await fetch('/api/gmail/protected-senders/protect?email=' + encodeURIComponent(email), {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') },
+    });
+    btn.textContent = res.ok ? 'Protected' : 'Failed';
+  } catch (e) {
+    btn.textContent = 'Failed';
+  } finally {
+    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 2000);
+  }
+}
+</script>
 
 <!-- ── Actions ──────────────────────────────────────────────────────────── -->
 <div style="margin:16px 0;display:flex;gap:10px;flex-wrap:wrap">

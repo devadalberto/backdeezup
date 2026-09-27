@@ -246,20 +246,28 @@ li { margin: 3px 0; }
       <td>
         <b>{{ rule.name }}</b><br>
         <span style="color:var(--gd);font-size:11px;font-family:monospace">{{ rule.gmail_query|truncatechars:80 }}</span>
+        {% if rule.never_delete_with_attachments %}<br><span style="color:var(--gt);font-size:11px">&#128206; never deletes messages with attachments</span>{% endif %}
       </td>
       <td style="text-align:center">
         {% if rule.enabled %}<span class="badge-on">ON</span>{% else %}<span class="badge-off">OFF</span>{% endif %}
       </td>
-      <td style="text-align:center"><code style="color:var(--gt)">{{ rule.action }}</code></td>
+      <td style="text-align:center">
+        {% if rule.action == "trash" %}<code style="color:var(--gt)">Trash</code><br><span style="font-size:10px;color:var(--gd)">recoverable</span>
+        {% elif rule.action == "permanent_delete" %}<code style="color:var(--gr)">Permanent Delete</code><br><span style="font-size:10px;color:var(--gr)">NOT recoverable</span>
+        {% else %}<code style="color:var(--gt)">{{ rule.action }}</code>{% endif %}
+      </td>
       <td style="text-align:center">{{ rule.min_age_days }}d</td>
-      <td style="text-align:center">{{ rule.last_dry_run_count }} msgs</td>
+      <td style="text-align:center">
+        {{ rule.last_dry_run_count }} msgs
+        {% if rule.last_dry_run_at %}<br><span style="font-size:10px;color:var(--gd)">{{ rule.last_dry_run_at|timesince }} ago</span>{% endif %}
+      </td>
       <td style="text-align:center">
         {% if rule.last_run_at %}{{ rule.last_run_at|date:"M d H:i" }}<br><span style="color:var(--gd);font-size:11px">{{ rule.last_affected_count }} affected</span>{% else %}<span style="color:var(--gd)">never</span>{% endif %}
       </td>
       <td>
         <button class="btn btn-sm btn-warn" onclick="call('gmail/rules/{{ rule.id }}/dry-run', 'POST', this)">Dry-run</button>
         <button class="btn btn-sm btn-danger" style="margin-left:4px"
-          onclick="execRule({{ rule.id }}, '{{ rule.name|escapejs }}', '{{ rule.action }}', this)">Execute</button>
+          onclick="execRule({{ rule.id }}, '{{ rule.name|escapejs }}', '{{ rule.action }}', {{ rule.last_dry_run_count }}, this)">Execute</button>
       </td>
     </tr>
     {% empty %}
@@ -325,14 +333,18 @@ li { margin: 3px 0; }
     <thead>
       <tr>
         <th>Rule</th><th>Action</th><th>Dry-run</th><th>Affected</th>
-        <th>Actor</th><th>Status</th><th>Started</th><th>Duration</th>
+        <th>Actor</th><th>Status</th><th>Started</th><th>Duration</th><th>Undo</th>
       </tr>
     </thead>
     <tbody id="auditBody" hx-get="/htmx/gmail/audit-log/" hx-trigger="load, every 15s" hx-swap="innerHTML">
     {% for entry in audit_log %}
     <tr>
       <td>{{ entry.rule_name }}</td>
-      <td><code>{{ entry.action }}</code></td>
+      <td>
+        {% if entry.action == "trash" %}<code style="color:var(--gt)">Trash</code>
+        {% elif entry.action == "permanent_delete" %}<code style="color:var(--gr)">Permanent Delete</code>
+        {% else %}<code>{{ entry.action }}</code>{% endif %}
+      </td>
       <td>{% if entry.dry_run %}<span class="tag tag-dry">dry</span>{% else %}<b>REAL</b>{% endif %}</td>
       <td>{{ entry.affected_count }}</td>
       <td>{{ entry.actor_label }}</td>
@@ -341,15 +353,23 @@ li { margin: 3px 0; }
           <span class="tag tag-ok">{{ entry.status }}</span>
         {% elif entry.status == "ERROR" %}
           <span class="tag tag-err">ERROR</span>
+        {% elif entry.status == "PAUSED" %}
+          <span class="tag" style="background:#2a2000;color:var(--gy);border:1px solid var(--gy);">PAUSED</span>
         {% else %}
           <span class="tag">{{ entry.status }}</span>
         {% endif %}
       </td>
       <td>{{ entry.started_at|date:"M d H:i:s" }}</td>
       <td>{% if entry.finished_at %}{{ entry.started_at|timesince:entry.finished_at }}{% else %}—{% endif %}</td>
+      <td>
+        {% if entry.action == "trash" and not entry.dry_run and not entry.undone_at %}
+        <button class="btn btn-sm btn-warn" onclick="undoAuditLog({{ entry.id }}, this)">Undo</button>
+        {% elif entry.undone_at %}<span style="color:var(--gd);font-size:11px">undone</span>
+        {% else %}—{% endif %}
+      </td>
     </tr>
     {% empty %}
-    <tr><td colspan="8" style="color:#888;padding:8px">No audit entries yet.</td></tr>
+    <tr><td colspan="9" style="color:#888;padding:8px">No audit entries yet.</td></tr>
     {% endfor %}
     </tbody>
   </table>
@@ -403,9 +423,25 @@ function callLimit(path, btn) {
   call(url, 'POST', btn);
 }
 
-function execRule(ruleId, ruleName, action, btn) {
-  if (!confirm('Execute rule: ' + ruleName + '?\nThis will ' + action + ' matching emails for real.')) return;
-  call('gmail/rules/' + ruleId + '/execute', 'POST', btn);
+function undoAuditLog(auditId, btn) {
+  if (!confirm('Undo this run? Restores any of its messages still in Gmail Trash.\n'
+    + '(Only works inside Gmail\'s retention window; permanent deletes cannot be restored.)')) return;
+  call('gmail/audit-log/' + auditId + '/undo', 'POST', btn);
+}
+
+function execRule(ruleId, ruleName, action, dryRunCount, btn) {
+  const actionWord = action === 'trash' ? 'move to Gmail Trash (recoverable)' : action;
+  const typed = prompt(
+    'Execute rule: ' + ruleName + '?\n\n'
+    + 'This will ' + actionWord + ' ' + dryRunCount + ' message(s) — the count from the last dry run.\n\n'
+    + 'Type ' + dryRunCount + ' to confirm:'
+  );
+  if (typed === null) return;
+  if (String(typed).trim() !== String(dryRunCount)) {
+    alert('Count did not match (' + dryRunCount + ') — execution cancelled.');
+    return;
+  }
+  call('gmail/rules/' + ruleId + '/execute?confirm_count=' + encodeURIComponent(typed), 'POST', btn);
 }
 
 let _confirmCallback = null;
@@ -429,16 +465,24 @@ async function refreshAudit() {
   const data = await res.json();
   const tbody = document.getElementById('auditBody');
   if (!data.length) return;
+  const actionLabel = a => a === 'trash'
+    ? '<code style="color:var(--gt)">Trash</code>'
+    : a === 'permanent_delete'
+      ? '<code style="color:var(--gr)">Permanent Delete</code>'
+      : '<code style="color:var(--gt)">' + a + '</code>';
   tbody.innerHTML = data.map(e => `
     <tr>
       <td>${e.rule}</td>
-      <td><code style="color:var(--gt)">${e.action}</code></td>
+      <td>${actionLabel(e.action)}</td>
       <td>${e.dry_run ? '<span class="tag tag-dry">dry</span>' : '<b>REAL</b>'}</td>
       <td>${e.affected}</td>
       <td>${e.actor}</td>
       <td><span class="tag ${e.status==='OK'||e.status==='DRY_RUN'?'tag-ok':e.status==='ERROR'?'tag-err':''}">${e.status}</span></td>
       <td>${new Date(e.started_at).toLocaleString()}</td>
       <td>—</td>
+      <td>${e.action === 'trash' && !e.dry_run && !e.undone_at
+        ? '<button class="btn btn-sm btn-warn" onclick="undoAuditLog(' + e.id + ', this)">Undo</button>'
+        : e.undone_at ? '<span style="color:var(--gd);font-size:11px">undone</span>' : '—'}</td>
     </tr>`).join('');
 }
 

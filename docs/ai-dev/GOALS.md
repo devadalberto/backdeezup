@@ -127,6 +127,61 @@ PHASE 21 -- FOSS multi-provider release
   Tag v2.0.0.
 
 ================================================================
+V2 UX + TRUST UPGRADES (source: propmt_v2_upgrades_suggested, repo root)
+Goal: appliance-grade experience for non-technical users.
+Rules for EVERY phase below (full text: GOALS_TODOS.md "V2 GUARDRAILS"):
+  additive only; new behavior behind env/setting with default = today's behavior;
+  no state-machine / two-proof-deletion changes; additive migrations only;
+  one phase = one commit; make test-full green + baseline URL codes unchanged.
+  Approved exceptions (2026-09-26, each with an env off-switch): 39 bind 127.0.0.1,
+  41 non-root ON, 32 storage guard ON, 34 cleanup safeguards ON.
+ORDER: Tracks A, B first; multi-account Phases 14, 16-20 run AFTER Track B (user decision).
+Already covered elsewhere (do NOT duplicate): multi-account = Phases 14, 16-20;
+  restore-to-Gmail = 14; Gmail push = 15; Redis locks / backoff / rate limit = 10-11;
+  container limits = 12.
+================================================================
+
+TRACK A -- Make it usable
+PHASE 22 -- TIME_ZONE from env (default unchanged America/Los_Angeles)
+PHASE 23 -- Human-readable error mapper (utility only, no task changes)
+PHASE 24 -- System health page /health/ (read-only)
+PHASE 25 -- Unified dashboard /dashboard/ (read-only, reuses htmx_stats + progress)
+PHASE 26 -- Per-item status labels + Backup / Browse / Cleanup nav grouping
+PHASE 27 -- Dashboard action buttons (enqueue existing Celery tasks)
+PHASE 28 -- Browser-based OAuth (start, callback, scopes, reconnect, disconnect)
+PHASE 29 -- Setup wizard part 1: first-run detect, admin account, validators
+PHASE 30 -- Setup wizard part 2: services, storage, schedule, test backup
+
+TRACK B -- Make it trustworthy
+PHASE 31 -- Verification report + "backed up = VERIFIED" + scheduled integrity check
+PHASE 32 -- Storage warnings + disk precheck + auto-pause (guard ON by default)
+PHASE 33 -- Notifications (webhook / email / Slack / Discord, off by default)
+PHASE 34 -- Cleanup safeguards (required dry run, exact-count confirm, global pause)
+PHASE 35 -- Cleanup undo (untrash) + "protect this sender" button
+PHASE 36 -- Export to ZIP / TAR
+PHASE 37 -- Restore to local dir + conflict handling + "Can I restore?" test
+PHASE 38 -- PostgreSQL backup / restore targets + docs
+
+TRACK C -- Make it robust
+PHASE 39 -- Compose: web + beat healthchecks, bind 127.0.0.1 default (BIND_ADDR), config check
+PHASE 40 -- Pin uv image + .dockerignore review
+PHASE 41 -- Non-root container user (ON by default)
+PHASE 42 -- Resumable downloads + checkpointing
+PHASE 43 -- Max-concurrency setting + per-provider rate-limit knob
+PHASE 44 -- CI: vulnerability scan + SBOM
+
+TRACK D -- Make it distributable (docs first, packaging last)
+PHASE 45 -- README rewrite around user tasks + platform / hardware matrix
+PHASE 46 -- Disaster-recovery + upgrade guide + generated config reference
+PHASE 47 -- Prebuilt images + versioned release workflow
+PHASE 48 -- Optional Caddy HTTPS compose profile
+PHASE 49 -- One-line installer + upgrade script
+
+NOT PHASED (backlog, needs a user decision first): restore to a different Google
+account, restore into Drive, per-rule cleanup schedules, NAS packages, animated
+demos, sample-Google-data test install, SBOM-signed releases.
+
+================================================================
 TOOLS
   make preflight          -- ALWAYS run first
   make test-full          -- lint + tests (before every PR/merge)

@@ -408,7 +408,9 @@ def list_rules(request):
             "gmail_query": r.gmail_query, "min_age_days": r.min_age_days,
             "enabled": r.enabled, "last_run_at": r.last_run_at,
             "last_dry_run_count": r.last_dry_run_count,
+            "last_dry_run_at": r.last_dry_run_at,
             "last_affected_count": r.last_affected_count,
+            "never_delete_with_attachments": r.never_delete_with_attachments,
         }
         for r in rules
     ]
@@ -429,10 +431,15 @@ def rule_dry_run(request, rule_id: int):
 
 @gmail_api.post("/rules/{rule_id}/execute")
 @ratelimit(key="user", rate="10/h", block=True)
-def rule_execute(request, rule_id: int):
+def rule_execute(request, rule_id: int, confirm_count: int = None):
+    """Phase 34: refuses without a dry run < 24h old whose count matches confirm_count."""
     from .models import CleanupRule
-    from .services_rules import apply_rule
+    from .services_rules import apply_rule, dry_run_confirmation_error
     rule = CleanupRule.objects.get(id=rule_id)
+    error = dry_run_confirmation_error(rule, confirm_count)
+    if error:
+        from django.http import JsonResponse
+        return JsonResponse({"error": error, "last_dry_run_count": rule.last_dry_run_count}, status=400)
     audit = apply_rule(rule, dry_run=False, actor_label="api")
     return {
         "rule": rule.name, "dry_run": False,
@@ -459,6 +466,25 @@ def apply_protected_senders(request):
     return {"affected": audit.affected_count, "status": audit.status}
 
 
+@gmail_api.post("/protected-senders/protect")
+def protect_sender_endpoint(request, email: str, label_to_apply: str = "", star: bool = False, note: str = ""):
+    """Phase 35: protect a sender from any Trash/Star/Label/Archive rule. Idempotent."""
+    from .services_rules import protect_sender
+    sender = protect_sender(email, label_to_apply=label_to_apply, star=star, note=note)
+    return {"email": sender.email, "protected": True}
+
+
+@gmail_api.post("/audit-log/{audit_id}/undo")
+@ratelimit(key="user", rate="10/h", block=True)
+def undo_audit_log_endpoint(request, audit_id: int):
+    """Phase 35: untrash the messages a Trash run affected, per the audit log's stored ids."""
+    from .models import CleanupAuditLog
+    from .services_rules import undo_audit_log
+    audit = CleanupAuditLog.objects.get(id=audit_id)
+    result = undo_audit_log(audit, actor_label="api")
+    return result
+
+
 @gmail_api.get("/audit-log")
 def get_audit_log(request, limit: int = 50):
     from .models import CleanupAuditLog
@@ -469,6 +495,7 @@ def get_audit_log(request, limit: int = 50):
             "dry_run": a.dry_run, "affected": a.affected_count,
             "status": a.status, "actor": a.actor_label,
             "started_at": str(a.started_at), "finished_at": str(a.finished_at),
+            "undone_at": str(a.undone_at) if a.undone_at else None,
         }
         for a in logs
     ]

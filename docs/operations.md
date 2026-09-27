@@ -151,6 +151,61 @@ make celery-logs     # tail worker + beat logs
 
 ---
 
+## Database Backup / Restore
+
+### Back up
+```bash
+make db-backup
+```
+Runs `pg_dump -Fc` inside the `db` container and writes a timestamped custom-format
+dump to `./backups/backdeezup-<timestamp>.dump` on the host (gitignored). Safe to
+run anytime — it only reads the database.
+
+### Restore
+```bash
+make db-restore FILE=backups/backdeezup-20260101-000000.dump
+```
+Asks for a typed `yes` confirmation, then runs `pg_restore --clean --if-exists`
+inside the `db` container against the **currently running** database — this
+drops and recreates every object the dump contains. Refuses to run without
+`FILE=` or if that file doesn't exist. There is no separate "restore into a
+throwaway DB" target: point a *second*, disposable Postgres instance's
+`DATABASE_URL` at the dump instead if you want to inspect it without touching
+the live database (see "Tested restore" below).
+
+### Optional weekly auto-backup + pruning
+Off by default. Set in `.env`:
+```bash
+DB_BACKUP_ENABLED=1        # turns on the weekly Beat task (Sun 04:00 UTC)
+DB_BACKUP_KEEP_LAST=14     # dumps kept before older ones are pruned
+```
+This runs `pg_dump` from inside the `celery` worker container (against
+`DATABASE_URL`, into the same `./backups/` bind mount `make db-backup` uses) and
+then deletes everything past the newest `DB_BACKUP_KEEP_LAST` dumps. It shares
+the exact naming scheme (`backdeezup-<timestamp>.dump`) and directory with
+`make db-backup`, so manual and automatic dumps are pruned together as one set.
+This flag does not affect `make db-backup` / `make db-restore`, which always work.
+
+### Tested restore (do this at least once per install)
+1. `make db-backup` to produce a fresh dump.
+2. Spin up a throwaway Postgres container against a scratch database, e.g.:
+   ```bash
+   docker run --rm -d --name backdeezup-restore-test \
+     -e POSTGRES_PASSWORD=scratch -e POSTGRES_DB=scratch postgres:16
+   docker exec -i backdeezup-restore-test pg_restore -U postgres -d scratch \
+     < backups/backdeezup-<timestamp>.dump
+   ```
+3. Compare row counts against the live database for a few key tables, e.g.:
+   ```bash
+   docker exec -i backdeezup-restore-test psql -U postgres -d scratch -c \
+     "select count(*) from google_gmail_backup_gmailmessage;"
+   docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c \
+     "select count(*) from google_gmail_backup_gmailmessage;"'
+   ```
+   Counts should match. `docker rm -f backdeezup-restore-test` when done.
+
+---
+
 ## Troubleshooting
 
 | Symptom | Check | Fix |

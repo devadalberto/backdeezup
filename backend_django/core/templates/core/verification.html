@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verification — BackDeezUp</title>
+<style>
+:root{--g0:#000;--g1:#070707;--ga:#002e0b;--gb:#0a1a0a;--gx:#00ff41;--gm:#00c832;--gd:#008f1f;--fw:#b8ffb8;--gy:#ffb300;--gr:#ff3131;--muted:#3a5c3a;}
+*{box-sizing:border-box;}
+body{background:var(--g0);color:var(--fw);font-family:'Courier New',monospace;margin:0;padding:24px;}
+a{color:var(--gm);text-decoration:none;} a:hover{color:var(--gx);}
+h1{color:var(--gx);letter-spacing:2px;margin:0 0 4px;}
+.sub{color:var(--muted);font-size:12px;margin-bottom:20px;}
+.section-label{color:var(--gd);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}
+.card{background:var(--g1);border:1px solid var(--ga);border-radius:4px;padding:16px;}
+.card:hover{border-color:var(--gd);}
+.stat-value{font-size:2rem;font-weight:bold;color:var(--gx);text-shadow:0 0 10px rgba(0,255,65,.3);}
+.stat-value.warn{color:var(--gy);}
+.stat-value.fail{color:var(--gr);}
+.stat-label{font-size:10px;color:var(--gd);letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
+.small{font-size:11px;color:var(--muted);margin-top:4px;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{background:var(--gb);color:var(--gx);text-align:left;padding:6px 8px;letter-spacing:1px;}
+td{padding:6px 8px;border-bottom:1px solid var(--ga);vertical-align:top;}
+.chip-fail{color:var(--gr);}
+.subnav{display:flex;gap:8px;margin:0 0 16px;}
+.subnav a{border:1px solid var(--ga);border-radius:3px;padding:5px 14px;font-size:12px;letter-spacing:1px;color:var(--gm);}
+.subnav a.active{border-color:var(--gx);color:var(--gx);}
+</style>
+</head>
+<body>
+{% include 'core/partials/nav.html' %}
+<h1>VERIFICATION REPORT</h1>
+<div class="sub">Read-only &middot; a "backed up" item has passed VERIFIED (download + checksum + file on disk) &middot;
+  <a href="{% url 'dashboard' %}">Dashboard</a> &middot; generated {{ generated_at|date:"M d H:i" }}</div>
+
+<div class="section-label">&#9608; Backed up</div>
+<div class="grid">
+  <div class="card">
+    <div class="stat-label">Total backed up</div>
+    <div class="stat-value">{{ total_backed_up }}</div>
+    <div class="small">Drive {{ drive.backed_up }} &middot; Gmail {{ gmail.backed_up }}</div>
+  </div>
+  <div class="card">
+    <div class="stat-label">Missing on disk</div>
+    <div class="stat-value{% if total_missing_on_disk %} fail{% endif %}">{{ total_missing_on_disk }}</div>
+    <div class="small">Drive {{ drive.missing_on_disk }} &middot; Gmail {{ gmail.missing_on_disk }}</div>
+  </div>
+  <div class="card">
+    <div class="stat-label">Oldest verified &middot; Drive</div>
+    <div class="stat-value" style="font-size:1.3rem;">{% if drive.oldest_verified %}{{ drive.oldest_verified|date:"M d, Y" }}{% else %}&#8212;{% endif %}</div>
+  </div>
+  <div class="card">
+    <div class="stat-label">Oldest verified &middot; Gmail</div>
+    <div class="stat-value" style="font-size:1.3rem;">{% if gmail.oldest_verified %}{{ gmail.oldest_verified|date:"M d, Y" }}{% else %}&#8212;{% endif %}</div>
+  </div>
+</div>
+
+<div class="section-label">&#9608; Latest integrity check (sampled re-hash)</div>
+<div class="card">
+  {% if latest_integrity_run %}
+    <div class="small" style="color:var(--fw)">
+      Started {{ latest_integrity_run.started_at|date:"M d H:i" }}
+      {% if latest_integrity_run.finished_at %} &middot; finished {{ latest_integrity_run.finished_at|date:"M d H:i" }}{% endif %}
+      &middot; sampled {{ latest_integrity_run.sampled }}
+    </div>
+    <div class="small" style="color:var(--fw);margin-top:6px;">
+      OK {{ latest_integrity_run.ok }} &middot; Missing {{ latest_integrity_run.missing }} &middot; Mismatched {{ latest_integrity_run.mismatched }}
+    </div>
+    {% if latest_integrity_run.details %}
+      <table style="margin-top:10px;">
+        <thead><tr><th>Source</th><th>ID</th><th>Path</th><th>Issue</th></tr></thead>
+        <tbody>
+        {% for d in latest_integrity_run.details %}
+          <tr><td>{{ d.source }}</td><td>{{ d.id }}</td><td>{{ d.path|truncatechars:60 }}</td><td class="chip-fail">{{ d.issue }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  {% else %}
+    <div class="small">No integrity check has run yet.</div>
+  {% endif %}
+</div>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connect Google account — BackDeezUp</title>
+<style>
+:root{--g0:#000;--g1:#070707;--ga:#002e0b;--gb:#0a1a0a;--gx:#00ff41;--gm:#00c832;--gd:#008f1f;--fw:#b8ffb8;--gy:#ffb300;--gr:#ff3131;--muted:#3a5c3a;}
+body{background:var(--g0);color:var(--fw);font-family:'Courier New',monospace;margin:0;padding:24px;max-width:760px;}
+a{color:var(--gm);text-decoration:none;} a:hover{color:var(--gx);}
+h1{color:var(--gx);letter-spacing:2px;margin:0 0 4px;}
+.sub{color:var(--muted);font-size:12px;margin-bottom:20px;}
+.card{background:var(--g1);border:1px solid var(--ga);border-radius:4px;padding:16px;margin-bottom:16px;}
+.badge{display:inline-block;padding:2px 10px;border-radius:3px;font-weight:bold;color:#000;}
+.ok{background:var(--gx);} .warn{background:var(--gy);} .fail{background:var(--gr);}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{background:var(--gb);color:var(--gx);text-align:left;padding:6px 8px;}
+td{padding:6px 8px;border-bottom:1px solid var(--ga);}
+.msg{margin-bottom:16px;padding:10px 14px;border-radius:4px;font-size:13px;}
+.msg-ok{background:rgba(0,255,65,.08);border:1px solid var(--gd);color:var(--gx);}
+.msg-fail{background:rgba(255,49,49,.08);border:1px solid var(--gr);color:var(--gr);}
+button{background:var(--g1);color:var(--gm);border:1px solid var(--gd);border-radius:3px;padding:8px 16px;font-family:inherit;font-size:12px;letter-spacing:1px;cursor:pointer;}
+button:hover{color:var(--gx);border-color:var(--gx);}
+button.danger:hover{color:var(--gr);border-color:var(--gr);}
+.subnav{display:flex;gap:8px;margin:0 0 16px;}
+.subnav a{border:1px solid var(--ga);border-radius:3px;padding:5px 14px;font-size:12px;letter-spacing:1px;color:var(--gm);}
+.subnav a.active{border-color:var(--gx);color:var(--gx);}
+</style>
+</head>
+<body>
+{% include 'core/partials/nav.html' %}
+<h1>CONNECT GOOGLE ACCOUNT</h1>
+<div class="sub"><a href="{% url 'dashboard' %}">Back to dashboard</a></div>
+
+{% if result %}
+<div class="msg {% if result.ok %}msg-ok{% else %}msg-fail{% endif %}">{{ result.message }}</div>
+{% endif %}
+
+<div class="card">
+  <div>Status: <span class="badge {{ connection.status }}">{{ connection.status|upper }}</span></div>
+  <div style="margin-top:6px;font-size:13px;">{{ connection.detail }}</div>
+  {% if connection.scopes %}
+  <div style="margin-top:10px;font-size:11px;color:var(--muted);">Granted scopes:</div>
+  <ul style="font-size:11px;margin:4px 0 0 18px;">
+    {% for s in connection.scopes %}<li>{{ s }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div style="font-size:11px;color:var(--gd);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Permissions this app will request</div>
+  <table>
+    <thead><tr><th>Scope</th><th>Why</th></tr></thead>
+    <tbody>
+    {% for s in scopes %}
+      <tr><td>{{ s.scope }}</td><td>{{ s.reason }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card" style="display:flex;gap:10px;">
+  <form method="post" action="{% url 'dashboard_connect_start' %}">
+    {% csrf_token %}
+    <button type="submit">{% if connection.status == 'ok' %}Reconnect{% else %}Connect Google account{% endif %}</button>
+  </form>
+  {% if connection.status != 'fail' %}
+  <form method="post" action="{% url 'dashboard_disconnect' %}" onsubmit="return confirm('Disconnect the Google account? Backed-up data is never touched, but backups will stop until you reconnect.');">
+    {% csrf_token %}
+    <button type="submit" class="danger">Disconnect</button>
+  </form>
+  {% endif %}
+</div>
+</body>
+</html>

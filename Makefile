@@ -17,6 +17,7 @@ DJ    := backend_django/manage.py
         progress \
         sync-download sync-import sync-verify sync-mark-delete sync-commit-delete sync-run \
         lint test test-integration test-full test-cov \
+        db-backup db-restore \
         wsl-proxy
 
 # ── Pre-flight checks ─────────────────────────────────────────────────────────
@@ -82,6 +83,10 @@ help:
 	@echo "    make gmail-loop         Loop download+verify until queue empty (LIMIT=$(LIMIT))"
 	@echo "    make gmail-reconcile    Reconcile: check soft-deleted messages against Gmail"
 	@echo "    make gmail-purge-expired  Purge expired soft-deletes (past retention window)"
+	@echo ""
+	@echo "  Database"
+	@echo "    make db-backup          pg_dump the db container to ./backups/<timestamp>.dump"
+	@echo "    make db-restore FILE=x  Restore ./backups/x into the running db (asks confirmation)"
 	@echo ""
 	@echo "  Local dev (uv)"
 	@echo "    make run                Django dev server on :8844"
@@ -230,6 +235,22 @@ check:
 
 fix-user-migration:
 	docker compose exec web python manage.py migrate accounts
+
+# ── Database backup / restore (Phase 38) ──────────────────────────────────────
+db-backup:
+	@mkdir -p backups
+	@TS=$$(date +%Y%m%d-%H%M%S); \
+	FILE=backups/backdeezup-$$TS.dump; \
+	docker compose exec -T db sh -c 'pg_dump -Fc -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"' > $$FILE; \
+	echo "Backup written to $$FILE ($$(du -h $$FILE | cut -f1))"
+
+db-restore:
+	@test -n "$(FILE)" || { echo "FAIL: FILE=... required, e.g. make db-restore FILE=backups/backdeezup-20260101-000000.dump"; exit 1; }
+	@test -f "$(FILE)" || { echo "FAIL: $(FILE) not found"; exit 1; }
+	@echo "This will DROP and recreate objects in the running database from $(FILE)."
+	@read -p "Type 'yes' to continue: " CONFIRM; [ "$$CONFIRM" = "yes" ] || { echo "Aborted."; exit 1; }
+	docker compose exec -T db sh -c 'pg_restore -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" --clean --if-exists' < $(FILE)
+	@echo "Restore complete."
 
 # ── Drive / Photos pipeline ───────────────────────────────────────────────────
 HOST  ?= http://localhost:8844

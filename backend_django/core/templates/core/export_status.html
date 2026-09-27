@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Export — BackDeezUp</title>
+{% if job and job.status != 'DONE' and job.status != 'ERROR' %}<meta http-equiv="refresh" content="5">{% endif %}
+<style>
+:root{--g0:#000;--g1:#070707;--ga:#002e0b;--gx:#00ff41;--gm:#00c832;--gd:#008f1f;--fw:#b8ffb8;--gy:#ffb300;--gr:#ff3131;--muted:#3a5c3a;}
+*{box-sizing:border-box;}
+body{background:var(--g0);color:var(--fw);font-family:'Courier New',monospace;margin:0;padding:24px;}
+a{color:var(--gm);text-decoration:none;} a:hover{color:var(--gx);}
+h1{color:var(--gx);letter-spacing:2px;margin:0 0 4px;}
+.card{background:var(--g1);border:1px solid var(--ga);border-radius:4px;padding:20px;max-width:560px;margin-top:16px;}
+.msg-ok{color:var(--gx);} .msg-err{color:var(--gr);} .small{color:var(--muted);font-size:12px;}
+</style>
+</head>
+<body>
+<h1>EXPORT</h1>
+<div class="card">
+{% if error %}
+  <span class="msg-err">{{ error }}</span>
+{% elif job %}
+  <p>Job #{{ job.id }} &mdash; scope <b>{{ job.scope }}</b>{% if job.source %} ({{ job.source }}){% endif %},
+     format <b>{{ job.format }}</b>, {{ job.item_count }} item(s).</p>
+  <p>Status: <b class="{% if job.status == 'DONE' %}msg-ok{% elif job.status == 'ERROR' %}msg-err{% endif %}">{{ job.status }}</b></p>
+  {% if job.status == 'DONE' %}
+    <p><a href="/dashboard/export/{{ job.id }}/?download=1">&#9654; Download archive</a></p>
+  {% elif job.status == 'ERROR' %}
+    <p class="small">{{ job.error }}</p>
+  {% else %}
+    <p class="small">Running in the background &mdash; this page refreshes every 5s.</p>
+  {% endif %}
+{% endif %}
+</div>
+<p style="margin-top:16px"><a href="/dashboard/">&larr; Back to dashboard</a></p>
+</body>
+</html>

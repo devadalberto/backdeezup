@@ -7,6 +7,8 @@ import random
 
 from celery import shared_task
 
+from core.storage import storage_guard
+
 from .schemas import snapshot_from_message
 
 log = logging.getLogger(__name__)
@@ -53,6 +55,15 @@ def _record_task_failure(task_name: str, exc: Exception) -> None:
     try:
         import sentry_sdk
         sentry_sdk.capture_exception(exc)
+    except Exception:
+        pass
+    try:
+        from core.errors import humanize_error
+        from core import notify
+        info = humanize_error(exc)
+        if info["code"] == "invalid_grant":
+            notify.send("oauth_revoked", "Google access was revoked or expired", info["hint"])
+        notify.send("backup_task_failure", f"Backup task '{task_name}' failed", f"{info['title']} -- {info['hint']}")
     except Exception:
         pass
 
@@ -221,6 +232,7 @@ def task_run_cleanup_rules(self):
 
 
 @shared_task(name="google_gmail_backup.tasks.task_gmail_download_batch")
+@storage_guard
 def task_gmail_download_batch(limit: int = 500, workers: int = 10):
     """Trigger a download batch — useful for on-demand pipeline from web UI."""
     import subprocess

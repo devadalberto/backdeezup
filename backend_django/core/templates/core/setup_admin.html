@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Setup — BackDeezUp</title>
+<style>
+:root{--g0:#000;--g1:#070707;--ga:#002e0b;--gx:#00ff41;--gm:#00c832;--gd:#008f1f;--fw:#b8ffb8;--gr:#ff3131;--muted:#3a5c3a;}
+body{background:var(--g0);color:var(--fw);font-family:'Courier New',monospace;margin:0;padding:24px;max-width:480px;}
+h1{color:var(--gx);letter-spacing:2px;margin:0 0 4px;}
+.sub{color:var(--muted);font-size:12px;margin-bottom:20px;}
+label{display:block;font-size:12px;color:var(--gd);letter-spacing:1px;text-transform:uppercase;margin:14px 0 4px;}
+input{width:100%;background:var(--g1);border:1px solid var(--ga);color:var(--fw);padding:8px 10px;font-family:inherit;font-size:13px;border-radius:3px;}
+input:focus{outline:none;border-color:var(--gx);}
+.errorlist{color:var(--gr);font-size:12px;margin:4px 0 0;padding:0;list-style:none;}
+button{background:var(--g1);color:var(--gm);border:1px solid var(--gd);border-radius:3px;padding:8px 16px;font-family:inherit;font-size:12px;letter-spacing:1px;cursor:pointer;margin-top:20px;}
+button:hover{color:var(--gx);border-color:var(--gx);}
+</style>
+</head>
+<body>
+<h1>SETUP</h1>
+<div class="sub">Step 2 of 2 — Create the admin account</div>
+
+<form method="post">
+  {% csrf_token %}
+  {% for field in form %}
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {{ field }}
+    {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  {% endfor %}
+  {% if form.non_field_errors %}<ul class="errorlist">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+  <button type="submit">Create admin account</button>
+</form>
+</body>
+</html>

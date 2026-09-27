@@ -31,7 +31,7 @@ class DriveAssetAdmin(admin.ModelAdmin):
     search_fields = ("drive_id", "name", "mime_type")
     readonly_fields = ("discovered_at", "downloaded_at", "imported_at", "last_attempt_at")
 
-    actions = ["action_mark_delete", "action_commit_delete"]
+    actions = ["action_mark_delete", "action_commit_delete", "action_export_zip", "action_export_tar"]
 
     @admin.action(description="Mark selected as DELETE_PENDING (only if VERIFIED)")
     def action_mark_delete(self, request, queryset):
@@ -45,3 +45,25 @@ class DriveAssetAdmin(admin.ModelAdmin):
             request,
             f"{count} item(s) are in DELETE_PENDING. Use /admin/ops/ → Commit Delete to perform Drive delete."
         )
+
+    def _export_selected(self, request, queryset, fmt):
+        """Phase 36 — stream the selected assets as a ZIP/TAR + manifest.json."""
+        from django.http import StreamingHttpResponse
+
+        from core.export import archive_content_type, archive_filename, iter_archive_stream, resolve_export_items
+
+        items = resolve_export_items("selection", media_ids=list(queryset.values_list("pk", flat=True)))
+        if not items:
+            self.message_user(request, "Nothing to export — none of the selected assets have a file on disk.", level="warning")
+            return None
+        resp = StreamingHttpResponse(iter_archive_stream(items, fmt), content_type=archive_content_type(fmt))
+        resp["Content-Disposition"] = f'attachment; filename="{archive_filename("selection", fmt)}"'
+        return resp
+
+    @admin.action(description="Export selected as ZIP")
+    def action_export_zip(self, request, queryset):
+        return self._export_selected(request, queryset, "zip")
+
+    @admin.action(description="Export selected as TAR")
+    def action_export_tar(self, request, queryset):
+        return self._export_selected(request, queryset, "tar")

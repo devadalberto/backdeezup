@@ -150,6 +150,64 @@ MEDIA_ROOT = config('MEDIA_ROOT', default=str(BASE_DIR / 'media'))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ── Integrity check (Phase 31) — read-only re-hash sample, off switch below ───
+INTEGRITY_CHECK_ENABLED = config('INTEGRITY_CHECK_ENABLED', cast=bool, default=True)
+INTEGRITY_CHECK_SAMPLE_SIZE = config('INTEGRITY_CHECK_SAMPLE_SIZE', cast=int, default=200)
+
+# ── Storage guard (Phase 32) — warn/pause thresholds, off switch below ────────
+STORAGE_WARN_PCT = config('STORAGE_WARN_PCT', cast=int, default=85)
+STORAGE_PAUSE_PCT = config('STORAGE_PAUSE_PCT', cast=int, default=95)
+STORAGE_GUARD_ENABLED = config('STORAGE_GUARD_ENABLED', cast=bool, default=True)
+
+# ── Notifications (Phase 33) — every channel off unless its env var is set ────
+NOTIFY_WEBHOOK_URL = config('NOTIFY_WEBHOOK_URL', default='')
+NOTIFY_SLACK_URL = config('NOTIFY_SLACK_URL', default='')
+NOTIFY_DISCORD_URL = config('NOTIFY_DISCORD_URL', default='')
+NOTIFY_EMAIL_TO = config('NOTIFY_EMAIL_TO', default='')
+# Hours without a successful RunLog before the stale-backup Beat check fires. 0 disables it.
+NOTIFY_STALE_BACKUP_HOURS = config('NOTIFY_STALE_BACKUP_HOURS', cast=int, default=0)
+
+# ── SMTP (only used if NOTIFY_EMAIL_TO is set) ────────────────────────────────
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='')
+EMAIL_PORT = config('EMAIL_PORT', cast=int, default=587)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', cast=bool, default=True)
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='backdeezup@localhost')
+
+# ── Cleanup safeguards (Phase 34) ──────────────────────────────────────────────
+# Global pause: skips every REAL cleanup run (run-all, Beat, make cleanup-run,
+# the Execute API) with a log line. Dry runs are unaffected.
+CLEANUP_PAUSED = config('CLEANUP_PAUSED', cast=bool, default=False)
+# Dry-run-required + exact-count confirm — applies ONLY to the Execute UI path,
+# not to run_all_enabled_rules / make cleanup-run / Beat (see services_rules.py).
+CLEANUP_REQUIRE_DRY_RUN = config('CLEANUP_REQUIRE_DRY_RUN', cast=bool, default=True)
+CLEANUP_DRY_RUN_MAX_AGE_HOURS = config('CLEANUP_DRY_RUN_MAX_AGE_HOURS', cast=int, default=24)
+
+# ── Export to ZIP/TAR (Phase 36) ───────────────────────────────────────────────
+# Above this many resolved items, /dashboard/export/ runs as a Celery task
+# writing to MEDIA_ROOT/exports/ instead of streaming synchronously.
+# scope=everything always goes async regardless of count.
+EXPORT_ASYNC_THRESHOLD = config('EXPORT_ASYNC_THRESHOLD', cast=int, default=200)
+
+# ── Restore to local dir (Phase 37) ────────────────────────────────────────────
+# Every restore is written inside this root -- core.restore rejects any
+# destination that resolves outside it (path traversal guard).
+RESTORE_ROOT = config('RESTORE_ROOT', default=str(Path(MEDIA_ROOT) / 'restores'))
+# "Can I restore a file?" weekly Beat check -- off by default (dashboard button
+# always works regardless of this flag; this only controls the scheduled run).
+RESTORE_SMOKE_TEST_ENABLED = config('RESTORE_SMOKE_TEST_ENABLED', cast=bool, default=False)
+
+# ── PostgreSQL backup (Phase 38) ────────────────────────────────────────────────
+# `make db-backup` / `make db-restore` always work (pg_dump/pg_restore run inside
+# the `db` container). This block only gates the OPTIONAL Celery Beat task that
+# also takes a dump (via pg_dump against DATABASE_URL) and prunes old ones -- off
+# by default. Both write into the same directory, bind-mounted at DB_BACKUP_DIR.
+DB_BACKUP_ENABLED = config('DB_BACKUP_ENABLED', cast=bool, default=False)
+DB_BACKUP_KEEP_LAST = config('DB_BACKUP_KEEP_LAST', cast=int, default=14)
+DB_BACKUP_DIR = config('DB_BACKUP_DIR', default='/app/backups')
+
 # ── Structured logging ────────────────────────────────────────────────────────
 LOGGING = {
     'version': 1,

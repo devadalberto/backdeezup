@@ -6,6 +6,8 @@ import logging
 
 from celery import shared_task
 
+from core.storage import storage_guard
+
 log = logging.getLogger(__name__)
 
 
@@ -52,6 +54,7 @@ def task_photos_discover(self, max_pages=50, page_size=100):
 
 @shared_task(bind=True, max_retries=2, default_retry_delay=60,
              name="google_media_backup.tasks.task_photos_download_batch")
+@storage_guard
 def task_photos_download_batch(self, limit=50):
     """Download a batch of DISCOVERED photos."""
     import os
@@ -181,6 +184,7 @@ def task_docs_discover(self, max_pages=50, page_size=200):
 
 @shared_task(bind=True, max_retries=2, default_retry_delay=60,
              name="google_media_backup.tasks.task_docs_download_batch")
+@storage_guard
 def task_docs_download_batch(self, limit=100):
     """Download a batch of DISCOVERED documents (exports Google native formats)."""
     import os

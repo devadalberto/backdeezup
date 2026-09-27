@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Setup — BackDeezUp</title>
+<style>
+:root{--g0:#000;--g1:#070707;--ga:#002e0b;--gb:#0a1a0a;--gx:#00ff41;--gm:#00c832;--gd:#008f1f;--fw:#b8ffb8;--gy:#ffb300;--gr:#ff3131;--muted:#3a5c3a;}
+body{background:var(--g0);color:var(--fw);font-family:'Courier New',monospace;margin:0;padding:24px;max-width:600px;}
+h1{color:var(--gx);letter-spacing:2px;margin:0 0 4px;}
+.sub{color:var(--muted);font-size:12px;margin-bottom:20px;}
+.card{background:var(--g1);border:1px solid var(--ga);border-radius:4px;padding:16px;margin-bottom:16px;}
+.success{color:var(--gx);font-size:22px;font-weight:bold;text-shadow:0 0 10px rgba(0,255,65,.4);}
+.err{color:var(--gr);font-size:13px;}
+button{background:var(--g1);color:var(--gm);border:1px solid var(--gd);border-radius:3px;padding:8px 16px;font-family:inherit;font-size:12px;letter-spacing:1px;cursor:pointer;margin-right:8px;}
+button:hover{color:var(--gx);border-color:var(--gx);}
+a.dash{color:var(--gm);}
+</style>
+</head>
+<body>
+<h1>SETUP</h1>
+<div class="sub">Step 7 of 7 — Test backup ({{ services|join:", " }})</div>
+
+{% if not result %}
+<div class="card">Runs a small backup (up to 10 items per service) and checks it reaches Verified.</div>
+<form method="post">{% csrf_token %}<button type="submit">Run test backup</button></form>
+{% else %}
+  {% if result.success %}
+    <div class="card"><div class="success">&#10003; Backup is working</div>
+      <div style="margin-top:8px;">{{ result.verified }} of {{ result.discovered }} test item(s) verified.</div>
+    </div>
+    <a class="dash" href="{% url 'dashboard' %}">Go to dashboard &#8594;</a>
+  {% else %}
+    <div class="card">
+      <div>{{ result.verified }} of {{ result.discovered }} test item(s) verified.</div>
+      {% if result.discovered == 0 %}<div class="err">No items were found to test with -- this can be normal for an empty account.</div>{% endif %}
+      {% for e in result.errors %}<div class="err">{{ e.source }}: {{ e.title }} -- {{ e.hint }}</div>{% endfor %}
+    </div>
+    <form method="post"><button type="submit">Retry test backup</button></form>
+  {% endif %}
+{% endif %}
+</body>
+</html>

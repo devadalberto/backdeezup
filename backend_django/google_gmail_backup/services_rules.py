@@ -7,20 +7,64 @@ Every execution is logged to CleanupAuditLog.
 import logging
 from datetime import timedelta
 
+from django.conf import settings
 from django.db import transaction
+from django.db.models import Max
 
 from .schemas import snapshot_from_message
 from django.utils import timezone
 
-from .models import CleanupAuditLog, CleanupRule, GmailMessage, ProtectedSender
+from .models import CleanupAuditLog, CleanupRule, GmailMessage, ProtectedSender, RuleCondition
 from .services_gmail import (
     batch_modify_labels,
     gmail_service,
     modify_labels,
     trash_message,
+    untrash_message,
 )
 
 log = logging.getLogger(__name__)
+
+
+def is_cleanup_paused() -> bool:
+    """Phase 34 global pause switch. Only gates REAL runs — dry runs are harmless."""
+    return bool(getattr(settings, "CLEANUP_PAUSED", False))
+
+
+def dry_run_confirmation_error(rule: CleanupRule, confirm_count) -> str | None:
+    """Phase 34 gate for the new Execute UI path only.
+
+    Existing callers (run_all_enabled_rules / `make cleanup-run` / Beat) are NOT
+    subject to this — they only honor CLEANUP_PAUSED. Returns an error message,
+    or None when the execute request may proceed.
+    """
+    if not getattr(settings, "CLEANUP_REQUIRE_DRY_RUN", True):
+        return None
+    if not rule.last_dry_run_at:
+        return "A dry run is required before executing this rule."
+    max_age = timedelta(hours=getattr(settings, "CLEANUP_DRY_RUN_MAX_AGE_HOURS", 24))
+    if timezone.now() - rule.last_dry_run_at > max_age:
+        return "The last dry run is more than 24h old — run a new dry run first."
+    if confirm_count != rule.last_dry_run_count:
+        return f"Confirmation count mismatch: expected {rule.last_dry_run_count}."
+    return None
+
+
+def _sync_attachment_guard_condition(rule: CleanupRule) -> None:
+    """Phase 34: keep a RuleCondition row in sync with never_delete_with_attachments,
+    reusing the existing condition model/compiler instead of a one-off filter string."""
+    existing = rule.conditions.filter(
+        field=RuleCondition.FIELD_HAS_ATTACH, operator=RuleCondition.OP_NOT_EQUALS,
+    ).first()
+    if rule.never_delete_with_attachments:
+        if not existing:
+            next_order = (rule.conditions.aggregate(Max("order"))["order__max"] or 0) + 1
+            RuleCondition.objects.create(
+                rule=rule, order=next_order, field=RuleCondition.FIELD_HAS_ATTACH,
+                operator=RuleCondition.OP_NOT_EQUALS, value="", logic=RuleCondition.LOGIC_AND,
+            )
+    elif existing:
+        existing.delete()
 
 
 def _protected_emails() -> set:
@@ -53,11 +97,33 @@ def _get_or_create_label(svc, label_name: str) -> str:
     return new_label["id"]
 
 
+def _notify_cleanup_executed(rule_name: str, action: str, affected: int) -> None:
+    """Phase 33 event: a real (non-dry-run) rule execution. Never raises."""
+    try:
+        from core import notify
+        notify.send(
+            "cleanup_executed",
+            f"Cleanup rule '{rule_name}' executed",
+            f"Action '{action}' affected {affected} message(s).",
+        )
+    except Exception:
+        pass
+
+
 def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "system") -> CleanupAuditLog:
     """
     Apply a CleanupRule. Returns a CleanupAuditLog record.
     Protected senders are always skipped regardless of rule.
     """
+    if not dry_run and is_cleanup_paused():
+        log.info("Cleanup paused (CLEANUP_PAUSED) — skipping real run of rule '%s' (actor=%s)", rule.name, actor_label)
+        return CleanupAuditLog.objects.create(
+            rule=rule, rule_name=rule.name, action=rule.action, dry_run=dry_run,
+            actor_label=actor_label, status="PAUSED", finished_at=timezone.now(),
+        )
+
+    _sync_attachment_guard_condition(rule)
+
     audit = CleanupAuditLog.objects.create(
         rule=rule,
         rule_name=rule.name,
@@ -105,6 +171,8 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
             if rule.respect_protected_senders and protected:
                 normalized = {e.lower() for e in protected}
                 qs = qs.exclude(from_email_normalized__in=normalized)
+            if rule.never_delete_with_attachments:
+                qs = qs.exclude(has_attachments=True)
             if dry_run:
                 # Dry-run: count from DB only (no Gmail API, fast)
                 total_count = qs.count()
@@ -117,7 +185,8 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
                 audit.finished_at = timezone.now()
                 audit.save()
                 rule.last_dry_run_count = total_count
-                rule.save(update_fields=["last_dry_run_count"])
+                rule.last_dry_run_at = timezone.now()
+                rule.save(update_fields=["last_dry_run_count", "last_dry_run_at"])
                 return audit
 
             # Execute — batch loop, no hard cap (max 50 iterations = 50k messages safety)
@@ -186,6 +255,7 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
             rule.save(update_fields=["last_run_at", "last_run_dry", "last_affected_count"])
 
             log.info("Rule '%s' executed: %d messages affected (dry=%s)", rule.name, executed, dry_run)
+            _notify_cleanup_executed(rule.name, rule.action, executed)
             return audit
 
     except Exception as e:
@@ -277,6 +347,10 @@ def run_all_enabled_rules(dry_run: bool = True, actor_label: str = "scheduler") 
     """
     from django.core.cache import cache
 
+    if not dry_run and is_cleanup_paused():
+        log.info("Cleanup paused (CLEANUP_PAUSED) — run_all_enabled_rules no-op (actor=%s)", actor_label)
+        return []
+
     LOCK_KEY = "backdeezup:cleanup_rules_running"
     LOCK_TTL = 1800  # 30 minutes max — prevents stuck lock from blocking forever
 
@@ -301,3 +375,73 @@ def run_all_enabled_rules(dry_run: bool = True, actor_label: str = "scheduler") 
     finally:
         if not dry_run:
             cache.delete(LOCK_KEY)
+
+
+# ── Undo (Phase 35) ────────────────────────────────────────────────────────────
+
+def undo_audit_log(audit: CleanupAuditLog, actor_label: str = "api") -> dict:
+    """Restore the messages one CleanupAuditLog run sent to Trash.
+
+    Only Trash actions inside Gmail's retention window are restorable. Permanent
+    deletes, dry runs, and non-Trash actions are reported as not applicable rather
+    than attempted. Failures are reported per message id -- one bad id never aborts
+    the rest of the batch. Only the (up to 100) ids stored on the audit row can be
+    restored; runs with affected_ids_truncated=True will only partially undo.
+    """
+    if audit.dry_run:
+        return {"restored": 0, "failed": [], "skipped": True, "reason": "Dry run made no changes -- nothing to undo."}
+    if audit.undone_at:
+        return {"restored": 0, "failed": [], "skipped": True, "reason": "This run has already been undone."}
+    if audit.action == "permanent_delete":
+        return {"restored": 0, "failed": [], "skipped": True, "reason": "Permanently deleted messages are not restorable."}
+    if audit.action != CleanupRule.ACTION_TRASH:
+        return {"restored": 0, "failed": [], "skipped": True,
+                "reason": f"Undo is only defined for Trash actions (this run was '{audit.action}')."}
+
+    svc = gmail_service()
+    if not svc:
+        raise RuntimeError("Not authenticated — run make auth first")
+
+    restored, failed = [], []
+    for gmail_id in audit.affected_gmail_ids:
+        if untrash_message(gmail_id):
+            restored.append(gmail_id)
+        else:
+            failed.append(gmail_id)
+
+    if restored:
+        GmailMessage.objects.filter(gmail_id__in=restored).update(
+            state=GmailMessage.STATE_VERIFIED, deleted_at=None, deletion_source="",
+        )
+
+    audit.undone_at = timezone.now()
+    audit.save(update_fields=["undone_at"])
+
+    undo_log = CleanupAuditLog.objects.create(
+        rule=audit.rule, rule_name=f"Undo: {audit.rule_name}", action="untrash",
+        dry_run=False, actor_label=actor_label,
+        status="OK" if not failed else "PARTIAL",
+        affected_count=len(restored), affected_gmail_ids=restored[:100],
+        finished_at=timezone.now(),
+    )
+    log.info("Undo of audit log %s: %d restored, %d failed", audit.id, len(restored), len(failed))
+
+    return {
+        "restored": len(restored), "failed": failed, "skipped": False,
+        "undo_audit_id": undo_log.id,
+        "truncated_note": (
+            "Only the first 100 message ids were stored on the original run -- "
+            "more than 100 were affected, so this undo is partial."
+        ) if audit.affected_ids_truncated else "",
+    }
+
+
+# ── Protect sender (Phase 35) ───────────────────────────────────────────────────
+
+def protect_sender(email: str, label_to_apply: str = "", star: bool = False, note: str = "") -> ProtectedSender:
+    """get_or_create a ProtectedSender. Idempotent -- calling it again for the same
+    email is a no-op that returns the existing row."""
+    return ProtectedSender.objects.get_or_create(
+        email=email.strip().lower(),
+        defaults={"label_to_apply": label_to_apply, "star": star, "note": note},
+    )[0]

@@ -1,0 +1,6 @@
+<nav class="subnav">
+  <a href="{% url 'dashboard' %}"{% if request.resolver_match.url_name == 'dashboard' %} class="active"{% endif %}>Backup</a>
+  <a href="/vault/"{% if request.path == '/vault/' %} class="active"{% endif %}>Browse</a>
+  <a href="{% url 'admin_gmail_dashboard' %}">Cleanup</a>
+  <a href="{% url 'dashboard_verification' %}"{% if request.resolver_match.url_name == 'dashboard_verification' %} class="active"{% endif %}>Verification</a>
+</nav>

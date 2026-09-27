@@ -34,7 +34,8 @@ class GmailMessageAdmin(admin.ModelAdmin):
                        "downloaded_at", "last_attempt_at", "sha256", "raw_path",
                        "deleted_at", "deletion_source", "metadata_snapshot"]
     date_hierarchy = "date"
-    actions = ["action_trash", "action_reconcile", "action_restore_to_gmail"]
+    actions = ["action_trash", "action_reconcile", "action_restore_to_gmail",
+               "action_export_zip", "action_export_tar"]
 
     @admin.action(description="Trash selected in Gmail (requires gmail.modify scope)")
     def action_trash(self, request, queryset):
@@ -110,6 +111,28 @@ class GmailMessageAdmin(admin.ModelAdmin):
             f"Note: restored messages have new Gmail IDs — original thread context is lost.",
             level="warning" if failed else "success",
         )
+
+    def _export_selected(self, request, queryset, fmt):
+        """Phase 36 — stream the selected messages as a ZIP/TAR (as .eml + manifest.json)."""
+        from django.http import StreamingHttpResponse
+
+        from core.export import archive_content_type, archive_filename, iter_archive_stream, resolve_export_items
+
+        items = resolve_export_items("selection", gmail_ids=list(queryset.values_list("pk", flat=True)))
+        if not items:
+            self.message_user(request, "Nothing to export — none of the selected messages have a file on disk.", level="warning")
+            return None
+        resp = StreamingHttpResponse(iter_archive_stream(items, fmt), content_type=archive_content_type(fmt))
+        resp["Content-Disposition"] = f'attachment; filename="{archive_filename("selection", fmt)}"'
+        return resp
+
+    @admin.action(description="Export selected as ZIP")
+    def action_export_zip(self, request, queryset):
+        return self._export_selected(request, queryset, "zip")
+
+    @admin.action(description="Export selected as TAR")
+    def action_export_tar(self, request, queryset):
+        return self._export_selected(request, queryset, "tar")
 
 
 @admin.register(ProtectedSender)

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — BackDeezUp</title>
+<script src="https://unpkg.com/htmx.org@2.0.3" integrity="sha384-0895/pl2MU10Hqc6jd4RvrthNlDiE9U1tWmX7WRESftEDRosgxNsQG/Ze9YMRzHq" crossorigin="anonymous"></script>
+<style>
+:root{--g0:#000;--g1:#070707;--g2:#0e0e0e;--ga:#002e0b;--gb:#0a1a0a;--gx:#00ff41;--gm:#00c832;--gd:#008f1f;--fw:#b8ffb8;--gy:#ffb300;--gr:#ff3131;--muted:#3a5c3a;}
+*{box-sizing:border-box;}
+body{background:var(--g0);color:var(--fw);font-family:'Courier New',monospace;margin:0;padding:24px;}
+a{color:var(--gm);text-decoration:none;} a:hover{color:var(--gx);}
+h1{color:var(--gx);letter-spacing:2px;margin:0 0 4px;}
+.sub{color:var(--muted);font-size:12px;margin-bottom:20px;}
+.section-label{color:var(--gd);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}
+.stat-card,.card{background:var(--g1);border:1px solid var(--ga);border-radius:4px;padding:16px;}
+.stat-card:hover,.card:hover{border-color:var(--gd);}
+.stat-value{font-size:2rem;font-weight:bold;color:var(--gx);text-shadow:0 0 10px rgba(0,255,65,.3);}
+.stat-label{font-size:10px;color:var(--gd);letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
+.stat-bar{height:4px;background:var(--ga);border-radius:2px;margin-top:10px;overflow:hidden;}
+.stat-bar-fill{height:4px;background:var(--gx);border-radius:2px;}
+.stat-badge{display:inline-block;padding:2px 8px;font-size:10px;border-radius:2px;margin-top:8px;}
+.badge-ok{background:rgba(0,255,65,.08);color:var(--gx);border:1px solid var(--gd);}
+.badge-running{background:rgba(255,179,0,.08);color:var(--gy);border:1px solid var(--gy);}
+.badge-fail{background:rgba(255,49,49,.08);color:var(--gr);border:1px solid var(--gr);}
+.small{font-size:11px;color:var(--muted);margin-top:4px;}
+.err{color:var(--gr);font-size:12px;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{background:var(--gb);color:var(--gx);text-align:left;padding:6px 8px;letter-spacing:1px;}
+td{padding:6px 8px;border-bottom:1px solid var(--ga);vertical-align:top;}
+.progress-card{background:var(--g1);border:1px solid var(--gm);border-radius:4px;padding:20px;}
+.progress-label{font-size:11px;color:var(--gd);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.progress-pct{font-size:32px;font-weight:bold;color:var(--gx);}
+.progress-detail{font-size:13px;color:var(--gm);margin-top:4px;}
+.progress-bar-wrap{background:var(--ga);border-radius:6px;height:12px;margin:10px 0 6px;overflow:hidden;}
+.progress-bar-fill{background:var(--gx);height:12px;border-radius:6px;}
+.progress-blocked{color:var(--gr);} .progress-ready{color:var(--gx);}
+.chip{display:inline-block;padding:1px 8px;font-size:10px;border-radius:9px;border:1px solid var(--gd);color:var(--fw);white-space:nowrap;}
+.chip-ok{color:var(--gx);border-color:var(--gx);background:rgba(0,255,65,.08);}
+.chip-warn{color:var(--gy);border-color:var(--gy);background:rgba(255,179,0,.08);}
+.chip-fail{color:var(--gr);border-color:var(--gr);background:rgba(255,49,49,.08);}
+.chip-muted{color:var(--muted);border-color:var(--muted);}
+.subnav{display:flex;gap:8px;margin:0 0 16px;}
+.subnav a{border:1px solid var(--ga);border-radius:3px;padding:5px 14px;font-size:12px;letter-spacing:1px;color:var(--gm);}
+.subnav a.active{border-color:var(--gx);color:var(--gx);}
+.actions{display:flex;flex-wrap:wrap;gap:8px;}
+.actions button{background:var(--g1);color:var(--gm);border:1px solid var(--gd);border-radius:3px;padding:7px 14px;font-family:inherit;font-size:12px;letter-spacing:1px;cursor:pointer;}
+.actions button:hover{color:var(--gx);border-color:var(--gx);}
+.actions button.warn:hover{color:var(--gy);border-color:var(--gy);}
+#action-result{margin-top:10px;font-size:12px;min-height:16px;}
+.msg-ok{color:var(--gx);} .msg-err{color:var(--gy);}
+.export-form{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.export-form select,.export-form button{background:var(--g1);color:var(--gm);border:1px solid var(--gd);border-radius:3px;padding:7px 12px;font-family:inherit;font-size:12px;}
+.export-form button{cursor:pointer;letter-spacing:1px;}
+.export-form button:hover{color:var(--gx);border-color:var(--gx);}
+</style>
+</head>
+<body>
+{% include 'core/partials/nav.html' %}
+<h1>BACKUP DASHBOARD</h1>
+<div class="sub">Read-only &middot; refreshes every 30s &middot;
+  <a href="/">Home</a> &middot; <a href="{% url 'health' %}">System health</a>
+  &middot; <a href="{% url 'dashboard_connect' %}">Connect account</a>
+  &middot; <a href="/admin/gmail/dashboard/">Gmail</a> &middot; <a href="/admin/ops/">Drive</a></div>
+
+<div class="section-label">&#9608; Overview</div>
+<div class="grid" hx-get="{% url 'htmx_stats' %}" hx-trigger="load, every 30s" hx-swap="innerHTML">
+  <div class="stat-card"><div class="stat-label">Loading...</div></div>
+</div>
+
+<div class="section-label">&#9608; Gmail progress</div>
+<div class="progress-card" hx-get="{% url 'htmx_gmail_progress' %}" hx-trigger="load, every 30s" hx-swap="innerHTML">
+  <div class="stat-label">Loading...</div>
+</div>
+
+<div class="section-label">&#9608; Actions</div>
+<div class="actions" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-target="#action-result" hx-swap="innerHTML">
+  <button hx-post="{% url 'dashboard_action' 'gmail-backup' %}">Gmail backup</button>
+  <button hx-post="{% url 'dashboard_action' 'drive-backup' %}">Drive backup</button>
+  <button hx-post="{% url 'dashboard_action' 'photos-backup' %}">Photos backup</button>
+  <button hx-post="{% url 'dashboard_action' 'verify-files' %}">Verify files</button>
+  <button hx-post="{% url 'dashboard_action' 'import-media' %}">Import media</button>
+  <button hx-post="{% url 'dashboard_action' 'retry-failed' %}">Retry failed</button>
+  <button hx-post="{% url 'dashboard_action' 'restore-smoke-test' %}">Can I restore a file?</button>
+  <button class="warn" hx-post="{% url 'dashboard_action' 'pause' %}">Pause all</button>
+  <button hx-post="{% url 'dashboard_action' 'resume' %}">Resume all</button>
+</div>
+<div id="action-result" aria-live="polite"></div>
+
+<div class="section-label">&#9608; Export</div>
+<form class="export-form" method="post" action="{% url 'dashboard_export' %}">
+  {% csrf_token %}
+  <input type="hidden" name="ui" value="1">
+  <select name="scope" id="exp-scope" onchange="document.getElementById('exp-source').style.display = this.value === 'source' ? '' : 'none'">
+    <option value="source">One source</option>
+    <option value="everything">Everything</option>
+  </select>
+  <select name="source" id="exp-source">
+    <option value="gmail">Gmail</option>
+    <option value="media">Drive/Photos</option>
+  </select>
+  <select name="format">
+    <option value="zip">ZIP</option>
+    <option value="tar">TAR.GZ</option>
+  </select>
+  <button type="submit">&#9654; Export</button>
+</form>
+<div class="small">Exports every backed-up, still-on-disk file as .eml / original file + a manifest.json (sha256 per file).
+  Large exports run in the background — you'll land on a status page with a download link.
+  To export a hand-picked set of messages or assets, use "Export selected" from their admin change-list instead.</div>
+
+<div class="section-label">&#9608; Status</div>
+<div id="dash-cards" hx-get="{% url 'dashboard_cards' %}" hx-trigger="load, every 30s" hx-swap="innerHTML">
+  <div class="stat-card"><div class="stat-label">Loading...</div></div>
+</div>
+</body>
+</html>

@@ -1,6 +1,7 @@
 # backend_django/config/urls.py
 from django.contrib import admin
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
@@ -15,7 +16,18 @@ from wagtail import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
 # Landing page
-from core.views import landing_page, htmx_stats
+from core.views import (
+    landing_page, htmx_stats, health_page, health_json,
+    dashboard_page, dashboard_cards, dashboard_action,
+    dashboard_connect, dashboard_connect_start, dashboard_disconnect,
+    dashboard_verification, dashboard_export, dashboard_export_status,
+)
+
+# Setup wizard (Phase 29 welcome/admin; Phase 30 services/connect/storage/schedule/test)
+from core.setup.views import (
+    setup_welcome, setup_admin, setup_services,
+    setup_connect, setup_connect_start, setup_storage, setup_schedule, setup_test,
+)
 
 # Optional query page
 try:
@@ -42,6 +54,31 @@ urlpatterns = [
     # Landing page
     path("", landing_page, name="landing"),
     path("htmx/stats/", htmx_stats, name="htmx_stats"),
+
+    # Unified dashboard (staff only, read-only)
+    path("dashboard/", dashboard_page, name="dashboard"),
+    path("dashboard/cards/", dashboard_cards, name="dashboard_cards"),
+    path("dashboard/actions/<slug:name>/", dashboard_action, name="dashboard_action"),
+    path("dashboard/connect/", dashboard_connect, name="dashboard_connect"),
+    path("dashboard/connect/start/", dashboard_connect_start, name="dashboard_connect_start"),
+    path("dashboard/disconnect/", dashboard_disconnect, name="dashboard_disconnect"),
+    path("dashboard/verification/", dashboard_verification, name="dashboard_verification"),
+    path("dashboard/export/", dashboard_export, name="dashboard_export"),
+    path("dashboard/export/<int:job_id>/", dashboard_export_status, name="dashboard_export_status"),
+
+    # Setup wizard -- reachable only on first run, see core.models.is_first_run
+    path("setup/", setup_welcome, name="setup_welcome"),
+    path("setup/admin/", setup_admin, name="setup_admin"),
+    path("setup/services/", setup_services, name="setup_services"),
+    path("setup/connect/", setup_connect, name="setup_connect"),
+    path("setup/connect/start/", setup_connect_start, name="setup_connect_start"),
+    path("setup/storage/", setup_storage, name="setup_storage"),
+    path("setup/schedule/", setup_schedule, name="setup_schedule"),
+    path("setup/test/", setup_test, name="setup_test"),
+
+    # System health (staff only, read-only)
+    path("health/", health_page, name="health"),
+    path("health/json/", health_json, name="health_json"),
 
     # Drive/Photos admin dashboards
     path("admin/reports/", reports_view, name="admin_reports"),
@@ -74,9 +111,20 @@ if HAS_QUERY_PAGE:
     urlpatterns += [path("", query_page, name="query")]
 
 # OAuth callback — CSRF exempt because OAuth providers cannot set CSRF tokens.
-# State parameter validation happens inside start_oauth_local() via PKCE.
+# Two paths land here:
+#  - CLI (`make auth`): the browser hits this URL only so the human can copy it from the
+#    address bar; nothing here processes it. That behavior is unchanged (Phase 28).
+#  - Browser (Phase 28 /dashboard/connect/, Phase 30 /setup/connect/): the session holds
+#    a matching, unexpired state -- core.oauth.is_our_callback() -- so this view completes
+#    the flow itself and returns to whichever page called core.oauth.start().
 @csrf_exempt
 def oauth_callback(request):
+    from core.oauth import handle_callback, is_our_callback, pop_return_to
+
+    if is_our_callback(request):
+        ok, message = handle_callback(request)
+        request.session["oauth_result"] = {"ok": ok, "message": message}
+        return redirect(pop_return_to(request))
     return HttpResponse(
         "<h2>OAuth completed.</h2><p>You can close this tab and return to the terminal.</p>",
         status=200,
