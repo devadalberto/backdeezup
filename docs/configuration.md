@@ -42,6 +42,7 @@ All configuration uses environment variables via [python-decouple](https://githu
 | `DEBUG` | `True` | Set `False` in production. |
 | `ALLOWED_HOSTS` | `*` | Comma-separated allowed hostnames. |
 | `DATABASE_URL` | SQLite | Use `postgres://user:pass@host:5432/db` in production. |
+| `TIME_ZONE` | `America/Los_Angeles` | IANA zone name for Django's `TIME_ZONE` (admin display, `localtime`). Does **not** change the Celery Beat schedule: `celery_app.py` sets `app.conf.timezone` separately and it stays `America/Los_Angeles`. |
 
 ---
 

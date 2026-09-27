@@ -138,7 +138,7 @@ else:
     }
 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'America/Los_Angeles'
+TIME_ZONE = config('TIME_ZONE', default='America/Los_Angeles')
 USE_I18N = True
 USE_TZ = True
 
