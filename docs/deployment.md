@@ -13,6 +13,36 @@ Full production deployment runbook — tested on Debian 13 WSL2 on Windows Serve
 
 ---
 
+## One-line install (Phase 49)
+
+An alternative to cloning the repo: `scripts/install.sh` sets up a fresh install
+using the [published image](releases.md) instead — no git clone, no local build.
+```bash
+curl -fsSL https://raw.githubusercontent.com/devadalberto/backdeezup/main/scripts/install.sh | bash
+```
+It checks for `docker`/`docker compose`/`curl`/`openssl`, downloads just what
+`docker compose` needs (`docker-compose.yml`, `.env.sample`, `Makefile`,
+`nginx/nginx.conf`, `Caddyfile`), generates `DJANGO_SECRET_KEY`,
+`GOOGLE_ENCRYPTION_KEY`, `POSTGRES_PASSWORD`, and `REDIS_PASSWORD` locally
+(never printed in full — first 4 characters only), generates a self-signed TLS
+cert, starts the stack, and prints the setup-wizard URL.
+
+Every action is printed before it happens; writing into an existing, non-empty
+target directory asks for confirmation first (`-y`/`--yes` to skip, for
+automation). `--dry-run` prints the full plan and makes zero writes and zero
+docker/network changes — verified: a dry run creates nothing on disk.
+
+If no release has been published yet (or the GHCR package is still private —
+see `releases.md`), the pull fails and the script offers to fall back to
+cloning the source and building locally instead, asking first.
+
+The resulting directory has its own `.env`, `docker-compose.yml`, and `Makefile`
+(so `make up`/`make db-backup`/etc. all work) but is **not** a git checkout —
+`make build`/`make redeploy`'s `git pull` step won't work there. Upgrade it with
+`scripts/upgrade.sh` (see `docs/upgrading.md`) instead.
+
+---
+
 ## Makefile reference
 
 All common operations are available via `make`. Run `make help` to see all targets.
@@ -192,6 +222,9 @@ make up
 make migrate
 ```
 
+Full guide, including why to back up the database first and how to roll back:
+`docs/upgrading.md`.
+
 ---
 
 ## Ongoing operations
@@ -255,6 +288,47 @@ BIND_ADDR=0.0.0.0
 overridable but keep their existing defaults. Run `make up` (not `restart`)
 after changing `.env` so the new bind takes effect. Validate the compose file
 with `make compose-check` any time you edit these.
+
+## Reverse proxy: nginx vs Caddy vs external (Phase 48)
+
+Three ways to terminate TLS in front of `web`, in order of how much this repo
+manages for you:
+
+| | nginx (default) | Caddy (opt-in) | External reverse proxy |
+|---|---|---|---|
+| Enabled by | Nothing — always on | `docker compose --profile caddy up -d` | You run it outside this repo entirely |
+| Certificate | Self-signed, `make gen-certs` | Automatic (Let's Encrypt) or its own internal CA | Your own (Traefik, Cloudflare Tunnel, a load balancer, etc.) |
+| Needs a public domain? | No | Only for real Let's Encrypt certs | Depends on your setup |
+| Best for | Local/LAN use, the default `docs/dev-quickstart.md` path | A real public hostname you want HTTPS for with no separate proxy to run | You already run a proxy in front of everything and just want `web`'s bare port |
+
+**Use nginx (do nothing)** if you're running this at home or on a LAN — it's what
+`make build && make up` gives you, self-signed cert included.
+
+**Opt into Caddy** if you want to expose BackDeezUp on a real domain with a
+browser-trusted certificate and don't want to run Certbot or a separate proxy
+yourself:
+```bash
+# .env
+DOMAIN=backdeezup.example.com
+CADDY_TLS_MODE=you@example.com   # real email -> real Let's Encrypt cert
+```
+```bash
+docker compose --profile caddy up -d
+```
+nginx keeps running alongside it on its own ports (8844/8445) unless you stop it —
+`docker compose stop nginx` if you only want Caddy fronting things. Caddy needs
+ports 80 and 443 actually reachable from the public internet for the Let's
+Encrypt HTTP challenge to succeed; `BIND_ADDR=0.0.0.0` (see above) plus your
+router/firewall/DNS pointing `DOMAIN` at this host. Leave `DOMAIN`/`CADDY_TLS_MODE`
+unset and it defaults to `localhost` + Caddy's own internal CA — same self-signed
+trust model as nginx's dev cert, works with zero config for local testing.
+`Caddyfile` at the repo root mirrors nginx's two direct-serve locations
+(`/static/`, `/media/images/`) and proxies everything else to `web:8000`.
+
+**Run your own external proxy** (Traefik, Cloudflare Tunnel, an existing
+load balancer) if you already have one — point it at `web:8000` directly (bypass
+both nginx and Caddy) or at nginx's/Caddy's port if you want their static-file
+serving too. Nothing in this repo needs to know about it.
 
 ## WSL2 external access (Windows Server only)
 

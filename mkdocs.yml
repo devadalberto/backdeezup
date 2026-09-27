@@ -53,7 +53,13 @@ nav:
   - API Reference: api.md
   - Deployment:
       - Docker: deployment.md
+      - Releases: releases.md
+  - Operations:
+      - Operations Manual: operations.md
+      - Upgrading: upgrading.md
+      - Disaster Recovery: disaster-recovery.md
   - Development:
+      - Dev Quickstart: dev-quickstart.md
       - Contributing: contributing.md
       - Changelog: changelog.md
   - Media Vault:

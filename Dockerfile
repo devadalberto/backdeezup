@@ -1,8 +1,12 @@
 # Phase 41 -- NONROOT selects the final stage below (default 1 = non-root).
-# Must be declared before the first FROM to be usable in a later FROM.
+# Phase 47 -- PYTHON_BASE_IMAGE lets the release workflow pin this by digest
+# (python:3.12-slim@sha256:...) for a reproducible tagged build. Everyday
+# `make build` leaves it at the floating tag below -- unchanged behavior.
+# Both ARGs must be declared before the first FROM to be usable in one.
 ARG NONROOT=1
+ARG PYTHON_BASE_IMAGE=python:3.12-slim
 
-FROM python:3.12-slim AS base
+FROM ${PYTHON_BASE_IMAGE} AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \

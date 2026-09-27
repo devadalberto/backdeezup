@@ -44,6 +44,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Both the new `trivy-fs` scan and the existing `trivy` image scan stay report-only
   (`exit-code: "0"`) until each has one clean run in this repo's own Actions
   history — do not flip either to fail-on-CRITICAL pre-emptively.
+- **Phase 45** — rewrote `README.md` around user tasks (Install through Troubleshoot),
+  with a platform matrix, an honest "no benchmarked hardware minimum" note (cites the
+  compose file's actual resource limits instead), the storage-estimate formula (real
+  field names from `core/storage.py`, no invented numbers), and an explicit
+  backup-vs-sync-vs-archive-vs-cleanup distinction. Old terse README preserved as
+  `docs/dev-quickstart.md` (now in the MkDocs nav). Fixed two stale Celery Beat
+  tables in `docs/operations.md` that listed Drive/Photos/reconcile/purge tasks as
+  scheduled — they aren't; only 3 tasks are ever automatic
+  (`backend_django/celery_app.py` is the source of truth).
+- **Phase 46** — new `docs/disaster-recovery.md` (what's recoverable, and how, for
+  each of: lost server, lost `MEDIA_ROOT` only, lost database only, revoked token,
+  compromised Google account) and `docs/upgrading.md` (backup-first upgrade steps,
+  the non-root `fix-perms` one-timer, rolling back, diffing new `.env` vars). Both
+  added to the MkDocs nav under a new "Operations" section, alongside
+  `docs/operations.md` (previously missing from the nav entirely). New
+  `scripts/gen_config_ref.py` walks every `config(...)` call in `backend_django/`
+  and every `${VAR}` in `docker-compose.yml` via `ast`/regex and writes a generated,
+  self-updating reference table into `docs/configuration.md` (`make config-ref` to
+  regenerate, `make config-ref-check` to verify it isn't stale); the rest of
+  `docs/configuration.md` was rewritten to match current defaults (several were
+  stale — e.g. `DEBUG` defaults to `False`, not `True`) and gained a "Common
+  mistakes" table. Fixed a real fresh-install bug found while writing the generated
+  reference: `REDIS_PASSWORD` (required, no default in `docker-compose.yml`) was
+  never added to `.env.sample`.
+- **Phase 47** — new `.github/workflows/release.yml`: pushing a `vX.Y.Z` tag builds
+  and pushes `ghcr.io/devadalberto/backdeezup:<tag>` (and `:latest`, for a real
+  release only — never for a `-rcN` pre-release tag), gated on the repo-root
+  `VERSION` file matching the tag, and creates a GitHub Release with that version's
+  `CHANGELOG.md` section as its body. Release builds pin `python:3.12-slim` to a
+  resolved digest via a new `PYTHON_BASE_IMAGE` Dockerfile `ARG`; `make build` is
+  unaffected (unchanged floating-tag default). `docker-compose.yml`'s `web`,
+  `celery`, and `celerybeat` services gained `image: ${BACKDEEZUP_IMAGE:-backdeezup:local}`
+  alongside their existing `build: .` — set `BACKDEEZUP_IMAGE` in `.env` and
+  `docker compose pull` to run a published image instead of building locally; unset,
+  behavior is identical to before. New `docs/releases.md` documents cutting a
+  release, testing the workflow with a pre-release tag, using a prebuilt image, and
+  the GHCR package-visibility gotcha (a new package defaults to private). Flagged
+  (not fixed — no release has actually been cut): `VERSION` (`0.10.1`),
+  `pyproject.toml`'s `version` (`0.10.0`), and the newest `CHANGELOG.md` entry
+  (`[0.10.0]`) don't agree with each other today.
+- **Phase 48** — optional Caddy reverse-proxy profile: `docker compose --profile
+  caddy up -d` (new `make caddy-up`/`make caddy-down`) starts a `caddy:2-alpine`
+  service alongside nginx (which stays the default, unaffected — verified `docker
+  compose config --services` lists the same 6 containers as before with no
+  profile, and adds `caddy` as a 7th with `--profile caddy`). New `Caddyfile`
+  mirrors nginx's two direct-serve locations (`/static/`, `/media/images/`) and
+  reverse-proxies everything else to `web:8000`; defaults to `DOMAIN=localhost` +
+  `CADDY_TLS_MODE=internal` (Caddy's own internal CA, same trust model as nginx's
+  self-signed dev cert) so the profile works with zero config, or set a real
+  `DOMAIN` + `CADDY_TLS_MODE=you@example.com` for automatic Let's Encrypt HTTPS.
+  Verified live: `caddy validate` against both env combinations, and a real
+  standalone run that obtained an internal-CA certificate and served HTTPS.
+  `docs/deployment.md` gained a "nginx vs Caddy vs external reverse proxy"
+  comparison section covering when to pick which.
+- **Phase 49** — one-line installer and upgrade script, the final phase of the
+  roadmap. `scripts/install.sh`: `curl -fsSL .../install.sh | bash` sets up a
+  fresh install from the published image (Phase 47) with no git clone and no
+  local build — fetches only what `docker compose` needs, generates
+  `DJANGO_SECRET_KEY`/`GOOGLE_ENCRYPTION_KEY`/`POSTGRES_PASSWORD`/`REDIS_PASSWORD`
+  locally (never printed in full), generates a self-signed cert, starts the
+  stack, prints the setup-wizard URL. Prints every action; confirms before
+  writing into a non-empty target or falling back to a source build if the
+  image pull fails; `--dry-run` makes zero writes (verified). `scripts/upgrade.sh`
+  (`make upgrade`): backup -> pull -> migrate -> up -> health-check-with-retry,
+  printing exact rollback instructions (never rolling back automatically) if
+  health fails; refuses to run over uncommitted changes in a git checkout.
+  Both `shellcheck`-clean and verified with real `docker` runs, not just read
+  for correctness.
+  Two real, previously-unnoticed bugs found and fixed by that live testing,
+  affecting every fresh install, not just this script: (1) `docker-compose.yml`
+  declares `media` as an *external* volume that nothing in this repo ever
+  created — `make up`/`make redeploy` now run `docker volume create
+  backdeezup_media` first (safe to re-run); (2) `make up`/`make redeploy`
+  started celery/celerybeat before running migrations, since those containers
+  only wait on db/redis being healthy, not on migrations being applied —
+  celerybeat crash-looped against a not-yet-migrated schema until it happened
+  to retry successfully (self-healing, but confusing on first boot); fixed by
+  migrating via `docker compose run --rm web ...` *before* `docker compose up
+  -d` everywhere (`make up`, `make redeploy`, both new scripts, and
+  `docs/upgrading.md`'s manual steps). Also fixed the Phase 41-flagged
+  `accounts.0002_create_table_from_auth_user` migration, which unconditionally
+  assumed a legacy `auth_user` table exists and broke `migrate` outright on any
+  genuinely fresh database — now wrapped in a `to_regclass('auth_user') IS NOT
+  NULL` guard so it's a no-op on a fresh install and unchanged for an upgrade
+  from the legacy schema. `docs/deployment.md` gained a "One-line install"
+  section; `docs/upgrading.md` gained the `make upgrade` path and the corrected
+  migrate-before-up order.
 
 ## [0.10.0] - 2026-05-16
 

@@ -3,11 +3,11 @@ DJ    := backend_django/manage.py
 
 .PHONY: help \
         preflight \
-        build up down restart logs ps check-services compose-check fix-perms \
+        build up down restart caddy-up caddy-down logs ps check-services compose-check config-ref config-ref-check fix-perms \
         migrate superuser shell check fix-user-migration gmail-empty-trash gmail-empty-trash-dry \
         gen-certs \
         auth \
-        deploy redeploy celery-logs celery-status celery-purge \
+        deploy redeploy upgrade celery-logs celery-status celery-purge \
         run docs \
         discover discover-files discover-photos \
         photos-discover photos-download photos-run photos-delete photos-progress \
@@ -49,11 +49,16 @@ help:
 	@echo "    make up                 Start all containers (detached)"
 	@echo "    make down               Stop all containers"
 	@echo "    make restart            down + up"
-	@echo "    make redeploy           pull + build + down + up + migrate"
+	@echo "    make caddy-up           Start Caddy alongside nginx (opt-in HTTPS profile, Phase 48)"
+	@echo "    make caddy-down         Stop the Caddy container (nginx keeps running)"
+	@echo "    make redeploy           pull + build + down + migrate + up"
+	@echo "    make upgrade            scripts/upgrade.sh: backup -> pull -> migrate -> up -> health check (Phase 49)"
 	@echo "    make logs               Tail all logs"
 	@echo "    make ps                 Show container status"
 	@echo "    make check-services     Post-boot health check (state, restart policy, ports, HTTP)"
 	@echo "    make compose-check      Validate docker-compose.yml (docker compose config -q)"
+	@echo "    make config-ref         Regenerate the config table in docs/configuration.md"
+	@echo "    make config-ref-check   Fail if that table is stale (no write)"
 	@echo "    make fix-perms          One-shot chown of media/staticfiles volumes to uid 10001"
 	@echo "                            (run ONCE before first start of a non-root image on an"
 	@echo "                            existing install -- see docs/deployment.md)"
@@ -105,12 +110,19 @@ build:
 	docker compose build
 
 up:
+	@docker volume create backdeezup_media >/dev/null   # external volume (docker-compose.yml) -- Compose never creates it for you; safe to re-run
 	docker compose up -d
 
 down:
 	docker compose down
 
 restart: down up
+
+caddy-up:
+	docker compose --profile caddy up -d
+
+caddy-down:
+	docker compose --profile caddy stop caddy
 
 gen-certs:
 	bash scripts/gen-dev-certs.sh
@@ -119,8 +131,12 @@ redeploy:
 	git pull origin main
 	docker compose build
 	docker compose down
+	@docker volume create backdeezup_media >/dev/null   # external volume -- safe to re-run
+	docker compose run --rm web python manage.py migrate   # before `up`: celery/celerybeat only depend on db/redis being healthy, not on migrations being applied, so `up` first can crash-loop celerybeat against a not-yet-migrated schema until it happens to retry
 	docker compose up -d
-	docker compose exec web python manage.py migrate
+
+upgrade:
+	bash scripts/upgrade.sh --dir .
 
 celery-logs:
 	docker compose logs -f --tail=100 celery celerybeat
@@ -139,6 +155,12 @@ ps:
 
 compose-check:
 	docker compose config -q && echo "OK: docker-compose.yml is valid"
+
+config-ref:
+	python3 scripts/gen_config_ref.py
+
+config-ref-check:
+	python3 scripts/gen_config_ref.py --check
 
 fix-perms:
 	@echo "Chowning media/ and staticfiles/ volumes to uid:gid 10001 (the non-root"

@@ -3,7 +3,10 @@
 **Self-hosted backup for Google Drive, Gmail, and Google Photos.**
 
 !!! tip "Already know what you're doing?"
-    Skip straight to the [Quick Start](quickstart.md) or just read the `README.md` in the repo — it's deliberately sarcastic and very short.
+    Skip straight to the [Quick Start](quickstart.md), or the terse command-only
+    [Dev Quickstart](dev-quickstart.md). `README.md` in the repo now walks through
+    the same ground step by step (install through troubleshooting) — it's the long
+    version, not the short one.
 
 ---
 
@@ -97,7 +100,9 @@ No. Cleanup rules default to dry-run. Nothing is deleted unless you explicitly e
 Back up the Docker `media/` volume and the PostgreSQL data directory. If you lose the DB but keep the files, a re-run will re-discover and re-verify everything.
 
 **Does it work with multiple Google accounts?**
-The infrastructure supports it (per-account token files). Multi-account onboarding UI is planned.
+Not yet — one account at a time today. A per-account token-path helper exists in
+the code but nothing calls it with a real second account; multi-account is planned
+(see `docs/ai-dev/GOALS_TODOS.md`, phases 14/16-20).
 
 **Can I use it with Outlook or Yahoo?**
 Not yet — IMAP support is on the roadmap (Phases 16-21 in `docs/ai-dev/GOALS.md`).

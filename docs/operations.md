@@ -6,15 +6,19 @@ Day-to-day operations guide. Everything here can be run by a human with `make` c
 
 ## Daily Operations (Celery handles automatically)
 
-These run on schedule via Celery Beat. **Gmail incremental sync runs automatically every 6 hours** — no manual command needed for normal operation. Manual trigger if needed for other tasks:
+Only these three run on schedule via Celery Beat (`backend_django/celery_app.py` is
+the source of truth — everything else below needs a manual command or a dashboard
+button):
 
 | Task | Schedule | Manual command |
 |------|----------|----------------|
-| Gmail incremental sync | Every 6h | (automatic via Celery) |
-| Apply protected senders | Every 6h | (runs with sync) |
-| Cleanup rules | 3x/day (06/12/18) | `make cleanup-run` |
-| Gmail reconciliation | Daily 03:00 UTC | `make gmail-reconcile` |
-| Soft-delete purge (90d) | Weekly Sun 04:00 | `make gmail-purge-expired` |
+| Gmail incremental sync | Every 6h | `make gmail-incremental` |
+| Apply protected senders | Every 6h (offset 30m) | (runs with sync) |
+| Cleanup rules (all enabled) | 3x/day (06/12/18 UTC) | `make cleanup-run` |
+
+**Not automatic today** (run manually, or via the dashboard's action buttons —
+`/dashboard/`): Drive/Photos/Documents discovery and download, Gmail reconciliation,
+soft-delete purge. See the command list below.
 
 ---
 
@@ -142,6 +146,8 @@ make logs      # tail all logs
 ```bash
 make redeploy  # git pull + build + restart + migrate
 ```
+Full walkthrough (backup-first, the non-root `fix-perms` one-timer, rolling back,
+diffing new `.env` variables): `docs/upgrading.md`.
 
 ### Celery
 ```bash
@@ -204,6 +210,10 @@ This flag does not affect `make db-backup` / `make db-restore`, which always wor
    ```
    Counts should match. `docker rm -f backdeezup-restore-test` when done.
 
+This only covers the database. `MEDIA_ROOT` has no built-in backup command — see
+`docs/disaster-recovery.md` for what that means if you lose it, the database, or
+both, and how far you can get back.
+
 ---
 
 ## Troubleshooting
@@ -222,18 +232,24 @@ This flag does not affect `make db-backup` / `make db-restore`, which always wor
 
 ## Scheduled Tasks (Celery Beat)
 
-Edit schedules at `/admin/django_celery_beat/`. Current defaults:
+Source of truth: `backend_django/celery_app.py`. The static entries get seeded into
+`/admin/django_celery_beat/` as `PeriodicTask` rows on first Beat startup, and can be
+edited there afterward (the setup wizard's Schedule step re-points the same three rows
+to a daily/weekly preset — it doesn't add new ones):
 
-| Task | Frequency |
-|------|-----------|
-| `task_gmail_incremental_sync` | Every 6 hours |
-| `task_apply_protected_senders` | Every 6 hours |
-| `task_run_cleanup_rules` | 3x/day (06:00, 12:00, 18:00) |
-| `task_gmail_reconcile` | Daily 03:00 UTC |
-| `task_purge_expired_soft_deletes` | Weekly Sunday 04:00 UTC |
-| `task_docs_discover` | Weekly Monday 03:00 UTC |
-| `task_docs_download_batch` | Nightly 02:30 UTC |
-| `task_photos_download_batch` | Nightly 02:00 UTC |
+| Task | Frequency | On by default? |
+|------|-----------|-----------------|
+| `task_gmail_incremental_sync` | Every 6 hours | Yes |
+| `task_apply_protected_senders` | Every 6 hours (offset 30m) | Yes |
+| `task_run_cleanup_rules` | 3x/day (06:00, 12:00, 18:00 UTC) | Yes |
+| `task_integrity_check` (Phase 31) | Weekly Monday 03:00 UTC | Yes (`INTEGRITY_CHECK_ENABLED`) |
+| `task_check_backup_freshness` (Phase 33) | Hourly | No (`NOTIFY_STALE_BACKUP_HOURS=0`) |
+| `task_restore_smoke_test` (Phase 37) | Weekly Monday 04:30 UTC | No (`RESTORE_SMOKE_TEST_ENABLED=0`) |
+| `task_db_backup` (Phase 38) | Weekly Sunday 04:00 UTC | No (`DB_BACKUP_ENABLED=0`) |
+
+**Not scheduled at all today** — always manual (`make ...` or a dashboard button):
+Drive/Photos/Documents discovery and download, Gmail reconciliation
+(`task_gmail_reconcile`), soft-delete purge (`task_purge_expired_soft_deletes`).
 
 ---
 

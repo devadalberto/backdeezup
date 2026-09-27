@@ -1,0 +1,30 @@
+# Optional reverse proxy (Phase 48) -- opt-in via `docker compose --profile caddy up`.
+# nginx (docker-compose.yml, no profile) stays the default; this is an alternative
+# for a real public hostname with automatic HTTPS, not a requirement.
+#
+# DOMAIN and CADDY_TLS_MODE are always set by docker-compose.yml's `environment:`
+# block for this service (with defaults localhost / internal) -- Caddyfile
+# placeholders don't support a bash-style `:-default` fallback, so the default
+# lives in docker-compose.yml instead. Override both in .env to switch to real
+# automatic HTTPS via Let's Encrypt. See docs/deployment.md.
+
+{$DOMAIN}
+tls {$CADDY_TLS_MODE}
+
+encode gzip
+
+# Static files and Wagtail image renditions served directly from the shared
+# volumes -- mirrors nginx/nginx.conf's two `alias` locations. Everything else
+# (including /documents/<id>/, which Wagtail already streams from Django
+# itself) goes through the reverse proxy below.
+handle_path /static/* {
+	root * /app/staticfiles
+	file_server
+}
+
+handle_path /media/images/* {
+	root * /app/media/images
+	file_server
+}
+
+reverse_proxy web:8000

@@ -26,6 +26,7 @@ services:
 
   web:
     build: .
+    image: ${BACKDEEZUP_IMAGE:-backdeezup:local}
     restart: unless-stopped
     env_file: .env
     environment:
@@ -56,6 +57,7 @@ services:
 
   celery:
     build: .
+    image: ${BACKDEEZUP_IMAGE:-backdeezup:local}
     restart: unless-stopped
     command: celery -A celery_app worker -l info -c 2 -Q default,celery --without-heartbeat
     env_file: .env
@@ -85,6 +87,7 @@ services:
 
   celerybeat:
     build: .
+    image: ${BACKDEEZUP_IMAGE:-backdeezup:local}
     restart: unless-stopped
     command: celery -A celery_app beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     env_file: .env
@@ -126,9 +129,35 @@ services:
     depends_on:
       - web
 
+  # ── Optional alternative reverse proxy (Phase 48) ──────────────────────────
+  # Opt-in only: `docker compose --profile caddy up -d`. nginx above is still the
+  # default and keeps running alongside it (different ports) unless you stop it
+  # yourself -- see docs/deployment.md for when to pick Caddy over nginx and how
+  # to run Caddy-only.
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["caddy"]
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+      CADDY_TLS_MODE: ${CADDY_TLS_MODE:-internal}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - media:/app/media:ro
+      - staticfiles:/app/staticfiles:ro
+    ports:
+      - "${BIND_ADDR:-127.0.0.1}:80:80"
+      - "${BIND_ADDR:-127.0.0.1}:443:443"
+    depends_on:
+      - web
+
 volumes:
   pgdata:
   media:
     external: true
     name: backdeezup_media
   staticfiles:
+  caddy_data:
+  caddy_config:
