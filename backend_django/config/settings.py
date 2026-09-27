@@ -106,6 +106,15 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
 
+# ── Reverse proxy trust (Phase 50) ────────────────────────────────────────────
+# nginx/Caddy are the only way in (BIND_ADDR defaults to 127.0.0.1, Phase 39;
+# `web`'s own directly-published port doesn't route to gunicorn at all -- see
+# docker-compose.yml), so it's safe to trust the X-Forwarded-* headers they set.
+# Without this, request.build_absolute_uri() (core/oauth.py's redirect_uri) comes
+# out http:// instead of https://, which Google's OAuth flow silently rejects.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+
 ROOT_URLCONF = 'config.urls'
 TEMPLATES = [{
     'BACKEND': 'django.template.backends.django.DjangoTemplates',

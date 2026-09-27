@@ -1206,3 +1206,73 @@ USER DECISIONS (2026-09-26) -- all resolved
   d. ORDER: multi-account (Phases 14, 16-20) runs AFTER Track B (Phases 31-38). Tracks C
      and D are not blocked by it. Phases 28-30 assume a single account; when 14 / 16-20
      land, the wizard / OAuth pages get an "add another account" follow-up phase.
+
+================================================================
+BUGS FOUND POST-ROADMAP
+================================================================
+
+PHASE 50 -- Fix OAuth redirect_uri behind reverse proxy (browser flow)
+  Size: S.  Risk: low (settings + nginx/Caddy config only, no schema/data changes,
+  no behavior change for the unaffected `make auth` CLI flow).
+
+  Root cause (confirmed by reading the actual code, not guessed):
+    - `backend_django/core/oauth.py` builds the OAuth redirect_uri via
+      `request.build_absolute_uri(reverse("oauth_callback"))` on both the start
+      and callback legs -- fully dynamic, derived from what Django thinks the
+      current request's scheme/host/port are.
+    - `nginx/nginx.conf`'s `location /` sends `proxy_set_header Host $host;` --
+      nginx's `$host` variable strips any port from the original Host header, so
+      Django's HTTP_HOST arrives as e.g. `localhost` with no port at all,
+      regardless of what port nginx itself is actually listening on.
+    - `backend_django/config/settings.py` never sets `SECURE_PROXY_SSL_HEADER` or
+      `USE_X_FORWARDED_HOST`, even though nginx already sends
+      `X-Forwarded-Proto: https` (`nginx.conf` line ~58). Django ignores that
+      header without those settings, so `request.is_secure()` is False and
+      `request.scheme` defaults to `http`.
+    - Net effect: the redirect_uri actually sent to Google ends up something like
+      `http://localhost/oauth/callback` -- wrong scheme, no port -- which won't
+      match whatever's registered as an authorized redirect URI in Google Cloud
+      Console for this client. Google shows its generic, unhelpful "Something
+      went wrong / Sorry, something went wrong there. Try again." page right
+      after the user approves scopes.
+    - This is **not** host/port-specific -- it would break identically at the
+      documented default (nginx on 8445) exactly as it did on a host running
+      nginx on a remapped port (18445). Found 2026-09-27 debugging a real
+      install on a second machine (unrelated port-conflict investigation
+      surfaced it as a side effect).
+    - The CLI `make auth` flow (`google_media_backup`/`google_gmail_backup`
+      management commands) is a **separate code path** with no
+      request-based redirect_uri construction -- confirmed unaffected, and is
+      the working fallback in the interim.
+
+  Fix:
+    1. `backend_django/config/settings.py`: add
+       `SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')` and
+       `USE_X_FORWARDED_HOST = True`. Standard Django guidance for exactly this
+       deployment shape (app only ever reachable through a proxy that sets
+       X-Forwarded-Proto) -- note in a comment that this trusts nginx/Caddy as
+       the sole entry point, consistent with BIND_ADDR defaulting to
+       127.0.0.1 (Phase 39); don't silently weaken that assumption elsewhere.
+    2. `nginx/nginx.conf`: change `proxy_set_header Host $host;` to
+       `proxy_set_header Host $http_host;` in the HTTPS server block's
+       `location /` (`$http_host` preserves the port the client actually
+       connected on; `$host` does not). Only that one location block proxies to
+       `web` -- the HTTP 80 block just redirects to HTTPS and doesn't need this.
+    3. Check `Caddyfile` (Phase 48) for the same class of bug before assuming
+       it's fine -- Caddy's `reverse_proxy` forwards the original Host header
+       and sets X-Forwarded-Proto automatically by default, so it may already be
+       correct, but verify rather than assume.
+    4. Check `docs/authentication.md` and README's "Connect Google" section for
+       any claim that the browser OAuth flow works today -- correct if it
+       overstates it.
+
+  Verify: this can be checked without live Google network access (no Google
+  network from vertex-dev -- see memory). Use Django's RequestFactory (or the
+  test client) to simulate exactly the headers nginx now sends
+  (`X-Forwarded-Proto: https`, `Host: <host>:<port>` as `$http_host` would send
+  it) against the oauth-start view, and confirm `request.build_absolute_uri(...)`
+  / the actual redirect_uri passed to the Google auth flow now comes out as
+  `https://<host>:<port>/...` -- not by hitting Google, by inspecting what the
+  app itself constructs. A scoped test file for this (e.g.
+  `core/tests_oauth_redirect.py`) is reasonable given Phase 6's per-view-test
+  convention.

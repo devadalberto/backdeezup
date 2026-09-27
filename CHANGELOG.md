@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Phase 50** — the Phase 28 browser OAuth flow (`/dashboard/connect/start/`) was
+  broken behind nginx **at any host or port**, including the documented default
+  (`localhost:8445`) — not specific to any one install. `core/oauth.py` builds its
+  Google redirect_uri from `request.build_absolute_uri()`, but `nginx.conf` forwarded
+  `Host: $host` (nginx's `$host` strips the port) and `settings.py` never set
+  `SECURE_PROXY_SSL_HEADER`/`USE_X_FORWARDED_HOST` despite nginx already sending
+  `X-Forwarded-Proto: https`. Result: the redirect_uri Google received came out
+  `http://<host>/...` — wrong scheme, no port — which it silently rejects after the
+  user approves scopes (Google's generic "Something went wrong" page, no useful
+  detail). Fixed: `nginx.conf` now sends `Host: $http_host` (preserves the port);
+  `settings.py` now trusts nginx's `X-Forwarded-Proto`. Caddy (Phase 48) needed no
+  change — its `reverse_proxy` already preserves the original `Host` header and sets
+  `X-Forwarded-Proto`/`X-Forwarded-Host` by default. The CLI `make auth` flow was
+  never affected (separate code path, no request-based redirect_uri) and was the
+  working fallback while this was open. New regression test
+  (`core/tests_oauth.py::test_connect_start_redirect_uri_respects_forwarded_proto_and_port`)
+  — confirmed it actually catches the bug by reverting the settings.py fix and
+  watching it fail (`http://` instead of `https://`) before restoring it.
+
 ### Changed
 - Removed `docs/backdeezup-prompts-2026-05-19.md` (an old raw session-prompt dump,
   never referenced from anywhere) and added `*prompt*`/`*propmt*` patterns to

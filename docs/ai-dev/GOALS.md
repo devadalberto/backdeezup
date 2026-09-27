@@ -179,6 +179,21 @@ PHASE 47 -- Prebuilt images + versioned release workflow (DONE)
 PHASE 48 -- Optional Caddy HTTPS compose profile (DONE)
 PHASE 49 -- One-line installer + upgrade script (DONE -- final phase of this roadmap)
 
+================================================================
+BUGS FOUND POST-ROADMAP (not part of the original V2 plan)
+================================================================
+PHASE 50 -- Fix OAuth redirect_uri behind reverse proxy (browser flow) (DONE)
+  Found 2026-09-27 debugging a real install (PDX-CL1): the Phase 28 browser OAuth
+  flow fails universally behind nginx (any host, any port, not specific to that
+  machine) -- Google shows a generic "Something went wrong" after the user approves
+  scopes. `core/oauth.py` builds redirect_uri from `request.build_absolute_uri()`,
+  but nginx forwards `Host: $host` (strips the port) and Django has no
+  SECURE_PROXY_SSL_HEADER/USE_X_FORWARDED_HOST configured despite nginx sending
+  X-Forwarded-Proto: https -- so the redirect_uri sent to Google ends up wrong
+  scheme (http) and missing the port entirely. The CLI `make auth` flow is
+  unaffected (different code path, no request-based redirect_uri) and is the
+  working fallback until this lands.
+
 NOT PHASED (backlog, needs a user decision first): restore to a different Google
 account, restore into Drive, per-rule cleanup schedules, NAS packages, animated
 demos, sample-Google-data test install, SBOM-signed releases.

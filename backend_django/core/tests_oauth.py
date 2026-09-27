@@ -63,6 +63,36 @@ def test_connect_start_redirects_to_google_and_stores_state(staff_client, tmp_pa
 
 
 @pytest.mark.django_db
+def test_connect_start_redirect_uri_respects_forwarded_proto_and_port(staff_client, tmp_path):
+    """Phase 50 regression. nginx forwards the original Host (port included, via
+    $http_host) and X-Forwarded-Proto: https; without SECURE_PROXY_SSL_HEADER /
+    USE_X_FORWARDED_HOST, request.build_absolute_uri() came out http://<host>/...
+    -- wrong scheme, no port -- which Google's OAuth flow silently rejected after
+    the user approved scopes. django.test.Client honors these headers exactly
+    like real WSGI env vars, so this exercises the same code path a request
+    through nginx does, no live network needed."""
+    secrets = tmp_path / "client.json"
+    secrets.write_text(json.dumps({"installed": {
+        "client_id": "x", "client_secret": "y",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "redirect_uris": ["https://testserver:18445/api/oauth/callback"],
+    }}))
+    with patch.object(oauth, "CLIENT_SECRETS", str(secrets)):
+        resp = staff_client.post(
+            "/dashboard/connect/start/",
+            HTTP_X_FORWARDED_PROTO="https",
+            HTTP_HOST="testserver:18445",
+        )
+    assert resp.status_code == 302
+
+    from urllib.parse import parse_qs, urlparse
+
+    redirect_uri = parse_qs(urlparse(resp["Location"]).query)["redirect_uri"][0]
+    assert redirect_uri == "https://testserver:18445/api/oauth/callback"
+
+
+@pytest.mark.django_db
 def test_connect_start_missing_secrets_is_humanized(staff_client, tmp_path):
     with patch.object(oauth, "CLIENT_SECRETS", str(tmp_path / "missing.json")):
         resp = staff_client.post("/dashboard/connect/start/")
