@@ -1744,3 +1744,83 @@ PHASE 64 -- Fix core/storage.py crashing when MEDIA_ROOT doesn't exist yet (XS)
   the local reproduction (moving the directory away, matching CI's exact
   missing-directory condition) is the practical ceiling of verification
   here, and it's a faithful reproduction, not a guess.
+
+  CI RESULT after pushing (2026-09-28): confirmed via `gh run view --json
+  status,conclusion,jobs` on run 36459787781 -- `lint: success`,
+  `sast-bandit: success`, `test: success`. Phase 55's original 3-job goal
+  is achieved. Overall run conclusion is still `failure` because a fourth,
+  unrelated job (`compose-smoke`, never part of Phase 55's scope) failed.
+  See PHASE 65 below.
+
+PHASE 65 -- Fix compose-smoke CI job: missing external "backdeezup_media" volume (XS)
+  Size: XS. Risk: none -- one added CI step, no application/compose logic
+  change.
+
+  Trigger: after Phase 64 shipped and all three of Phase 55's target jobs
+  went green, the overall CI run (36459787781) still showed `failure`
+  because `compose-smoke` failed.
+
+  Facts confirmed (not guessed):
+    - Real failure log (`gh run view 36459787781 --log-failed`), tail of
+      the "Start full Docker Compose stack" step:
+        Network backdeezup_default  Created
+        external volume "backdeezup_media" not found
+        ##[error]Process completed with exit code 1.
+    - `docker-compose.yml`'s `volumes:` section declares
+      `media: external: true` -- Compose never creates an external volume
+      itself; it must already exist before `docker compose up` runs.
+    - `git log -S "external: true" --oneline -- docker-compose.yml` ->
+      commit `3f83107` ("fix: mark backdeezup_media as external volume to
+      suppress WARN on docker compose up") -- predates every phase from
+      this session (50 through 64). This is a pre-existing gap, not a
+      regression introduced by Phase 53 or 58 (the two phases that did
+      touch `docker-compose.yml` this session), confirmed by checking that
+      neither of those phases' diffs touched the `volumes:` section.
+    - `Makefile`'s `up:` target already handles this correctly
+      (Makefile:112-114):
+        up:
+            @docker volume create backdeezup_media >/dev/null   # external volume (docker-compose.yml) -- Compose never creates it for you; safe to re-run
+            docker compose up -d
+    - `.github/workflows/ci.yml`'s `compose-smoke` job (starts line 204)
+      replicates most of `make up`'s setup by hand -- writes `.env`
+      (line 237-269), generates a self-signed cert (210-218), creates
+      dummy Google client secrets (220-235) -- but its "Start full Docker
+      Compose stack" step (271-272) is a bare `docker compose up -d
+      --build`, never the volume-create step.
+
+  Fix: add `docker volume create backdeezup_media` before `docker compose
+  up -d --build` in the "Start full Docker Compose stack" step (or as its
+  own preceding step) in `.github/workflows/ci.yml`'s `compose-smoke` job.
+  `docker volume create` is idempotent/safe to re-run (matches the
+  Makefile's own comment), so no conditional/existence-check needed.
+
+  Verify: `gh run list --workflow=ci.yml --limit 1` / `gh run view --json
+  status,conclusion,jobs` on the commit carrying this fix -- confirm
+  `compose-smoke` gets past volume creation. The job has several further
+  steps after it (wait-for-healthy, run migrations, 3 HTTP smoke tests)
+  that have never been exercised successfully before (this whole job has
+  likely been broken since commit `3f83107`) -- if one of THOSE fails
+  next, that is new information requiring its own real-log diagnosis, not
+  something to assume is also fixed by this one change. This dev box has
+  no live compose stack to test against directly; CI itself is the
+  verification environment here.
+
+  SCOPE EXPANDED during implementation: `grep -n "Start full Docker Compose
+  stack"` found a SECOND occurrence (line 420-ish) in the `playwright` job
+  -- it independently brings up its own full compose stack (separate
+  runner, `needs: compose-smoke`, currently shows as `skipped` since it
+  never gets to run while `compose-smoke` fails first) with the exact same
+  bare `docker compose up -d --build`, same bug. Applied the identical fix
+  to both occurrences (`replace_all` on the identical text) rather than
+  treating it as a separate phase, since it's the same root cause and same
+  one-line fix, just a second copy of the same pattern.
+
+  STATUS: DONE (2026-09-28). Applied `docker volume create backdeezup_media`
+  immediately before `docker compose up -d --build` in both the
+  `compose-smoke` and `playwright` jobs' "Start full Docker Compose stack"
+  steps. Verified: `python3 -c "import yaml; yaml.safe_load(...)"` confirms
+  the workflow file is still valid YAML, and both jobs' step lists are
+  otherwise unchanged (same step names/order, just the one new command
+  line inside the existing step). Real CI-green confirmation (this phase's
+  own Verify step) needs the commit pushed -- can't run GitHub Actions or
+  a full compose stack from this dev box.

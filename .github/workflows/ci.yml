@@ -269,7 +269,9 @@ jobs:
           EOF
 
       - name: Start full Docker Compose stack
-        run: docker compose up -d --build
+        run: |
+          docker volume create backdeezup_media
+          docker compose up -d --build
 
       - name: Wait for web service to be healthy
         run: |
@@ -418,7 +420,9 @@ jobs:
           EOF
 
       - name: Start full Docker Compose stack
-        run: docker compose up -d --build
+        run: |
+          docker volume create backdeezup_media
+          docker compose up -d --build
 
       - name: Wait for web service to be ready
         run: |

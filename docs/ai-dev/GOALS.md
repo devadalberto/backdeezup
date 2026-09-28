@@ -630,6 +630,52 @@ PHASE 64 -- Fix core/storage.py crashing when MEDIA_ROOT doesn't exist yet (XS) 
   scoped full pytest run (all 6 files, same as Phase 63's verification)
   passes cleanly. Full detail: GOALS_TODOS.md.
 
+PHASE 65 -- Fix compose-smoke CI job: missing external "backdeezup_media" volume (XS) (DONE)
+  Found live: after Phase 64 shipped, `lint`/`sast-bandit`/`test` all went
+  green (Phase 55's original goal, confirmed via `gh run view --json
+  status,conclusion,jobs`) -- but the overall run still showed `failure`
+  because `compose-smoke` failed. Confirmed unrelated to anything from this
+  session: `git log -S "external: true" -- docker-compose.yml` shows the
+  `media:` volume was marked `external: true` in commit `3f83107` ("fix:
+  mark backdeezup_media as external volume to suppress WARN on docker
+  compose up"), which predates every phase from this session (50-64).
+  `compose-smoke` has likely been broken since that commit.
+
+  Facts confirmed by reading the actual CI log (`gh run view --log-failed`)
+  and the workflow file:
+    - The exact failure: `external volume "backdeezup_media" not found` on
+      `docker compose up -d --build`, then `##[error]Process completed with
+      exit code 1`.
+    - `docker-compose.yml`'s `volumes:` section (bottom of file) declares
+      `media: external: true` -- Compose will never create this volume
+      itself; something has to run `docker volume create backdeezup_media`
+      first.
+    - `Makefile`'s `up:` target already does this correctly:
+        up:
+            @docker volume create backdeezup_media >/dev/null   # external volume -- Compose never creates it for you; safe to re-run
+            docker compose up -d
+    - `.github/workflows/ci.yml`'s `compose-smoke` job (line 204) replicates
+      most of `make up`'s setup manually (writes `.env`, generates a
+      self-signed cert, creates dummy Google client secrets) but its "Start
+      full Docker Compose stack" step (line 271-272) is a bare
+      `docker compose up -d --build` -- it never runs the volume-create
+      step at all.
+
+  Fix: add `docker volume create backdeezup_media` (matching the Makefile's
+  own comment: "external volume -- Compose never creates it for you; safe
+  to re-run") as its own step, or prepended to the existing "Start full
+  Docker Compose stack" step, right before `docker compose up -d --build`
+  in `.github/workflows/ci.yml`'s `compose-smoke` job.
+
+  Verify: `gh run list --workflow=ci.yml --limit 1` shows `compose-smoke`
+  passing (or at least progressing past the volume-creation step -- the
+  job has several further smoke-test steps after it that were never
+  reached and have not been verified independently; if one of those fails
+  next, diagnose it separately with real log evidence rather than assuming
+  this one fix closes the whole job). This dev box has no live compose
+  stack to test the fix against directly -- CI itself is the verification
+  environment for this one. Full detail: GOALS_TODOS.md.
+
 NOT PHASED (backlog, needs a user decision first): restore to a different Google
 account, restore into Drive, per-rule cleanup schedules, NAS packages, animated
 demos, sample-Google-data test install, SBOM-signed releases.

@@ -27,6 +27,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   about sizing a 12-vCPU/36GB deployment. No application code changes.
 
 ### Fixed
+- **Phase 65** — after Phase 64, CI's `lint`, `sast-bandit`, and `test` jobs
+  all went green (Phase 55's original goal, confirmed via `gh run view --json
+  status,conclusion,jobs`), but the overall run still failed because
+  `compose-smoke` hit `external volume "backdeezup_media" not found` on
+  `docker compose up -d --build`. `docker-compose.yml`'s `media:` volume is
+  declared `external: true`, so Compose never creates it itself — confirmed
+  via `git log -S "external: true"` that this predates every phase from this
+  session (commit `3f83107`, well before Phase 50), unrelated to anything
+  changed here. `Makefile`'s `up:` target already runs `docker volume create
+  backdeezup_media` first; CI's `compose-smoke` job replicated the rest of
+  `make up`'s setup by hand but missed that one step — and the same bare
+  `docker compose up -d --build` pattern, same bug, was also found in the
+  `playwright` job (it independently brings up its own compose stack).
+  Fixed: added `docker volume create backdeezup_media` before `docker
+  compose up -d --build` in both jobs. Verified the workflow file is still
+  valid YAML with both jobs' other steps unchanged.
 - **Phase 64** — `core/storage.py`'s `usage()` called
   `shutil.disk_usage(settings.MEDIA_ROOT)` with no check that the directory
   exists first. Found live: pushing Phase 63 triggered a real CI run of the
