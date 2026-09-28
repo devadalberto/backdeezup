@@ -63,12 +63,15 @@ Requires only Docker + Docker Compose v2 (the `docker compose` plugin, not the
 standalone `docker-compose` binary). No local Python/uv/Node needed — everything
 runs in containers.
 
-**Hardware:** no benchmarked minimum exists yet. What's actually configured, in
-`docker-compose.yml`'s per-container resource limits: `web` (1.0 CPU / 512MB), `celery`
-(2.0 CPU / 1GB), `celerybeat` (0.25 CPU / 192MB) — a combined ceiling of about 3.25
-CPU / 1.7GB for those three. `db`, `redis`, and `nginx` have no configured limit today.
-Treat this as the compose file's configured ceiling, not a tested "runs comfortably
-on X" claim.
+**Hardware:** no benchmarked minimum exists yet. Default resource limits, in
+`docker-compose.yml`: `web` (1.0 CPU / 512MB), `celery` (2.0 CPU / 1GB), `celerybeat`
+(0.25 CPU / 192MB) — a combined ceiling of about 3.25 CPU / 1.7GB for those three.
+`db`, `redis`, and `nginx` have no configured limit today. These are all raisable via
+`.env` on bigger hardware (`CELERY_CONCURRENCY`, `WEB_CPUS`/`WEB_MEMORY`,
+`CELERY_CPUS`/`CELERY_MEMORY`, `CELERYBEAT_CPUS`/`CELERYBEAT_MEMORY`, Phase 53) —
+see "Sizing for Bigger Hardware" in `docs/operations.md` for recommended values per
+vCPU/RAM tier. Treat the defaults as the compose file's original ceiling, not a
+tested "runs comfortably on X" claim.
 
 ---
 

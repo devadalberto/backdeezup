@@ -157,6 +157,33 @@ make celery-logs     # tail worker + beat logs
 
 ---
 
+## Sizing for Bigger Hardware
+
+Gmail downloads are I/O-bound (network call + `.eml` write + SHA-256 hash + DB
+save per message) — more vCPUs mostly help by letting more of these run in
+parallel without contending for cores, not by making each one faster. The real
+ceiling on `make gmail-loop WORKERS=N` is Gmail's own per-user API quota, not
+your CPU count — pushing far past ~15-20 workers tends to trade throughput for
+429 rate-limit errors rather than gain anything. `CELERY_CONCURRENCY` is a
+separate knob: it governs how many *Celery tasks* (reconcile, verify, media
+backup) run in parallel, not the threads inside one gmail-loop batch.
+
+All values below are `.env` vars (Phase 53) with defaults matching the
+project's original hardcoded ones — unset, nothing changes.
+
+| Hardware       | `WORKERS` (gmail-loop) | `CELERY_CONCURRENCY` | `CELERY_CPUS` / `CELERY_MEMORY` | `MAX_CONCURRENT_DOWNLOADS` |
+|----------------|------------------------|-----------------------|----------------------------------|------------------------------|
+| 2 vCPU / 4GB   | 10 (default)           | 2 (default)           | 2.0 / 1G (default)               | 2 (default)                  |
+| 4 vCPU / 8GB   | 12–15                  | 3                     | 3.0 / 2G                         | 3                             |
+| 12 vCPU / 36GB | 16–20                  | 4                     | 4.0 / 4G                         | 4                             |
+
+Only raise `GOOGLE_API_MAX_RPS` (default `0`, disabled) if you actually see
+429/`rateLimitExceeded` errors climbing in `make celery-logs` — don't
+preemptively throttle. After changing any `.env` value: `make up` (not
+`restart` — see the Troubleshooting table below for why).
+
+---
+
 ## Database Backup / Restore
 
 ### Back up

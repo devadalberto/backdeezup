@@ -52,14 +52,14 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'
-          memory: 512M
+          cpus: '${WEB_CPUS:-1.0}'
+          memory: ${WEB_MEMORY:-512M}
 
   celery:
     build: .
     image: ${BACKDEEZUP_IMAGE:-backdeezup:local}
     restart: unless-stopped
-    command: celery -A celery_app worker -l info -c 2 -Q default,celery --without-heartbeat
+    command: celery -A celery_app worker -l info -c ${CELERY_CONCURRENCY:-2} -Q default,celery --without-heartbeat
     env_file: .env
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
@@ -82,8 +82,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.0'
-          memory: 1G
+          cpus: '${CELERY_CPUS:-2.0}'
+          memory: ${CELERY_MEMORY:-1G}
 
   celerybeat:
     build: .
@@ -112,8 +112,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
-          memory: 192M
+          cpus: '${CELERYBEAT_CPUS:-0.25}'
+          memory: ${CELERYBEAT_MEMORY:-192M}
 
   nginx:
     image: nginx:stable-alpine
