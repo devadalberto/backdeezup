@@ -387,6 +387,71 @@ PHASE 58 -- Fix nginx's HTTP->HTTPS redirect hardcoding port 8445 (S) (DONE)
   redirects to the *actual* published `NGINX_HTTPS_PORT`, not 8445 -- test both
   the default and a custom-port override. Full detail: GOALS_TODOS.md.
 
+PHASE 59 -- Fix Makefile ops commands hardcoding port 8844/8845 (ignoring custom ports) (S) (DONE)
+  Found live on PDX-CL1 (same deployment, right after Phase 58's port fix):
+  `make gmail-progress` failed with `python3 -m json.tool`'s confusing
+  "Expecting value: line 1 column 1 (char 0)" -- traced to `curl -s` silently
+  returning zero bytes because it hit the WRONG, unbound port.
+
+  Facts confirmed by reading the Makefile (not guessed):
+    - `HOST ?= http://localhost:8844` (Makefile:292) -- hardcoded, doesn't read
+      `.env`'s `NGINX_HTTP_PORT`/`NGINX_HTTPS_PORT`. 9 targets use `$(HOST)` in
+      a curl call: `progress`, `sync-download`, `sync-run` (3 calls inline),
+      `sync-import`, `sync-verify`, `sync-mark-delete`, `sync-commit-delete`,
+      `gmail-incremental`, `gmail-progress`.
+    - None of those curl calls pass `-S` (only `-s`), so a real connection
+      failure produces zero output with NO error message -- confirmed this is
+      exactly what happened on PDX-CL1 (port 8844 isn't published on this
+      deployment at all; nothing in its `docker ps` output listens there).
+    - `check-services` (Makefile:204,212) hardcodes literal ports `8845`/`8844`
+      directly (not even via a variable) for its own port-bound/HTTP-response
+      diagnostic checks -- same gap, worse (no override possible at all today).
+    - This is the THIRD recurrence of the same pattern this session: Phase 56
+      (`gmail-loop` ignoring `WORKERS=`), Phase 58 (nginx hardcoding the
+      redirect port), now the ops-command layer.
+    - `HOST`'s default is plain `http://`, matching `make run`'s bare dev
+      server (no nginx, no TLS) -- but the actual docker-compose deployment
+      fronts everything through nginx with a self-signed cert (Phase 58's
+      redirect goes exactly there), so hitting the HTTP port on a real
+      deployment costs an extra redirect hop `curl` won't follow without `-L`,
+      and the HTTPS endpoint needs `-k` for the self-signed cert (already the
+      documented convention elsewhere -- `docs/api.md`/`URL_INDEX.md` both
+      say `curl -k https://localhost:8445/...`).
+
+  Fix:
+    1. Compute `HOST` once, at Makefile-parse time, from `.env` if present,
+       falling back to today's defaults if not (so a plain git checkout with
+       no `.env` yet, or the standard un-customized install, behaves exactly
+       as today):
+         NGINX_HTTPS_PORT := $(shell grep -E '^NGINX_HTTPS_PORT=' .env 2>/dev/null | tail -1 | cut -d= -f2)
+         NGINX_HTTPS_PORT := $(if $(NGINX_HTTPS_PORT),$(NGINX_HTTPS_PORT),8445)
+         HOST ?= https://localhost:$(NGINX_HTTPS_PORT)
+       (Switches the default scheme from `http` to `https` -- going straight
+       to the real endpoint instead of relying on an unfollowed redirect.
+       `WORKERS=`/`LIMIT=`-style override still works: `make gmail-progress
+       HOST=...` continues to take precedence via `?=`.)
+    2. Add `-k` to every one of the 9 `$(HOST)`-using curl calls (matches the
+       project's own documented convention for hitting this self-signed-cert
+       endpoint elsewhere), and change `-s` to `-sS` on all of them so a real
+       failure prints curl's actual error instead of silently feeding
+       `json.tool` zero bytes.
+    3. `check-services`: replace the hardcoded `8845`/`8844` literals with the
+       same `.env`-read pattern (`WEB_PORT`/`NGINX_HTTP_PORT`, defaults
+       unchanged), so its own diagnostic actually checks the ports this
+       deployment is really using.
+    4. `docs/operations.md`: add a short note that these ops commands
+       auto-detect `.env`'s ports, so a customized deployment doesn't need
+       manual `HOST=` overrides for routine use.
+
+  Verify: `make -n gmail-progress` (dry-run) with no `.env` present shows the
+  unchanged default `https://localhost:8445` (behavior-preserving check, since
+  `.env` doesn't exist in this git checkout); construct a throwaway `.env`
+  with `NGINX_HTTPS_PORT=18445` and confirm the same dry-run now shows
+  `https://localhost:18445` -- delete the throwaway `.env` after. Full
+  end-to-end proof (an actual working `make gmail-progress` against a real
+  custom-port deployment) needs to happen on PDX-CL1, same as Phase 58.
+  Full detail: GOALS_TODOS.md.
+
 NOT PHASED (backlog, needs a user decision first): restore to a different Google
 account, restore into Drive, per-rule cleanup schedules, NAS packages, animated
 demos, sample-Google-data test install, SBOM-signed releases.

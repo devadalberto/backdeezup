@@ -201,7 +201,7 @@ check-services:
 		check "$$svc restart policy" "$$policyok" "$$policymsg"; \
 	done; \
 	\
-	for port in 8845 8844; do \
+	for port in $(WEB_PORT) $(NGINX_HTTP_PORT); do \
 		if python3 -c "import socket; s=socket.socket(); s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1); s.bind(('0.0.0.0',$$port)); s.close()" 2>/dev/null; then \
 			check "port $$port bound" "warn" "port $$port is NOT bound — Windows port exclusion may be blocking it (see GOALS.md Phase R1)"; \
 		else \
@@ -209,11 +209,11 @@ check-services:
 		fi; \
 	done; \
 	\
-	http_code=$$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://localhost:8844/ 2>/dev/null); \
+	http_code=$$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 http://localhost:$(NGINX_HTTP_PORT)/ 2>/dev/null); \
 	if [ "$$http_code" = "200" ] || [ "$$http_code" = "301" ] || [ "$$http_code" = "302" ]; then \
-		check "HTTP :8844/ (nginx) responds ($$http_code)" "ok" ""; \
+		check "HTTP :$(NGINX_HTTP_PORT)/ (nginx) responds ($$http_code)" "ok" ""; \
 	else \
-		check "HTTP :8844/ (nginx) responds" "fail" "got HTTP $$http_code (port 8845 direct has WSL2 bug — nginx on 8844 is the real access path)"; \
+		check "HTTP :$(NGINX_HTTP_PORT)/ (nginx) responds" "fail" "got HTTP $$http_code ($(WEB_PORT) direct has WSL2 bug — nginx on $(NGINX_HTTP_PORT) is the real access path)"; \
 	fi; \
 	\
 	echo ""; \
@@ -289,7 +289,17 @@ db-restore:
 	@echo "Restore complete."
 
 # ── Drive / Photos pipeline ───────────────────────────────────────────────────
-HOST  ?= http://localhost:8844
+# HOST (and check-services' port checks) default to this deployment's actual
+# ports (read from .env if present, else the standard defaults) instead of
+# hardcoded ports -- customized NGINX_HTTP_PORT/NGINX_HTTPS_PORT/WEB_PORT
+# (Phase 53/58) used to be silently ignored here (Phase 59).
+NGINX_HTTPS_PORT := $(shell grep -E '^NGINX_HTTPS_PORT=' .env 2>/dev/null | tail -1 | cut -d= -f2)
+NGINX_HTTPS_PORT := $(if $(NGINX_HTTPS_PORT),$(NGINX_HTTPS_PORT),8445)
+NGINX_HTTP_PORT := $(shell grep -E '^NGINX_HTTP_PORT=' .env 2>/dev/null | tail -1 | cut -d= -f2)
+NGINX_HTTP_PORT := $(if $(NGINX_HTTP_PORT),$(NGINX_HTTP_PORT),8844)
+WEB_PORT := $(shell grep -E '^WEB_PORT=' .env 2>/dev/null | tail -1 | cut -d= -f2)
+WEB_PORT := $(if $(WEB_PORT),$(WEB_PORT),8845)
+HOST  ?= https://localhost:$(NGINX_HTTPS_PORT)
 LIMIT ?= 100
 
 discover:
@@ -351,16 +361,16 @@ pipeline-all:
 	uv run python run_pipeline.py all --limit $(LIMIT)
 
 progress:
-	curl -s "$(HOST)/api/progress" | python3 -m json.tool || true
+	curl -skS "$(HOST)/api/progress" | python3 -m json.tool || true
 
 sync-download:
-	curl -s -X POST "$(HOST)/api/sync/download?limit=$(LIMIT)" | python3 -m json.tool || true
+	curl -skS -X POST "$(HOST)/api/sync/download?limit=$(LIMIT)" | python3 -m json.tool || true
 
 sync-run:
 	@bash -c '\
 	HOST=$(HOST); LIMIT=$(LIMIT); \
 	show_progress() { \
-		p=$$(curl -s "$$HOST/api/progress" 2>/dev/null); \
+		p=$$(curl -sk "$$HOST/api/progress" 2>/dev/null); \
 		pct=$$(echo "$$p" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[\"pct\"])" 2>/dev/null || echo 0); \
 		done_n=$$(echo "$$p" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[\"done\"])" 2>/dev/null || echo 0); \
 		total=$$(echo "$$p" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[\"total\"])" 2>/dev/null || echo 0); \
@@ -370,36 +380,36 @@ sync-run:
 	}; \
 	echo "Running full pipeline: download -> import -> verify (single pass)"; \
 	dl=0; imp=0; ver=0; \
-	result=$$(curl -s -X POST "$$HOST/api/sync/download?limit=$$LIMIT"); \
+	result=$$(curl -sk -X POST "$$HOST/api/sync/download?limit=$$LIMIT"); \
 	dl=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"downloaded\",0))" 2>/dev/null || echo 0); \
 	echo "  download: $$dl"; show_progress; \
-	result=$$(curl -s -X POST "$$HOST/api/sync/import?limit=$$LIMIT"); \
+	result=$$(curl -sk -X POST "$$HOST/api/sync/import?limit=$$LIMIT"); \
 	imp=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"imported\",0))" 2>/dev/null || echo 0); \
 	echo "  import: $$imp"; show_progress; \
-	result=$$(curl -s -X POST "$$HOST/api/sync/verify?limit=$$LIMIT"); \
+	result=$$(curl -sk -X POST "$$HOST/api/sync/verify?limit=$$LIMIT"); \
 	ver=$$(echo "$$result" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get(\"verified\",0))" 2>/dev/null || echo 0); \
 	echo "  verify: $$ver"; show_progress; \
 	echo "Pass done (dl=$$dl imp=$$imp ver=$$ver). Run again or use: while make sync-run | grep -q \"dl=0 imp=0 ver=0\"; do break; done"; \
 	[ "$$dl" -gt 0 ] || [ "$$imp" -gt 0 ] || [ "$$ver" -gt 0 ]'
 
 sync-import:
-	curl -s -X POST "$(HOST)/api/sync/import?limit=$(LIMIT)" | python3 -m json.tool || true
+	curl -skS -X POST "$(HOST)/api/sync/import?limit=$(LIMIT)" | python3 -m json.tool || true
 
 sync-verify:
-	curl -s -X POST "$(HOST)/api/sync/verify?limit=$(LIMIT)" | python3 -m json.tool || true
+	curl -skS -X POST "$(HOST)/api/sync/verify?limit=$(LIMIT)" | python3 -m json.tool || true
 
 sync-mark-delete:
-	curl -s -X POST "$(HOST)/api/sync/mark-delete?limit=$(LIMIT)" | python3 -m json.tool || true
+	curl -skS -X POST "$(HOST)/api/sync/mark-delete?limit=$(LIMIT)" | python3 -m json.tool || true
 
 sync-commit-delete:
-	curl -s -X POST "$(HOST)/api/sync/commit-delete?limit=$(LIMIT)" | python3 -m json.tool || true
+	curl -skS -X POST "$(HOST)/api/sync/commit-delete?limit=$(LIMIT)" | python3 -m json.tool || true
 
 # ── Gmail pipeline ────────────────────────────────────────────────────────────
 gmail-discover:
 	docker compose exec web python manage.py gmail_pipeline discover --max-pages 50 --page-size 500
 
 gmail-incremental:
-	curl -s -X POST "$(HOST)/api/gmail/sync/incremental" | python3 -m json.tool || true
+	curl -skS -X POST "$(HOST)/api/gmail/sync/incremental" | python3 -m json.tool || true
 
 WORKERS ?= 10
 
@@ -430,7 +440,7 @@ gmail-loop:
 	done
 
 gmail-progress:
-	curl -s "$(HOST)/api/gmail/progress" | python3 -m json.tool || true
+	curl -skS "$(HOST)/api/gmail/progress" | python3 -m json.tool || true
 
 gmail-reconcile:
 	docker compose exec web bash -c "cd /app/backend_django && python manage.py shell -c \"from google_gmail_backup.tasks import task_gmail_reconcile; print(task_gmail_reconcile())\""

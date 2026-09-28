@@ -27,6 +27,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   about sizing a 12-vCPU/36GB deployment. No application code changes.
 
 ### Fixed
+- **Phase 59** — 9 `make` ops commands (`gmail-progress`, `gmail-incremental`,
+  the `sync-*` targets, etc.) hardcoded `HOST ?= http://localhost:8844`, and
+  `check-services` hardcoded literal ports `8845`/`8844` directly — neither
+  read a customized `NGINX_HTTP_PORT`/`NGINX_HTTPS_PORT`/`WEB_PORT`. Found
+  live right after Phase 58: `make gmail-progress` failed with a confusing
+  `python3 -m json.tool` error ("Expecting value: line 1 column 1 (char 0)"),
+  traced to `curl -s` (no `-S`) silently returning zero bytes because it hit
+  a port this deployment doesn't have bound at all. Third recurrence of the
+  same "hardcoded default ignores `.env` override" pattern this session
+  (Phases 56, 58). Fixed: `HOST` and `check-services`'s port checks now read
+  `.env`'s actual values at Makefile-parse time, falling back to today's
+  defaults if `.env` isn't found; `HOST`'s default scheme also switched from
+  `http` to `https` (going straight to the real endpoint instead of relying
+  on an unfollowed redirect), and all 9 `$(HOST)`-using curl calls gained
+  `-k` (self-signed cert, matching the project's existing documented
+  convention elsewhere) and `-S` (so a real failure shows a real error
+  instead of silently feeding `json.tool` zero bytes). Verified via `make -n`
+  dry-runs, both with no `.env` (unchanged defaults) and with a throwaway
+  `.env` matching a real custom-port deployment.
 - **Phase 58** — nginx's HTTP→HTTPS redirect (`nginx/nginx.conf:13`,
   `return 301 https://$host:8445$request_uri;`) hardcoded port `8445` as a
   literal, but `nginx.conf` was bind-mounted as a static, unmodified file —

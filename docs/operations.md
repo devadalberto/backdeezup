@@ -2,6 +2,13 @@
 
 Day-to-day operations guide. Everything here can be run by a human with `make` commands — no AI, no Django knowledge required.
 
+Any `make` command that talks to the running stack over HTTP (`gmail-progress`,
+`gmail-incremental`, the `sync-*` targets, `check-services`, etc.) auto-detects
+this deployment's actual ports from `.env` (`NGINX_HTTPS_PORT`, `NGINX_HTTP_PORT`,
+`WEB_PORT`) — no manual `HOST=` override needed even if you've customized them
+(e.g. to run alongside another stack on the same host). Falls back to the
+standard defaults (8445/8844/8845) if `.env` isn't found or doesn't set them.
+
 ---
 
 ## Daily Operations (Celery handles automatically)
