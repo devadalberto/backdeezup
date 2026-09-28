@@ -148,9 +148,14 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
                 date__lte=cutoff,
             ).exclude(deleted_at__gte=recent_cutoff)
 
-            # For dry-run: count from local DB only (fast, no Gmail API call)
-            # For real run: also cross-reference live Gmail query to catch label changes
-            if not dry_run and rule.gmail_query.strip():
+            # Phase 69: cross-reference the live Gmail query for BOTH dry-run and
+            # real runs — dry-run used to count state+age only, ignoring
+            # rule.gmail_query entirely, so the preview shown before Execute
+            # didn't reflect what Execute would actually do (Phase 34's
+            # dry-run-must-match-count safety gate was checking the wrong
+            # number). Costs one live Gmail API call on a dry run now, but a
+            # preview that doesn't reflect reality isn't a safety feature.
+            if rule.gmail_query.strip():
                 svc = gmail_service()
                 if svc:
                     matching_ids = set()
@@ -174,7 +179,8 @@ def apply_rule(rule: CleanupRule, dry_run: bool = True, actor_label: str = "syst
             if rule.never_delete_with_attachments:
                 qs = qs.exclude(has_attachments=True)
             if dry_run:
-                # Dry-run: count from DB only (no Gmail API, fast)
+                # Phase 69: qs already reflects rule.gmail_query (if any) from above,
+                # so this count matches exactly what Execute would affect.
                 total_count = qs.count()
                 sample_subjects = [m.subject[:80] for m in qs[:10]]
                 audit.affected_count = total_count

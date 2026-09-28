@@ -80,6 +80,7 @@ jobs:
             backend_django/google_gmail_backup/tests_notify_wiring.py \
             backend_django/google_gmail_backup/tests_schemas.py \
             backend_django/google_gmail_backup/tests_undo_protect.py \
+            backend_django/google_gmail_backup/tests_analyze_mail_patterns.py \
             -v
 
   # ── 3. sast-bandit ────────────────────────────────────────────────────────

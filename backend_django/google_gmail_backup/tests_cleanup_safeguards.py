@@ -147,6 +147,49 @@ def test_never_delete_with_attachments_syncs_rule_condition(rule):
     ).exists()
 
 
+# ── Phase 69: dry-run must apply rule conditions, not just age ───────────────────
+
+@pytest.mark.django_db
+def test_dry_run_applies_gmail_query_not_just_age():
+    """Before Phase 69, dry-run counted state+age only and ignored
+    rule.gmail_query entirely — Execute (which DOES apply gmail_query
+    against live Gmail) could affect a completely different set than what
+    the dry-run preview showed. Two messages are equally old; only one
+    matches the rule's gmail_query per the mocked live search — dry-run
+    must report exactly that one, not both."""
+    rule = CleanupRule.objects.create(
+        name="Newsletter cleanup", gmail_query="from:newsletter",
+        action=CleanupRule.ACTION_TRASH, min_age_days=30, enabled=True,
+    )
+    matching = _msg(1)
+    matching.gmail_id = "matches-query"
+    matching.save()
+    non_matching = _msg(2)
+    non_matching.gmail_id = "does-not-match-query"
+    non_matching.save()
+
+    mock_svc = MagicMock()
+    mock_svc.users.return_value.messages.return_value.list.return_value.execute.return_value = {
+        "messages": [{"id": "matches-query"}],
+    }
+    with patch("google_gmail_backup.services_rules.gmail_service", return_value=mock_svc) as mocked:
+        audit = apply_rule(rule, dry_run=True)
+
+    assert mocked.called, "dry-run must call gmail_service() when rule.gmail_query is set"
+    assert audit.affected_count == 1
+    assert audit.affected_gmail_ids == ["matches-query"]
+
+
+@pytest.mark.django_db
+def test_dry_run_skips_gmail_query_call_when_query_is_empty(rule):
+    """rule fixture has gmail_query="" — dry-run must NOT call gmail_service
+    at all in that case (no behavior change for age-only rules)."""
+    _msg(1)
+    with patch("google_gmail_backup.services_rules.gmail_service", side_effect=AssertionError("must not be called")):
+        audit = apply_rule(rule, dry_run=True)
+    assert audit.affected_count == 1
+
+
 # ── /api/gmail/rules/{id}/execute — new Execute UI gate ──────────────────────────
 
 @pytest.fixture

@@ -396,3 +396,55 @@ class CleanupAuditLog(models.Model):
             models.Index(fields=["rule", "-started_at"]),
             models.Index(fields=["status", "-started_at"]),
         ]
+
+
+# ── Suggested Rule (Phase 70) ───────────────────────────────────────────────────
+
+class SuggestedRule(models.Model):
+    """
+    A candidate cleanup rule surfaced by `analyze_mail_patterns` from header-level
+    bulk-mail heuristics (List-Unsubscribe, Precedence: bulk, etc.) found in
+    already-downloaded .eml files. Read-only analysis output -- NEVER auto-applied.
+    A human reviews and turns one into a real CleanupRule via the existing
+    create_rule API, same as if they'd typed the conditions in by hand.
+    """
+
+    class SignalType(models.TextChoices):
+        LIST_UNSUBSCRIBE     = "list_unsubscribe",     "List-Unsubscribe header"
+        LIST_ID              = "list_id",              "List-Id header (mailing list)"
+        PRECEDENCE_BULK      = "precedence_bulk",       "Precedence: bulk/list"
+        REPLY_TO_MISMATCH    = "reply_to_mismatch",     "From/Reply-To domain mismatch"
+        RETURN_PATH_MISMATCH = "return_path_mismatch",  "From/Return-Path domain mismatch"
+
+    sender_domain = models.CharField(max_length=255, db_index=True)
+    signal_type   = models.CharField(max_length=30, choices=SignalType)
+
+    message_count  = models.IntegerField(default=0)
+    sample_sender  = models.CharField(max_length=320, blank=True, default="")
+    sample_subjects = models.JSONField(default=list, validators=[_validate_list_of_strings])
+
+    first_seen   = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    dismissed = models.BooleanField(
+        default=False,
+        help_text="Human reviewed and declined this suggestion -- do not resurface.",
+    )
+    created_rule = models.ForeignKey(
+        CleanupRule, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="suggestions",
+        help_text="Set once a human accepts this suggestion and turns it into a real rule.",
+    )
+
+    def __str__(self) -> str:
+        return f"{self.sender_domain} [{self.signal_type}] x{self.message_count}"
+
+    class Meta:
+        verbose_name        = "Suggested Rule"
+        verbose_name_plural = "Suggested Rules"
+        ordering            = ["-message_count"]
+        constraints          = [
+            models.UniqueConstraint(
+                fields=["sender_domain", "signal_type"], name="unique_suggestion_per_domain_signal",
+            ),
+        ]

@@ -2281,3 +2281,411 @@ Phase 68 -- `make upgrade` must restart nginx to actually load config changes
   to actually load Phase 67's resolver fix for the first time -- every
   `make upgrade` after that point will handle it automatically via this
   phase's new step.
+
+----------------------------------------------------------------
+Phase 69 -- Fix dry-run preview ignoring rule conditions
+----------------------------------------------------------------
+  Trigger: not a user bug report -- found while reading
+  backend_django/google_gmail_backup/services_rules.py and query_compiler.py
+  to ground Phase 70's design (user asked for "an agent to go through my
+  mail from the database side using the API to build and improve
+  existing rules"). Investigating how existing rules actually execute
+  surfaced this independently.
+
+  Investigation (real code reads, exact line numbers, not guessed):
+    1. backend_django/google_gmail_backup/models.py:275-283 --
+       RuleCondition.Field already includes CATEGORY, compiling (per
+       query_compiler.py:74-78) to Gmail's native `category:promotions`
+       search syntax. This DISPROVED my original Phase 70 premise
+       ("backfill labelIds so category becomes usable") -- category
+       filtering already exists at the model/compiler layer.
+    2. backend_django/google_gmail_backup/api.py:597-618 (create_rule
+       endpoint) -- confirms `rule.gmail_query` is NOT a separate,
+       independently-typed field: it's compiled from the submitted
+       RuleCondition list via `query_compiler.compile_conditions()` and
+       persisted as `gmail_query` at rule-creation time. So
+       `rule.gmail_query` is the authoritative representation of a
+       rule's full condition set.
+    3. backend_django/google_gmail_backup/services_rules.py:113-183
+       (apply_rule) -- read the FULL function, not just the part that
+       looked relevant:
+         - Line ~145-151 (dry-run count path): `qs = GmailMessage.objects
+           .select_for_update(skip_locked=True).filter(state=VERIFIED,
+           date__lte=cutoff).exclude(deleted_at__gte=recent_cutoff)` --
+           then protected-sender/attachment excludes, then
+           `total_count = qs.count()`. NO reference to `rule.gmail_query`
+           or `RuleCondition` anywhere in this branch.
+         - Line ~165-177 (only reached when `not dry_run`): builds
+           `matching_ids` by paging through
+           `svc.users().messages().list(q=rule.gmail_query, ...)` against
+           the LIVE Gmail API, then `qs = qs.filter(gmail_id__in=
+           matching_ids)` -- THIS is where sender/subject/category/label
+           conditions actually take effect. It is explicitly gated
+           `if not dry_run and rule.gmail_query.strip():` -- dry-run
+           never reaches it.
+         - The existing code comment directly above this block says:
+           "For dry-run: count from local DB only (fast, no Gmail API
+           call) / For real run: also cross-reference live Gmail query to
+           catch label changes" -- confirming this asymmetry was a
+           deliberate original design choice (a speed optimization),
+           not an oversight introduced later -- but one that silently
+           broke the accuracy guarantee Phase 34 depends on.
+    4. Cross-checked against Phase 34's actual safety gate:
+       `dry_run_confirmation_error()` (services_rules.py:34-49) blocks
+       the Execute UI path unless `confirm_count == rule.last_dry_run_count`
+       and the dry run is under 24h old. `rule.last_dry_run_count` is set
+       at services_rules.py:187-188 directly from the (currently
+       inaccurate) `total_count` computed in step 3's dry-run branch.
+       So the gate is real and does fire -- it's just gating against the
+       wrong number for any rule with a real condition.
+
+  Concrete failure scenario this produces: create a rule "category:
+  promotions AND older_than:30d, action=trash". Dry run shows, say,
+  "1,400 messages" (every VERIFIED message older than 30 days, rule
+  ignored). Execute (after the 24h/count-match gate passes on that wrong
+  number) actually only trashes the ~80 that are genuinely in
+  CATEGORY_PROMOTIONS. Not data-lossy in this direction (real run is
+  narrower than what dry-run promised) -- but the INVERSE is also
+  possible and IS data-lossy: a rule with a condition that WIDENS what
+  Gmail's live search matches versus the local age-only filter (e.g. a
+  condition that has nothing to do with age at all, or Gmail search
+  syntax matching messages the local `date__lte=cutoff` filter would
+  have excluded) could execute against MORE messages than the dry run
+  ever showed the user, with the confirmation count gate having approved
+  a completely unrelated number. The gate's entire purpose -- "you saw
+  this preview, you approved this count" -- is violated either direction.
+
+  Fix (this phase's deliverable): remove the `if not dry_run` guard on
+  the live-Gmail-query cross-reference block so it runs whenever
+  `rule.gmail_query.strip()` is non-empty, REGARDLESS of dry_run. The
+  existing `if dry_run: <count and return> else: <execute batch loop>`
+  split, which comes AFTER that point in the function, continues to be
+  the only thing that decides whether real trash/star/label/archive API
+  calls fire. Net diff is small: hoist the `svc = gmail_service(); ...
+  matching_ids ...; qs = qs.filter(gmail_id__in=matching_ids)` block
+  above the `if dry_run:` branch instead of inside an `if not dry_run:`
+  wrapper.
+
+  Rejected alternative (local ORM filter mirroring Gmail syntax):
+  considered building a parallel compiler that translates
+  RuleCondition rows into Django ORM `Q()` filters against `GmailMessage`
+  fields directly (`from_email_normalized__icontains`, `subject__icontains`,
+  `labels__contains`, etc.) instead of calling live Gmail at all, even
+  for real runs. Rejected for two concrete reasons found in code, not
+  hypothetical: (a) `labels` (google_gmail_backup/management/commands/
+  gmail_pipeline.py:125) is only populated `if not msg.subject and not
+  msg.from_address` -- i.e. only for messages that had no metadata
+  cached from search-time snippets, NOT backfilled for the bulk of
+  already-downloaded mail -- so a local CATEGORY filter would silently
+  under-match against real Gmail state; (b) Gmail's search operators
+  (`subject:`, quoted-phrase handling, `category:`, `older_than:`) have
+  their own matching semantics that a hand-rolled Python equivalent would
+  have to reverse-engineer and keep in permanent sync with Google's
+  actual behavior -- a real, ongoing drift risk. Reusing the exact same
+  live-query code path for both dry-run and real-run has zero drift risk
+  by construction (it's the same code, not a parallel implementation).
+
+  Honest tradeoff to document, not hide: dry-run now costs one live
+  Gmail API call per rule (previously zero, per the removed "fast, no
+  Gmail API call" comment) and requires valid Gmail auth even to preview
+  a rule, not just to execute it. Accepted: this is the literal thing
+  Phase 34's safety gate exists to guarantee, and a preview that doesn't
+  reflect reality isn't actually a safety feature.
+
+  Verify:
+    1. Read the affected test files first (tests_cleanup_safeguards.py,
+       tests_regression.py, tests_undo_protect.py, tests.py) to find
+       existing dry-run/execute-count assertions and confirm none assume
+       the OLD (buggy) "dry-run never calls Gmail" behavior in a way that
+       would now break -- if any do (e.g. asserting zero Gmail API mock
+       calls during a dry run), update them to reflect the corrected
+       contract rather than working around the fix.
+    2. Add/extend a test: create a CleanupRule with a real
+       RuleCondition (e.g. sender-restricted, not just age), mock the
+       Gmail service's `messages().list()` to return a known subset,
+       assert dry-run's `total_count`/`affected_gmail_ids` now matches
+       exactly what that mocked live query returns intersected with the
+       local age/protected/attachment filters -- not just every
+       VERIFIED+aged message.
+    3. Run the scoped test files locally with `DATABASE_URL=` cleared
+       (forces SQLite, matches CI) -- per this repo's standing
+       never-run-the-full-suite-on-this-dev-box constraint.
+
+  STATUS: DONE (2026-09-28). Edited services_rules.py:
+    - Removed the `not dry_run` gate on the live-Gmail-query
+      cross-reference block (was `if not dry_run and rule.gmail_query
+      .strip():`, now `if rule.gmail_query.strip():`), with an updated
+      comment explaining why (Phase 69, dry-run now costs one live Gmail
+      API call, trades speed for the preview actually being accurate).
+    - Updated the stale "Dry-run: count from DB only (no Gmail API,
+      fast)" comment on the count line to reflect that `qs` now already
+      incorporates `rule.gmail_query` filtering by that point.
+
+  Verified for real, not on paper:
+    1. Grepped every test file for `gmail_query=` to find any existing
+       rule fixture with a non-empty query that dry-run tests rely on --
+       found ONE: tests_regression.py's `CleanupRuleRatelimitTest`
+       (`gmail_query="from:newsletter"`), calling dry-run endpoints
+       WITHOUT mocking `gmail_service`. Read `gmail_service()`
+       (services_gmail.py:20-31) to confirm it returns `None` gracefully
+       (not an exception) when no credentials exist -- matches this dev
+       box's "no Google network" constraint -- so the existing `if svc:`
+       guard already handles this cleanly with no test changes needed.
+    2. Ran the full previously-passing suite after the fix:
+       `google_gmail_backup.tests_regression.CleanupRuleRatelimitTest` +
+       `tests_reconciliation` via `manage.py test` (11/11 passed) and
+       `tests_cleanup_safeguards.py` + `tests_undo_protect.py` via
+       `pytest` (these are pytest-native files -- confirmed `manage.py
+       test` finds 0 tests in them, same discovery gap Phase 63 already
+       documented; ran them the correct way) -- 31/31 passed (29
+       pre-existing + 2 new).
+    3. Added two new regression tests to tests_cleanup_safeguards.py:
+       `test_dry_run_applies_gmail_query_not_just_age` (two equally-old
+       messages, only one matches a mocked live Gmail search -- asserts
+       dry-run now reports exactly that one, and that `gmail_service()`
+       was actually called) and
+       `test_dry_run_skips_gmail_query_call_when_query_is_empty` (the
+       default age-only `rule` fixture must NOT call `gmail_service` at
+       all -- no behavior change for the common case).
+    4. Proved the new test is a REAL regression test, not a false
+       positive: `git stash`'d just services_rules.py (reverting to the
+       pre-fix code) and re-ran
+       `test_dry_run_applies_gmail_query_not_just_age` alone --
+       confirmed it FAILS against the old code (`1 failed`) -- then
+       `git stash pop` to restore the fix and confirmed it passes again.
+    5. `ruff check` on both changed files: all checks passed.
+
+  This closes the exact gap identified: dry-run's preview count/sample
+  now comes from the SAME filtered queryset the real run would use
+  (age + protected-sender + attachment excludes + live Gmail query, when
+  set), so Phase 34's dry-run-must-match-before-execute gate is now
+  checking an accurate number.
+
+----------------------------------------------------------------
+Phase 70 -- Mine FOSS spam-rule corpora to seed suggested cleanup rules
+----------------------------------------------------------------
+  Trigger: user request -- "i need an agent to go through my mail (from
+  the database side) using the api to build and improve existing rules
+  like a feedback / enhancement cycle." Explicit instruction: search the
+  internet first, ensure FOSS, before building anything.
+
+  FOSS research performed (WebSearch + verification via `gh api` reading
+  actual LICENSE file bytes, never trusting a repo blurb or GitHub's
+  auto-detected license badge alone):
+    - Apache SpamAssassin (apache/spamassassin) -- confirmed Apache-2.0
+      via `gh api repos/apache/spamassassin --jq '.license.spdx_id'`.
+      Decades of community-maintained heuristic rules (`.cf` files:
+      header regex, body phrase, phishing patterns, scored and
+      combined) plus the public SpamAssassin Mail Corpus (labeled
+      spam/ham email dataset).
+    - Rspamd (rspamd/rspamd) -- GitHub's own license badge returned
+      NOASSERTION (would have wrongly read as "unlicensed"). Listed the
+      repo root (`gh api repos/rspamd/rspamd/contents/`), found the
+      actual file is `LICENSE.md` (not `LICENSE`), read its content
+      directly -- genuinely Apache License 2.0 full text. A real
+      false-negative in GitHub's auto-detection, only caught by reading
+      actual bytes instead of trusting the badge.
+    - martinschaible/rspamd-rules (MIT, verified), kawaiipantsu/
+      spamassassin-rules (MIT, verified) -- community rule packs, extra
+      corroborating prior art.
+    - Elie222/inbox-zero -- 12.4k stars, closest FEATURE match (layered
+      deterministic-rules-then-AI matching, explicit correction-based
+      feedback loop) but license is AGPLv3 PLUS added terms read
+      directly from the LICENSE file: no monetizing the software, and
+      any org with 5+ business users needs a paid enterprise license.
+      That's source-available, not OSI-compliant FOSS -- ruled out per
+      the user's explicit "ensure is FOSS" requirement, despite being
+      the best feature match. Good pattern to borrow (deterministic
+      rules first, AI proposes, human approves), bad license to build on.
+    - sohaib-0897/InboxLearn -- exactly the "feedback/enhancement cycle"
+      shape (human corrections -> isolated candidate model -> gated
+      eval -> rollback) but has NO license file at all ("all rights
+      reserved" by default copyright) -- cannot legally reuse the code,
+      cited only as a design pattern, not a dependency.
+    - dmarchevsky/gmail-triage, jikahu/gmail-intelligence-agent -- also
+      unlicensed, ruled out for the same reason.
+
+  Scope correction (see chat with user, not silently absorbed): the
+  original plan item #1 ("backfill Gmail's labelIds/category into the
+  DB so rules can use Google's own classification") turned out to
+  already be implemented -- see Phase 69's investigation:
+  `RuleCondition.FIELD_CATEGORY` already exists and already compiles to
+  `category:X` Gmail search syntax, already sent to the live Gmail API
+  during real rule execution. Told the user directly rather than writing
+  up a redundant phase. This phase (70) is now scoped to ONLY the
+  genuinely missing piece: signals Gmail's own classifier does not
+  expose as a queryable rule field at all.
+
+  Design (grounded in what already exists in this codebase, not
+  invented from scratch):
+    - Every DOWNLOADED/VERIFIED GmailMessage already has its full raw
+      RFC822 saved locally at `GmailMessage.raw_path` (written during
+      the download step, google_gmail_backup/management/commands/
+      gmail_pipeline.py). This makes the analysis genuinely "from the
+      database side" as the user asked -- parse headers from the LOCAL
+      .eml files already on disk via Python's stdlib `email` module (or
+      `email.parser.BytesParser`), no additional Gmail API calls needed
+      for the analysis pass itself. The Gmail API is only touched later,
+      IF a human accepts a suggestion and it becomes a real rule (same
+      existing create_rule path, which already talks to Gmail to fetch/
+      create labels etc.).
+    - Header-heuristic signals to extract per message, using
+      SpamAssassin/Rspamd's rule catalogs as the starting PATTERN list
+      (the ideas, not their code or DSL -- their rule engines operate at
+      SMTP/MDA time on raw messages with their own scoring language,
+      which doesn't transfer to a Gmail-archive cleanup tool):
+        - `List-Unsubscribe` / `List-Unsubscribe-Post` presence (RFC
+          2369/8058) -- strong bulk-mail signal.
+        - `List-Id` presence -- mailing-list membership.
+        - `Precedence: bulk` / `Precedence: list` header.
+        - `From` domain vs `Reply-To` domain mismatch -- common
+          marketing/phishing pattern SpamAssassin scores heavily.
+        - `Return-Path` domain vs `From` domain mismatch.
+    - New read-only Django management command (name TBD at
+      implementation time, e.g. `analyze_mail_patterns`) that:
+        1. Iterates DOWNLOADED/VERIFIED GmailMessage rows with a
+           non-empty `raw_path`.
+        2. Parses each .eml's headers for the signals above.
+        3. Groups by sender domain (reusing the existing
+           `from_email_normalized` field already indexed on the model).
+        4. For each cluster, checks whether it's already matched by an
+           ENABLED CleanupRule's compiled `gmail_query` (reuse the
+           SAME live-Gmail-query mechanism Phase 69 makes trustworthy --
+           this is exactly why Phase 69 needs to land first) -- clusters
+           already covered are excluded from suggestions.
+        5. Ranks remaining clusters by message count and writes/updates
+           `SuggestedRule` rows (new lightweight model: sender_pattern,
+           signal_type, message_count, sample_subjects, first_seen,
+           dismissed default False, created_rule FK nullable) --
+           idempotent re-run: update counts on existing undismissed
+           suggestions rather than duplicating rows.
+    - Surface suggestions for human review (exact UI TBD at
+      implementation time -- likely a new admin list view or an
+      ops.html panel reusing existing patterns, NOT decided yet, needs a
+      design pass, not guessed here).
+    - NEVER auto-creates or auto-enables a CleanupRule from a
+      suggestion. Accepting a suggestion routes through the EXISTING
+      create_rule API (api.py:597) exactly as if the user had typed the
+      conditions in by hand -- same Phase 34 dry-run-required safety
+      gate applies to anything created this way, no bypass.
+    - Explicit non-goals for this phase (avoiding premature scope): no
+      Bayesian/ML classifier, no training on the old public spam corpora
+      (SpamAssassin Public Corpus / Enron / TREC / Ling-Spam) -- these
+      are 2000s-era datasets, not representative of 2026 bulk mail
+      patterns, not worth the effort versus header heuristics; no
+      auto-execution of suggestions ever.
+
+  Depends on: Phase 69 landing first -- this phase's "already covered by
+  an enabled rule" check reuses the live-Gmail-query cross-reference,
+  which is only trustworthy after Phase 69's fix (otherwise this phase
+  would inherit the same preview-vs-reality mismatch when checking
+  coverage).
+
+  Verify: entirely read-only by construction (no Gmail API writes, no
+  rule auto-creation, no DB writes beyond the new SuggestedRule table) --
+  run the new command against a small fixture set of .eml files with
+  known List-Unsubscribe/Precedence/domain-mismatch headers (synthetic,
+  not real user mail, per the No Invented Data Rule for anything beyond
+  clearly-labeled test fixtures), confirm expected sender clusters and
+  counts, confirm a sender already covered by an existing enabled rule
+  is correctly excluded, confirm re-running is idempotent (no duplicate
+  SuggestedRule rows, counts update in place).
+
+  STATUS: DONE (2026-09-28).
+
+  Design change made during implementation (an improvement, not scope
+  creep -- see reasoning below): the "already covered by an enabled
+  rule" check does NOT reuse the live-Gmail-query mechanism as originally
+  planned. Instead it queries `RuleCondition.objects.filter(rule__enabled
+  =True, field=FIELD_SENDER)` directly -- fully local, no Gmail API call,
+  no auth required to run this command at all. Reasoning: the structured
+  RuleCondition rows already say exactly which sender domains an enabled
+  rule targets; re-deriving that from a compiled `gmail_query` string (or
+  worse, re-executing it live against Gmail) would be strictly more
+  complex, slower, and dependent on Gmail auth for what's supposed to be
+  a read-only local analysis tool -- for zero accuracy benefit, since the
+  RuleCondition rows ARE the source of truth `gmail_query` was compiled
+  from in the first place (Phase 69's own finding, api.py:597-618). This
+  also means Phase 70 doesn't strictly depend on Phase 69 having landed
+  -- moot here since 69 already shipped first, but noted for accuracy.
+
+  Implementation:
+    - New model `SuggestedRule` (models.py) -- sender_domain, signal_type
+      (5 choices: list_unsubscribe, list_id, precedence_bulk,
+      reply_to_mismatch, return_path_mismatch), message_count,
+      sample_sender, sample_subjects, first_seen, last_updated,
+      dismissed, created_rule (FK to CleanupRule, nullable). Unique
+      constraint on (sender_domain, signal_type) for idempotent re-runs.
+      Migration: 0013_suggestedrule.py.
+    - New read-only management command `analyze_mail_patterns.py`:
+      iterates GmailMessage rows with state=VERIFIED and a non-empty
+      raw_path, parses each .eml's headers via stdlib `email
+      .message_from_bytes` (List-Unsubscribe, List-Id, Precedence,
+      Reply-To/Return-Path vs From domain), groups by sender domain
+      (via `email.utils.parseaddr`), skips domains already covered by an
+      enabled rule (see design change above), skips domains whose
+      existing suggestion was dismissed (does not resurface or bump its
+      count), upserts the rest via `update_or_create` keyed on
+      (sender_domain, signal_type). `--limit` option (default 20000).
+      Prints a scan summary (scanned/missing-file/already-covered counts,
+      new/updated/dismissed-untouched suggestion counts).
+    - New `SuggestedRuleAdmin` (admin.py): read-only list/detail (no add
+      permission -- suggestions only come from the command), two bulk
+      actions -- "Dismiss selected" and "Create a draft CleanupRule
+      (disabled) from selected". The create-draft action builds a
+      CleanupRule with `enabled=False, dry_run_default=True` (same
+      safe-by-default posture as seed_smart_rules.py's hand-authored
+      rules) plus one RuleCondition (sender contains the domain),
+      compiles `gmail_query` via the EXISTING `query_compiler
+      .compile_conditions()` (the same function api.py's create_rule
+      endpoint uses) rather than duplicating that logic, links
+      `created_rule` back onto the suggestion, and marks it dismissed
+      (resolved). NEVER calls the Gmail API, never sets enabled=True.
+    - `Makefile`: added `analyze-mail-patterns: docker compose exec web
+      python manage.py analyze_mail_patterns $(ARGS)`, matching the
+      existing `seed-smart-rules`/`cleanup-dry` pattern.
+    - `.github/workflows/ci.yml`: added the new
+      `tests_analyze_mail_patterns.py` file to the Phase 63 pytest-native
+      step's file list -- WITHOUT this, per Phase 63's own finding, the
+      new tests would silently never run in CI at all (manage.py test's
+      unittest-only discovery finds 0 tests in a pytest-native file, and
+      the pytest step only runs an explicit file list, not a glob).
+
+  Verified for real, not on paper:
+    1. `makemigrations` generated exactly one migration
+       (0013_suggestedrule.py, CreateModel only) -- read it to confirm no
+       unexpected schema changes.
+    2. New test file `tests_analyze_mail_patterns.py` (9 pytest-native
+       tests, following tests_cleanup_safeguards.py's established style):
+       List-Unsubscribe/Precedence:bulk/Reply-To-mismatch detection each
+       create the expected suggestion; a plain message with no signal
+       headers creates nothing; a domain already covered by an enabled
+       rule's sender condition is correctly skipped (built a real
+       CleanupRule+RuleCondition in the test, not mocked); re-running
+       against a second message from the same domain updates the
+       existing row's count to 2 rather than duplicating; dismissing a
+       suggestion then feeding it more matching mail leaves it
+       untouched (still dismissed, count NOT bumped); a GmailMessage
+       whose raw_path points to a file that doesn't exist is skipped
+       gracefully (no crash, correct skip-count in the summary output);
+       the admin's create_draft_rule action produces a disabled,
+       dry-run-default rule with a compiled gmail_query containing the
+       domain and a real RuleCondition row, and marks the source
+       suggestion dismissed. All 9 passed.
+    3. Ran the FULL existing pytest-native suite (all 6 files from Phase
+       63/69 plus the new 7th) together: 76/76 passed.
+    4. `ruff check` on every new/changed file: all checks passed.
+    5. `python3 -c "import yaml; yaml.safe_load(...)"` on ci.yml: valid.
+    6. `manage.py check`: "System check identified no issues" -- confirms
+       the new model/admin registration doesn't break app startup.
+    7. `uvx bandit` (ephemeral, matches CI's SAST tool without adding a
+       project dependency) on the 3 new/changed Python files: "No issues
+       identified", exit 0 -- relevant given this command reads
+       arbitrary local file paths (raw_path) and parses their bytes as
+       email headers.
+
+  Explicit non-goals honored, not silently dropped: no Bayesian/ML
+  classifier, no training on old public spam corpora, no auto-creation
+  or auto-enabling of a CleanupRule anywhere in the code path -- the
+  create_draft_rule action always leaves `enabled=False` and always
+  requires a human to click it in the first place.

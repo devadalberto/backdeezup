@@ -9,6 +9,7 @@ from .models import (
     GmailSyncState,
     ProtectedSender,
     RuleCondition,
+    SuggestedRule,
 )
 
 
@@ -208,3 +209,62 @@ class CleanupAuditLogAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+
+@admin.register(SuggestedRule)
+class SuggestedRuleAdmin(admin.ModelAdmin):
+    """Phase 70: read-only analysis output from `analyze_mail_patterns`.
+    Accepting a suggestion creates a disabled, dry-run-first CleanupRule --
+    same safety posture as every other rule-creation path in this app.
+    Never auto-created or auto-enabled."""
+
+    list_display = ["sender_domain", "signal_type", "message_count",
+                    "dismissed", "created_rule", "last_updated"]
+    list_filter = ["signal_type", "dismissed"]
+    search_fields = ["sender_domain", "sample_sender"]
+    readonly_fields = ["sender_domain", "signal_type", "message_count", "sample_sender",
+                       "sample_subjects", "first_seen", "last_updated", "created_rule"]
+    actions = ["dismiss_suggestions", "create_draft_rule"]
+
+    def has_add_permission(self, request):
+        return False
+
+    @admin.action(description="Dismiss selected suggestions (won't resurface)")
+    def dismiss_suggestions(self, request, queryset):
+        updated = queryset.update(dismissed=True)
+        self.message_user(request, f"{updated} suggestion(s) dismissed.")
+
+    @admin.action(description="Create a draft CleanupRule (disabled) from selected")
+    def create_draft_rule(self, request, queryset):
+        from .query_compiler import compile_conditions
+
+        created = 0
+        for suggestion in queryset:
+            if suggestion.created_rule_id:
+                continue
+            rule = CleanupRule.objects.create(
+                name=f"[Suggested] {suggestion.sender_domain} — {suggestion.get_signal_type_display()}",
+                description=(
+                    f"Auto-suggested from {suggestion.message_count} message(s) with "
+                    f"{suggestion.get_signal_type_display()}. Review conditions before enabling."
+                ),
+                action=CleanupRule.ACTION_TRASH,
+                min_age_days=30,
+                enabled=False,
+                dry_run_default=True,
+            )
+            condition = RuleCondition.objects.create(
+                rule=rule, order=1, field=RuleCondition.FIELD_SENDER,
+                operator=RuleCondition.OP_CONTAINS, value=suggestion.sender_domain,
+                logic=RuleCondition.LOGIC_AND,
+            )
+            rule.gmail_query = compile_conditions([condition])
+            rule.save(update_fields=["gmail_query"])
+            suggestion.created_rule = rule
+            suggestion.dismissed = True
+            suggestion.save(update_fields=["created_rule", "dismissed"])
+            created += 1
+        self.message_user(
+            request,
+            f"{created} draft rule(s) created (disabled — review and enable in Cleanup Rules).",
+        )

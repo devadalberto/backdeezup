@@ -7,7 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Phase 70** — new `analyze_mail_patterns` management command (`make
+  analyze-mail-patterns`): read-only scan of already-downloaded mail for
+  header-level bulk-mail signals Gmail's own category classifier doesn't expose
+  as a rule condition (`List-Unsubscribe`, `List-Id`, `Precedence: bulk`,
+  From/Reply-To and From/Return-Path domain mismatches — patterns drawn from
+  Apache SpamAssassin/Rspamd's rule catalogs, both verified Apache-2.0).
+  Parses headers straight from the .eml files already on disk, no Gmail API
+  calls needed for the analysis itself. Surfaces ranked suggestions as new
+  `SuggestedRule` rows, skipping sender domains already covered by an enabled
+  rule and never resurfacing a dismissed suggestion. New admin page lets a
+  human dismiss a suggestion or turn it into a real `CleanupRule` — always
+  created disabled with dry-run required, same safety posture as every other
+  rule-creation path in this app. Never auto-creates or auto-enables anything.
+
 ### Fixed
+- **Phase 69** — cleanup rules' dry-run preview counted only `state=VERIFIED` +
+  age, completely ignoring the rule's actual conditions (sender/subject/
+  category/label) and its compiled `gmail_query` — meaning the preview shown
+  before "Execute" was inaccurate for any rule with a real condition, while the
+  actual Execute path correctly cross-references `gmail_query` against live
+  Gmail. This silently undermined Phase 34's own dry-run-must-match-count
+  safety gate, which was checking a number that was never accurate to begin
+  with. Fixed by applying the same live-Gmail-query cross-reference for both
+  dry-run and real runs — the only remaining difference is whether the actual
+  trash/star/label/archive calls fire. Added two regression tests, one of
+  which was confirmed to fail against the pre-fix code (via `git stash`) before
+  confirming it passes against the fix, proving it actually catches the bug.
 - **Phase 68** — Phase 67's nginx fix shipped correctly but never actually took
   effect on a second `make upgrade` run on PDX-CL1: `nginx` has no `build:` step
   and only bind-mounts `nginx.conf.template`, rendered via `envsubst` inside its

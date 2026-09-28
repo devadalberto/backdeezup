@@ -135,6 +135,10 @@
     "mtime": 1790487097.757864,
     "hash": "649c0710bca958684099f95223baac92"
   },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/tests_analyze_mail_patterns.py": {
+    "mtime": 1790627133.264608,
+    "hash": "6f87d036ee1eb7cfa281f582b8778cca"
+  },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/tests_regression.py": {
     "mtime": 1790557538.5366282,
     "hash": "fab875a8b7690a3a80ed5860576857f4"
@@ -144,12 +148,12 @@
     "hash": "f16ff7214f1d34a53dd2e5ffe64d2bc6"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/admin.py": {
-    "mtime": 1790557538.5366282,
-    "hash": "4af1d695ce2d1c23a4a37452dc978fb5"
+    "mtime": 1790627086.9929388,
+    "hash": "de21aa5fae8ddb3b93756464bae82a42"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/tests_cleanup_safeguards.py": {
-    "mtime": 1790557538.5366282,
-    "hash": "7833439e62ab57043f0ffd267c29cab1"
+    "mtime": 1790626872.158401,
+    "hash": "b82471d728e258c7c0d15b628dd2d2b6"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/admin_views.py": {
     "mtime": 1790487097.757864,
@@ -168,8 +172,8 @@
     "hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/services_rules.py": {
-    "mtime": 1790503491.009625,
-    "hash": "c36d810daa4c670d6058acd48d21bf8e"
+    "mtime": 1790626894.9556782,
+    "hash": "a0529059b4ae260010a94b844968fd6b"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/api.py": {
     "mtime": 1790615836.7208889,
@@ -196,8 +200,8 @@
     "hash": "51faf45ca67b6e84587088c1d3d8b613"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/models.py": {
-    "mtime": 1790503463.44165,
-    "hash": "1218d35109aed993dba2eb6dd34c32a9"
+    "mtime": 1790626993.6316712,
+    "hash": "9b8f648c576dd540213e052e3065e04a"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/tests_schemas.py": {
     "mtime": 1790487097.757864,
@@ -222,6 +226,10 @@
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/migrations/0012_phase35_cleanup_undo.py": {
     "mtime": 1790503466.8158438,
     "hash": "ddffe8a101d0cc6f88fa78400d3fb744"
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/migrations/0013_suggestedrule.py": {
+    "mtime": 1790626996.911837,
+    "hash": "c850847ae69b49f63c077a97725cf209"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/migrations/0004_rulecondition.py": {
     "mtime": 1790487097.757864,
@@ -278,6 +286,10 @@
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/management/commands/seed_rules.py": {
     "mtime": 1790487097.757864,
     "hash": "a1fe7c79b7cb95d20758aeeb9e5c195e"
+  },
+  "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/management/commands/analyze_mail_patterns.py": {
+    "mtime": 1790627067.823208,
+    "hash": "9e0af514f27fc4cfb7907907290dc2f2"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/google_gmail_backup/management/commands/seed_smart_rules.py": {
     "mtime": 1790487097.757864,
@@ -600,8 +612,8 @@
     "hash": "a17af88e1cf42bc0e4ac7131e2e738d9"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/CHANGELOG.md": {
-    "mtime": 1790622921.4761333,
-    "hash": "b2214e3509c171be014bfce9560c8ec6"
+    "mtime": 1790627220.0468352,
+    "hash": "446a11c6b821cdcc4a0141ae9144ce84"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/mkdocs.yml": {
     "mtime": 1790513027.2764819,
@@ -712,8 +724,8 @@
     "hash": "13b27600e3f8338f0ae92c73d9dda3d8"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/docs/ai-dev/TODO.md": {
-    "mtime": 1790622912.9858532,
-    "hash": "81e5118edc7c7d037a0213cc81c4a51a"
+    "mtime": 1790627212.2763875,
+    "hash": "a0f1cba3b288290b0a105a3b13d2f2fa"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/docs/ai-dev/AGENTS.md": {
     "mtime": 1790487097.757864,
@@ -724,16 +736,16 @@
     "hash": "fe915e01e1fc6ee6600fc9c899b3171a"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/docs/ai-dev/GOALS_TODOS.md": {
-    "mtime": 1790622910.8657835,
-    "hash": "0e9d73f1e68f91c08bdfcf27220a7990"
+    "mtime": 1790627209.376224,
+    "hash": "ec07b3643d4ffff37d1c9d7ac0bcb7ab"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/docs/ai-dev/GEMINI.md": {
     "mtime": 1790487097.757864,
     "hash": "da79aa9343cd2b362206f03762160abc"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/docs/ai-dev/GOALS.md": {
-    "mtime": 1790622915.1859255,
-    "hash": "44af5bc864d9943f64d08d2a2ada0730"
+    "mtime": 1790627214.8665395,
+    "hash": "981d26978ced6e927e243044dfdeb5ed"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/media_vault/templates/media_vault/media_vault_mediagallerypage.html": {
     "mtime": 1790487097.757864,
@@ -912,7 +924,7 @@
     "hash": "494f530fec07701527511b4174ffd7fc"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/media/video/abc1/ab/abc123.mp4": {
-    "mtime": 1790616894.3074448,
+    "mtime": 1790627156.7243445,
     "hash": "8d777f385d3dfec8815d20f7496026dc"
   },
   "/home/saitama/repos/github/devadalberto/backdeezup/backend_django/media/video/abc1/ab/abc123.mp4": {

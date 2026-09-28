@@ -260,6 +260,9 @@ gmail-empty-trash:
 seed-smart-rules:
 	docker compose exec web python manage.py seed_smart_rules
 
+analyze-mail-patterns:
+	docker compose exec web python manage.py analyze_mail_patterns $(ARGS)
+
 superuser:
 	docker compose exec web python manage.py createsuperuser
 
