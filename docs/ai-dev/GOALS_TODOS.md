@@ -1800,3 +1800,132 @@ PHASE 57 -- Fix infinite loop in 4 task_gmail_reconcile tests (under-mocked `.li
   reproduction from Phase 55 Step 3's diagnosis already proves the mechanism.
   Not yet re-verified against the full two-app suite on PDX-CL1 (that's the
   Verify step above, still pending) or against CI.
+
+PHASE 58 -- Fix nginx's HTTP->HTTPS redirect hardcoding port 8445 (S)
+  Size: S. Risk: low-medium -- only changes the nginx container's startup
+  command and how one config file reaches it; doesn't touch Django, OAuth
+  (Phase 50), or any other service. Test carefully before/after on a real
+  compose stack, not just `docker compose config`.
+
+  Trigger: user asked "so how i access it then" after seeing PDX-CL1's `docker
+  ps` show nginx on `127.0.0.1:18844->80/tcp, 127.0.0.1:18445->443/tcp` (not
+  the documented default 8844/8445) -- while checking whether docs needed a
+  port update, found this is an actual live bug, not a docs gap.
+
+  Facts confirmed by reading the code (not guessed):
+    - `nginx/nginx.conf:13`: `return 301 https://$host:8445$request_uri;` --
+      the HTTP (port 80) server block's redirect to HTTPS. Literal `8445`,
+      no variable.
+    - `docker-compose.yml:118-128` (nginx service): mounts nginx.conf as a
+      static, read-only file --
+        volumes:
+          - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+        ports:
+          - "${BIND_ADDR:-127.0.0.1}:${NGINX_HTTP_PORT:-8844}:80"
+          - "${BIND_ADDR:-127.0.0.1}:${NGINX_HTTPS_PORT:-8445}:443"
+      The `ports:` mapping correctly reads `NGINX_HTTPS_PORT` (that's how PDX-CL1
+      ended up on 18445), but nginx.conf itself is never touched by any
+      substitution -- it's the exact bytes on disk, always.
+    - Docker's port remapping is transparent to the container: nginx has no
+      built-in way to know "my container port 443 is externally published as
+      host port 18445" -- that mapping lives entirely in Docker's networking
+      layer. No nginx variable (`$server_port` = container-internal port,
+      `$http_host` = whatever port the CURRENT request came in on, which for
+      the HTTP server block is the HTTP port, not the HTTPS port -- and HTTP
+      and HTTPS use *different* custom host ports here, 18844 vs 18445) can
+      substitute for this. The value must come from outside the container.
+    - Confirmed impact on PDX-CL1's actual deployment: `http://<host>:18844/`
+      redirects to `https://<host>:8445/...` -- a port not in PDX-CL1's
+      published ports at all (confirmed via its own `docker ps` output), so
+      the request fails outright. The user is currently only working because
+      they go straight to `https://localhost:18445` and never hit the HTTP
+      port.
+    - The official `nginx:stable-alpine` image's built-in template
+      auto-processing (files in `/etc/nginx/templates/*.template` ->
+      `envsubst`'d into `/etc/nginx/conf.d/*.conf` on container start) doesn't
+      fit this repo's structure: our `nginx.conf` replaces the *entire* file
+      (`worker_processes`, `events {}`, the `http {}` wrapper), not a
+      `conf.d/*.conf` fragment included by a base `nginx.conf` -- the built-in
+      mechanism is designed for the latter, not the former. Restructuring into
+      that convention would mean splitting top-level directives out of this
+      file, which is more invasive than necessary.
+
+  Fix (self-contained, doesn't require restructuring into conf.d):
+    1. `git mv nginx/nginx.conf nginx/nginx.conf.template`, and inside it
+       change the hardcoded `8445` to `${NGINX_HTTPS_PORT}`:
+         return 301 https://$host:${NGINX_HTTPS_PORT}$request_uri;
+    2. In `docker-compose.yml`'s `nginx` service:
+       - Change the volume mount to point at the template:
+           - ./nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro
+       - Add an `environment:` block so the container actually has the
+         variable to substitute:
+           environment:
+             - NGINX_HTTPS_PORT=${NGINX_HTTPS_PORT:-8445}
+       - Add a `command:` override that runs `envsubst` before starting nginx
+         (the base image's default `docker-entrypoint.sh` still runs first via
+         `ENTRYPOINT`, so this `command:` becomes its final exec target,
+         consistent with how the official image's own entrypoint script
+         chains into whatever `command` is given):
+           command: ["/bin/sh", "-c", "envsubst '$$NGINX_HTTPS_PORT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]
+         (the `$$` escapes docker-compose's own `${...}` interpolation so the
+         container's shell -- and therefore `envsubst` -- sees a literal
+         `$NGINX_HTTPS_PORT` to substitute, not compose pre-expanding it into
+         a plain number that then has no `$` left for `envsubst` to act on;
+         restricting `envsubst` to that one explicit variable name also
+         avoids it accidentally mangling nginx's own `$host`/`$request_uri`/
+         etc. directive variables, since only variable names explicitly
+         listed are substituted -- everything else passes through untouched.)
+    3. Default behavior unchanged: unset `NGINX_HTTPS_PORT` still renders
+       `8445`, byte-identical to today's hardcoded value.
+
+  Verify:
+    - `docker compose config` shows the new `command`/`environment` on the
+      `nginx` service.
+    - Start the real stack (default ports) and `curl -I http://localhost:8844/`
+      -- confirm the `Location` header says `https://localhost:8445/...`
+      (unchanged from today).
+    - Start again with `NGINX_HTTP_PORT`/`NGINX_HTTPS_PORT` overridden (e.g.
+      18844/18445, matching PDX-CL1) and repeat -- confirm the `Location`
+      header now says `https://localhost:18445/...`, not `8445`. This is the
+      actual regression test; don't consider this phase done without it,
+      since it's exactly the bug that was found live.
+    - Since this can't be tested from this dev box (no way to actually bring
+      up the compose stack in a way that matters here -- Google network isn't
+      the blocker for this one, but there's no reason to stand up nginx/certs
+      locally just to prove a redirect header), do the real verification on
+      PDX-CL1 directly, or in CI's `compose-smoke` job if it already curls
+      through nginx (confirm by reading `.github/workflows/ci.yml`'s
+      `compose-smoke` job before assuming it does or doesn't).
+
+  STATUS: DONE (2026-09-28). Applied the exact fix above:
+  `git mv nginx/nginx.conf nginx/nginx.conf.template`, hardcoded `8445` ->
+  `${NGINX_HTTPS_PORT}`; `docker-compose.yml`'s `nginx` service updated with
+  the template mount, `environment: NGINX_HTTPS_PORT`, and the `envsubst`
+  `command:` override, exactly as planned.
+
+  Turned out this COULD be verified locally after all, stronger than the
+  runbook assumed -- Docker itself is available here, this bug has nothing to
+  do with Google network access. Verified in 3 layers:
+    1. `envsubst '$NGINX_HTTPS_PORT' < nginx.conf.template` run directly (not
+       through Docker) with `NGINX_HTTPS_PORT=8445` produces output
+       byte-identical (`diff`, zero output) to the original committed
+       `nginx.conf` -- proves the restricted-variable-list `envsubst` call
+       doesn't touch nginx's own `$host`/`$request_uri`/etc. directives.
+    2. `docker compose config` (with a temporary throwaway `.env`, deleted
+       after) shows the new `command`/`environment` rendered correctly on the
+       `nginx` service.
+    3. Real end-to-end test: ran the actual `nginx:stable-alpine` image
+       standalone (`docker run`, with throwaway self-signed dev certs and
+       `--add-host web:127.0.0.1` to satisfy the unrelated `proxy_pass
+       http://web:8000` upstream check nginx does at config-load time) with
+       the exact `command:` from `docker-compose.yml`, twice:
+       - `NGINX_HTTPS_PORT=8445` (default): `curl -I http://localhost/`
+         returns `Location: https://localhost:8445/` -- unchanged from today.
+       - `NGINX_HTTPS_PORT=18445` (matching PDX-CL1's actual deployment):
+         `curl -I http://localhost/` returns `Location: https://localhost:18445/`
+         -- the actual bug, actually fixed, actually proven with a live
+         container, not just config inspection.
+    All test containers and throwaway certs cleaned up after.
+    Not yet deployed to PDX-CL1 itself (that requires pulling this commit and
+    restarting the stack there) -- the fix is verified correct here, but
+    PDX-CL1's own redirect won't reflect it until that deploy happens.

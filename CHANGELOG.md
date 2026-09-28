@@ -27,6 +27,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   about sizing a 12-vCPU/36GB deployment. No application code changes.
 
 ### Fixed
+- **Phase 58** — nginx's HTTP→HTTPS redirect (`nginx/nginx.conf:13`,
+  `return 301 https://$host:8445$request_uri;`) hardcoded port `8445` as a
+  literal, but `nginx.conf` was bind-mounted as a static, unmodified file —
+  so a customized `NGINX_HTTPS_PORT` never reached it, even though
+  `docker-compose.yml`'s own port mapping correctly read that same variable.
+  Found live on a real deployment running on custom ports (18844/18445):
+  hitting the HTTP port redirected to `https://<host>:8445/...`, a port that
+  deployment wasn't even listening on — the request failed outright. Docker's
+  port remapping is transparent to the container, so nginx has no built-in way
+  to know the externally-published HTTPS port without being told explicitly.
+  Fixed by turning `nginx.conf` into `nginx.conf.template`
+  (`${NGINX_HTTPS_PORT}` in place of the hardcoded value), mounting the
+  template instead of a static file, passing `NGINX_HTTPS_PORT` to the nginx
+  container via `environment:`, and running `envsubst` in a `command:`
+  override before nginx starts. Default behavior unchanged — verified
+  byte-identical output at the default port. Verified end-to-end with a real
+  standalone `nginx:stable-alpine` container (not just config inspection):
+  `curl -I http://localhost/` returns `Location: https://localhost:8445/` at
+  the default port, and `Location: https://localhost:18445/` with
+  `NGINX_HTTPS_PORT=18445` — the actual bug, actually fixed.
 - **Phase 57** — 4 tests in `google_gmail_backup/tests_reconciliation.py`
   (`Reconcile404Test`, `ReconcileTrashLabelTest`, `ReconcileMessageAliveTest`,
   `ProtectedSenderReconcileTest`) mocked `svc` as a bare `MagicMock()` without

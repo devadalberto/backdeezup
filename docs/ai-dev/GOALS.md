@@ -354,6 +354,39 @@ PHASE 57 -- Fix infinite loop in 4 task_gmail_reconcile tests (under-mocked `.li
   "nextPageToken": None}`) in each of the 4 tests before calling
   `task_gmail_reconcile()`. Test-only change. Full detail: GOALS_TODOS.md.
 
+PHASE 58 -- Fix nginx's HTTP->HTTPS redirect hardcoding port 8445 (S) (DONE)
+  Found live on PDX-CL1: its `docker ps` shows nginx published on
+  `127.0.0.1:18844->80/tcp, 127.0.0.1:18445->443/tcp` (customized via
+  `NGINX_HTTP_PORT`/`NGINX_HTTPS_PORT` in its `.env`), but `nginx/nginx.conf:13`'s
+  redirect is `return 301 https://$host:8445$request_uri;` -- a literal `8445`,
+  not driven by any variable. `docker-compose.yml:122` bind-mounts
+  `nginx.conf` as a static, unmodified file (`./nginx/nginx.conf:/etc/nginx/nginx.conf:ro`)
+  -- no substitution happens on it at all, even though `docker-compose.yml:127-128`
+  DOES correctly read `NGINX_HTTPS_PORT` for the port mapping itself. Confirmed
+  impact: anyone hitting PDX-CL1's `http://<host>:18844/` gets redirected to
+  `https://<host>:8445/...`, a port nginx isn't even listening on for this
+  deployment (not in its published ports at all) -- the request just fails.
+  Docker's port remapping is transparent to the container, so nginx has no way
+  to know the externally-published HTTPS port without being told explicitly --
+  no nginx-variable trick (`$server_port`, `$http_host`, etc.) can substitute
+  for this, since HTTP and HTTPS use *different* custom host ports here.
+  Fix: make `nginx.conf` a template that reads `NGINX_HTTPS_PORT` at container
+  start, since the official nginx image's built-in template auto-processing
+  (`/etc/nginx/templates/*.template` -> `/etc/nginx/conf.d/*.conf`) doesn't fit
+  our case -- we replace the *entire* nginx.conf (worker_processes/events/http
+  wrapper), not a conf.d fragment. Instead: rename `nginx/nginx.conf` ->
+  `nginx/nginx.conf.template` (hardcoded `8445` -> `${NGINX_HTTPS_PORT}`), mount
+  the template instead of the static file, pass `NGINX_HTTPS_PORT` as an env var
+  to the nginx service, and override its `command` to run `envsubst` before
+  starting nginx:
+      command: ["/bin/sh", "-c", "envsubst '$$NGINX_HTTPS_PORT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]
+  (the `$$` escapes docker-compose's own interpolation so the shell/envsubst
+  sees a literal `$NGINX_HTTPS_PORT`). Default unchanged (`8445`) for anyone
+  not overriding it. Verify: `docker compose config` shows the new command/env,
+  then start the stack and confirm `curl -I http://localhost:$NGINX_HTTP_PORT/`
+  redirects to the *actual* published `NGINX_HTTPS_PORT`, not 8445 -- test both
+  the default and a custom-port override. Full detail: GOALS_TODOS.md.
+
 NOT PHASED (backlog, needs a user decision first): restore to a different Google
 account, restore into Drive, per-rule cleanup schedules, NAS packages, animated
 demos, sample-Google-data test install, SBOM-signed releases.
