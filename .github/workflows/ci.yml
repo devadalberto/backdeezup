@@ -295,6 +295,19 @@ jobs:
             sleep 5
           done
 
+      - name: Capture resource diagnostics before migrations
+        # Phase 66: "Run Django migrations via compose" was seen dying with
+        # exit 137 (SIGKILL) ~3s in, right after the very first health check
+        # -- diagnosing whether that's real memory exhaustion across the 6
+        # simultaneously-starting containers, or one of them already dead.
+        run: |
+          echo "--- free -h (runner) ---"
+          free -h || true
+          echo "--- docker compose ps ---"
+          docker compose ps || true
+          echo "--- docker stats --no-stream ---"
+          docker stats --no-stream || true
+
       - name: Run Django migrations via compose
         run: docker compose exec -T web python manage.py migrate --run-syncdb
 
@@ -444,6 +457,19 @@ jobs:
             fi
             sleep 5
           done
+
+      - name: Capture resource diagnostics before migrations
+        # Phase 66: same diagnostic as compose-smoke's equivalent step -- this
+        # job independently brings up its own full compose stack and could
+        # hit the same exit-137 once it actually runs (currently skipped
+        # while compose-smoke fails first).
+        run: |
+          echo "--- free -h (runner) ---"
+          free -h || true
+          echo "--- docker compose ps ---"
+          docker compose ps || true
+          echo "--- docker stats --no-stream ---"
+          docker stats --no-stream || true
 
       - name: Run Django migrations
         run: docker compose exec -T web python manage.py migrate --run-syncdb

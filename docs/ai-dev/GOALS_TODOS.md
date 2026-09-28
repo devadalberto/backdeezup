@@ -1824,3 +1824,305 @@ PHASE 65 -- Fix compose-smoke CI job: missing external "backdeezup_media" volume
   line inside the existing step). Real CI-green confirmation (this phase's
   own Verify step) needs the commit pushed -- can't run GitHub Actions or
   a full compose stack from this dev box.
+
+  CI RESULT after pushing (2026-09-28, run 36463420169): confirmed the fix
+  genuinely worked -- `compose-smoke` got past "Start full Docker Compose
+  stack" (no more "external volume not found") and past "Wait for web
+  service to be healthy" ("web state: running (attempt 1/30)") -- real,
+  new progress, never seen in any prior run. It then hit a DIFFERENT
+  failure on the very next step. This is exactly the "if one of THOSE
+  fails next, diagnose it separately" scenario this runbook called out in
+  advance -- see PHASE 66.
+
+PHASE 66 -- Diagnose compose-smoke's exit-137 on "Run Django migrations via compose" (S, diagnosis-first)
+  Size: S. Risk: n/a -- this phase is diagnosis only, no fix decided yet;
+  do not write a fix until the diagnostic evidence in step (a) below
+  exists.
+
+  Trigger: run 36463420169 (Phase 65's own verification push) -- full log
+  via `gh run view 36463420169 --log-failed`:
+    compose-smoke  Run Django migrations via compose
+      2026-09-28T18:13:33.769Z ##[group]Run docker compose exec -T web python manage.py migrate --run-syncdb
+      2026-09-28T18:13:36.757Z ##[error]Process completed with exit code 137.
+  ~3 seconds from step start to SIGKILL. Immediately preceding step's full
+  output (via `gh run view --log`, not just `--log-failed` since this one
+  succeeded):
+    compose-smoke  Wait for web service to be healthy
+      web state: running (attempt 1/30)
+      web is running
+  -- i.e. the FIRST poll already reported "running", so the wait loop
+  exited almost instantly (one `sleep 5` and it moved on) rather than
+  actually waiting through multiple retries.
+
+  What's confirmed vs. not, precisely:
+    - CONFIRMED: exit 137 (SIGKILL) on this exact command, this exact
+      step, ~3s after start, in this exact CI run.
+    - CONFIRMED: this is new -- no prior `compose-smoke` run ever reached
+      this step, since every earlier run failed earlier (missing volume,
+      before Phase 65).
+    - NOT CONFIRMED: whether this is a genuine OOM kill of the `migrate`
+      process itself, or `docker compose exec` failing against a `web`
+      container that had ALREADY been OOM-killed moments earlier by
+      something else (the "running" state Docker Compose reports only
+      means the container's top-level process started -- it says nothing
+      about whether Gunicorn finished binding or whether the container
+      later died from memory pressure caused by the other 5 containers
+      -- db, redis, celery, celerybeat, nginx -- all starting around the
+      same time). No `docker stats`/`docker compose ps` snapshot exists
+      from this run to distinguish these two explanations.
+    - SUSPECTED, not proven: a standard `ubuntu-latest` GitHub-hosted
+      runner's fixed (~7GB) memory budget, shared across 6 simultaneously-
+      starting containers -- several of which (`web`, `celery`,
+      `celerybeat`) each do a full, independent Django+Wagtail app import
+      on cold start -- plus this `exec`'d `migrate` process ALSO doing a
+      full Django app import at the same moment, could plausibly exhaust
+      available memory. This is a real, but unverified, hypothesis.
+
+  Diagnostic steps required before any fix (the actual deliverable of this
+  phase):
+    a. Add a CI step, right before "Run Django migrations via compose",
+       that captures and prints `docker stats --no-stream` and `docker
+       compose ps` (and ideally `free -h` for the runner's own overall
+       memory state) -- this either confirms genuine memory exhaustion
+       across the containers, or reveals that `web` (or another
+       container) had already exited/crashed before this step even ran,
+       pointing at a completely different root cause.
+    b. If (a) confirms real memory pressure: candidate fixes to evaluate
+       (not yet decided) --
+         - Reorder/stagger the compose-smoke job so `celery`/`celerybeat`
+           don't need to be up during the migration step (does this smoke
+           test's actual purpose -- verifying the stack boots and answers
+           HTTP -- require them running simultaneously with the
+           migration, or could they start afterward?).
+         - Check whether `docker-compose.yml`'s existing `deploy.resources.limits`
+           (Phase 53's `WEB_CPUS`/`CELERY_CPUS` etc. and their paired
+           memory limits) are now tight enough to cause an IN-container
+           OOM during a cold-start Django+Wagtail import, independent of
+           the runner's own overall budget -- these limits were designed
+           around today's default hardware assumptions, not necessarily
+           validated against a from-scratch Django import's peak memory.
+         - Consider whether `ubuntu-latest`'s standard runner has enough
+           headroom at all for a 6-container full-stack smoke test, or
+           whether this job needs a larger runner (GitHub offers larger
+           hosted runners) -- a cost/complexity tradeoff to raise with the
+           user, not something to decide unilaterally.
+    c. If (a) shows `web` (or another container) had already crashed
+       independently: diagnose that crash on its own terms (`docker
+       compose logs web` from that run), not assumed to be memory-related
+       just because this phase started from an OOM hypothesis.
+
+  Verify: cannot be verified from this dev box at all -- no live compose
+  stack here, and this dev box isn't resource-constrained the same way a
+  standard GitHub-hosted runner is, so even a successful local repro
+  wouldn't prove anything about the actual failure. Diagnostic step (a)
+  must run in real CI and be read from a real log, same discipline as
+  every other phase this session -- do not guess past this point.
+
+  STATUS: DIAGNOSTIC STEP ADDED (2026-09-28) -- this phase's deliverable is
+  the diagnostic itself, not a fix; root cause remains genuinely open until
+  the next CI run's evidence comes back. Added a "Capture resource
+  diagnostics before migrations" step (`free -h`, `docker compose ps`,
+  `docker stats --no-stream`) immediately before both jobs' "Run Django
+  migrations"/"Run Django migrations via compose" steps -- `compose-smoke`
+  AND `playwright` (the latter hits the identical pattern once it actually
+  runs, currently skipped while `compose-smoke` fails first).
+  Correction made during implementation: first added `if: always()` to
+  these new steps by reflex (copying the pattern from the pre-existing
+  "Collect compose logs on failure"/"Tear down stack" steps nearby) --
+  caught and removed before finalizing, since `always()` would make this
+  diagnostic run even if an EARLIER, unrelated step had failed, which
+  isn't the intent; it should just run in normal sequence like any other
+  step. Verified via `python3 -c "import yaml; yaml.safe_load(...)"` that
+  the workflow is still valid YAML, both new steps land in the correct
+  position in each job's step list, and only the two legitimate
+  pre-existing `if: always()` instances remain (the real "Tear down
+  stack" steps). Next action: push, wait for the next CI run, read the
+  new diagnostic output for real evidence -- then, and only then, decide
+  on an actual fix (a follow-up phase, not this one).
+
+----------------------------------------------------------------
+Phase 67 -- Fix nginx proxying to a dead `web` container after `make upgrade`
+----------------------------------------------------------------
+  Trigger: live PDX-CL1 bug, caught immediately after running `make
+  upgrade` on my own recommendation (to pick up Phases 60-64's real
+  app-code fixes). The upgrade script's own health check failed:
+
+    HEALTH CHECK FAILED after the upgrade. Nothing was rolled back
+    automatically -- decide based on 'docker compose logs' first.
+
+  Investigation (real evidence at every step, per this session's
+  discipline -- no guessing):
+    1. `docker compose logs web --tail 100` on PDX-CL1: gunicorn booted
+       clean at 18:43:23 (`Starting gunicorn 26.0.0`, 3 workers, zero
+       errors, zero tracebacks).
+    2. `docker compose logs nginx --tail 30`: repeated, for 10+ minutes
+       straight (18:53:10 onward, while the user was live in the browser
+       on the ops page) --
+         connect() failed (111: Connection refused) while connecting to
+         upstream ... upstream: "http://172.19.0.4:8000/api/gmail/progress"
+       -- `111: Connection refused` specifically (not a timeout), meaning
+       nothing was listening at that IP at all, not that the app was slow.
+    3. `docker compose ps`: `backdeezup-web-1` -- `Up 11 minutes
+       (healthy)`. `backdeezup-nginx-1` -- `Up 3 hours`. web was freshly
+       recreated by the upgrade; nginx was NOT touched.
+    4. `free -h`: 15Gi free / 17Gi total. Ruled out OOM as an explanation
+       for anything here.
+    5. `docker inspect backdeezup-web-1 --format 'OOMKilled={{.State.OOMKilled}}
+       ExitCode={{.State.ExitCode}} Status={{.State.Status}}'`:
+       `OOMKilled=false ExitCode=0 Status=running`. web never crashed,
+       never restarted, is healthy right now. The 502s are not caused by
+       anything wrong with web itself.
+    6. Read `scripts/upgrade.sh` (Phase 49) in full: step 3 is
+       `docker compose run --rm web python manage.py migrate` then
+       `docker compose up -d` -- an IN-PLACE `up -d`, never a `down`
+       first. Compose only recreates containers whose image/config
+       changed -- `web`/`celery`/`celerybeat` (new image) get recreated
+       (new container, new internal Docker network IP); `nginx`/`db`/
+       `redis` (unchanged image/config) are left running untouched.
+    7. Read `nginx/nginx.conf.template` in full: the only proxy block is
+       `location / { proxy_pass http://web:8000; ... }` -- a bare
+       hostname, no `resolver` directive anywhere in the file. Stock
+       nginx behavior: a bare hostname in `proxy_pass` (not a variable)
+       is resolved ONCE, at nginx startup/worker-fork time, and the
+       resolved IP is cached in the compiled upstream for that worker
+       process's entire lifetime. There is no periodic re-resolution
+       without an explicit `resolver` directive + a *variable* in
+       `proxy_pass` (a well-documented Docker Compose + nginx gotcha).
+       Since nginx itself was never restarted by the upgrade, its workers
+       kept the OLD (pre-upgrade, now-dead) `web` container's IP
+       (`172.19.0.4` in the logs) forever -- hence permanent `Connection
+       refused`, not a transient blip that would clear up on its own.
+    8. Checked `make redeploy` in the Makefile for the same bug: it runs
+       `docker compose down` BEFORE `docker compose up -d`, which tears
+       down and recreates every container including nginx -- nginx always
+       gets a fresh DNS lookup on start. `redeploy` is NOT affected. Only
+       the in-place `upgrade` path (Phase 49) hits this.
+
+  Immediate live fix (told directly to the user, not a code change --
+  restores PDX-CL1 right now without touching data):
+    docker compose restart nginx
+    curl -ksf https://localhost:18445/health/ && echo OK
+
+  Structural fix (this phase's actual deliverable) -- make nginx
+  re-resolve `web`'s IP periodically instead of caching it forever, using
+  Docker Compose's built-in embedded DNS server at `127.0.0.11`:
+
+    In nginx/nginx.conf.template, inside the `location /` block, replace:
+      proxy_pass http://web:8000;
+    with:
+      resolver 127.0.0.11 valid=10s ipv6=off;
+      set $upstream_web web:8000;
+      proxy_pass http://$upstream_web;
+    (the `set $upstream_web ...;` + variable in `proxy_pass` is what
+    forces nginx to treat this as dynamic and actually honor `resolver`
+    -- a bare hostname in `proxy_pass` ignores `resolver` entirely, so
+    both pieces are required together, not just adding `resolver` alone.)
+
+  Why this is the right fix and not a bigger one:
+    - Fixes the root cause structurally (nginx's DNS caching behavior),
+      not just today's specific trigger -- protects against ANY future
+      scenario where `web` gets recreated without nginx also recreating
+      (a manual `docker compose up -d --no-deps web`, a future deploy
+      script, etc.), not only `make upgrade`.
+    - No change needed to `scripts/upgrade.sh` or the `Makefile` --
+      `upgrade.sh`'s existing health-check loop already retries for up to
+      50s (10 attempts x 5s sleep), comfortably past the 10s
+      `valid=10s` re-resolution window, so the health check will simply
+      pass on its own once this ships, with zero script changes.
+    - `valid=10s` matches Docker Compose's own embedded DNS TTL
+      conventions (commonly recommended value for this exact pattern);
+      `ipv6=off` avoids nginx wasting time on AAAA lookups Docker's
+      embedded DNS won't usefully answer for bridge-network service
+      names.
+    - Scoped to exactly the one `proxy_pass` this template has -- no
+      speculative resolver/upstream changes to the other `location`
+      blocks (`/static/`, `/media/images/`, `/protected-media/`), which
+      are `alias` directives serving files directly from the nginx
+      container's own filesystem, not proxying to `web` at all, so they
+      cannot exhibit this bug.
+
+  Verify:
+    1. `docker compose config -q` (or equivalent template-render check)
+       after substituting `${NGINX_HTTPS_PORT}` -- confirms the templated
+       nginx.conf is still valid config syntax.
+    2. `docker compose exec nginx nginx -t` against the rendered config --
+       confirms nginx itself accepts the `resolver`/`set`/`proxy_pass`
+       trio (some restricted nginx variants disallow `resolver` outside
+       specific contexts; the stock `nginx:stable-alpine` image used here
+       does not).
+    3. Real local repro of the exact failure mode: start the full stack
+       (`make up` or `docker compose up -d`), confirm `/health/` responds,
+       then run `docker compose up -d --force-recreate --no-deps web`
+       (this reproduces exactly what `upgrade.sh`'s in-place `up -d` does
+       to `web` alone, without needing a real image change) -- immediately
+       after, confirm nginx logs briefly show the old IP failing (or
+       nothing, if timed past the TTL) and then self-heal to 200s within
+       ~10s, with NO manual `docker compose restart nginx` needed. This is
+       the actual regression test for this bug -- without it, a fix could
+       look plausible on paper but not actually resolve on a real
+       recreate.
+    4. Confirm `location /` still preserves every existing behavior
+       (Phase 50's `$http_host` vs `$host` fix, the 360s read/send
+       timeouts, the security headers) -- this change only touches how
+       the upstream address is resolved, not any other directive in the
+       block.
+
+  Not yet applied to PDX-CL1 itself beyond the immediate live
+  `docker compose restart nginx` -- the structural template fix ships via
+  the normal `git push` + next `make upgrade`/`make redeploy` cycle, same
+  as every other phase this session.
+
+  STATUS: DONE (2026-09-28). Applied the `resolver 127.0.0.11 valid=10s
+  ipv6=off; set $upstream_web web:8000; proxy_pass http://$upstream_web;`
+  change to nginx/nginx.conf.template's `location /` block.
+
+  Verified for real, not on paper:
+    1. `nginx -t` against the rendered template (with `${NGINX_HTTPS_PORT}`
+       substituted and throwaway self-signed certs mounted, via
+       `docker run --rm -v ... nginx:stable-alpine nginx -t`): "syntax is
+       ok" / "test is successful".
+    2. Actual regression test of the exact bug mechanism, using two
+       throwaway nginx containers side by side on a real Docker network
+       (no Google secrets needed, so runnable on this dev box despite the
+       "no live compose stack" constraint noted in Phase 66 -- that
+       constraint was about needing the FULL app stack; this test only
+       needed nginx + a plain HTTP server, isolating precisely the piece
+       that changed):
+         a. `test_nginx_old` running the pre-Phase-67 bare
+            `proxy_pass http://web:8000;` (no resolver).
+         b. `test_nginx_new` running the Phase 67 resolver+variable
+            version.
+         c. Both pointed via Docker network alias `web` at a container
+            serving "OLD", at a fixed IP (172.30.0.10). Confirmed both
+            return "OLD".
+         d. Force-recreated the `web`-aliased container at a DIFFERENT
+            fixed IP (172.30.0.20, simulating exactly what `docker
+            compose up -d` does to `web` during `make upgrade` --
+            in-place recreate, new IP, nginx never restarted) serving
+            "NEW".
+         e. Immediately after: BOTH nginx containers return 504 (the new
+            config's cache hasn't hit its 10s TTL yet -- expected, not a
+            bug).
+         f. 12+ seconds after the recreate: `test_nginx_old` STILL
+            returns 504 forever (reproduces the exact PDX-CL1 symptom --
+            permanent failure, no self-recovery, matching the real
+            10+-minute-and-counting `Connection refused` seen in PDX-CL1's
+            actual nginx logs). `test_nginx_new` returns "NEW" -- self-
+            healed automatically, zero manual intervention, zero nginx
+            restart.
+    3. Cleaned up all throwaway test containers/network afterward
+       (`test_web1`, `test_web2`, `test_nginx_old`, `test_nginx_new`,
+       `backdeezup_test_net`) -- nothing left behind in this dev box's
+       Docker state.
+
+  This is about as close to a real regression test as this bug can get
+  without the full Google-secrets-dependent app stack: it exercises the
+  literal mechanism (Docker embedded DNS caching vs. periodic
+  re-resolution under `resolver`) that caused and now fixes the real
+  production incident, not a simulated/assumed version of it.
+
+  Remaining: push, then on PDX-CL1 pick this up via the normal
+  `make upgrade` cycle (nginx does get recreated by `make redeploy`
+  today regardless, and after this fix `make upgrade` no longer needs
+  nginx to be recreated at all -- it will self-heal on its own within
+  10s of `web` coming back up).

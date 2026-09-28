@@ -675,6 +675,128 @@ PHASE 65 -- Fix compose-smoke CI job: missing external "backdeezup_media" volume
   this one fix closes the whole job). This dev box has no live compose
   stack to test the fix against directly -- CI itself is the verification
   environment for this one. Full detail: GOALS_TODOS.md.
+  RESULT confirmed 2026-09-28 (run 36463420169): Phase 65's fix genuinely
+  worked -- `compose-smoke` got past volume creation and the healthy-wait
+  step this time (new progress, not seen before). It hit a DIFFERENT,
+  previously-unseen failure further along. See PHASE 66.
+
+PHASE 66 -- Diagnose compose-smoke's exit-137 on "Run Django migrations via compose" (S, diagnosis-first) (DIAGNOSTIC STEP ADDED, root cause still open)
+  Size: S. Risk: n/a -- diagnosis phase; no fix decided yet.
+
+  Trigger: after Phase 65's volume-create fix, run 36463420169 shows
+  `compose-smoke` getting past "Wait for web service to be healthy"
+  ("web state: running (attempt 1/30)" -- first check, immediately) but
+  then dying on the very next step:
+    docker compose exec -T web python manage.py migrate --run-syncdb
+    ##[error]Process completed with exit code 137.
+  Confirmed via `gh run view 36463420169 --log-failed`: this happens ~3
+  seconds after the step starts (18:13:33.77 -> 18:13:36.76). Exit 137
+  is SIGKILL -- almost always an OOM kill in a GitHub Actions container
+  context, but NOT independently confirmed here (no `docker stats`/memory
+  telemetry captured in this run) -- could also be a container that was
+  already dead/killed moments earlier (from the OTHER 5 containers -- db,
+  redis, celery, celerybeat, nginx -- all starting up around the same
+  time) rather than this specific `exec` command itself being the thing
+  that got killed. Genuinely new information -- never seen before this
+  run, since `compose-smoke` never got this far in any prior run.
+
+  Suspected (NOT confirmed -- do not implement a fix on this alone): a
+  standard `ubuntu-latest` GitHub-hosted runner has a fixed, modest memory
+  budget (~7GB, shared with runner overhead), and this job runs `docker
+  compose up -d --build` for the FULL stack -- 6 containers (nginx, web,
+  celery, celerybeat, db, redis) -- then almost immediately tries to run
+  a SEPARATE `manage.py migrate` process inside `web`, which itself does a
+  full Django app import (all installed apps: Wagtail + all google_*
+  apps) at the same moment `web`'s own Gunicorn workers, `celery`'s
+  worker, and `celerybeat` are ALL also independently booting and
+  importing the same full Django app stack for the first time. That's a
+  lot of concurrent heavy Python process startups competing for a fixed
+  memory budget -- plausible, not proven.
+
+  Diagnostic steps needed before any fix (this is the actual work of this
+  phase -- do not guess a patch without this):
+    a. Add a step right before "Run Django migrations via compose" that
+       captures `docker stats --no-stream` and `docker compose ps` --
+       confirms (or rules out) genuine memory exhaustion versus one
+       container already having crashed.
+    b. If (a) shows real memory pressure: consider trimming which
+       containers `compose-smoke` actually needs running simultaneously
+       (does this smoke test genuinely need `celery`+`celerybeat` up
+       during the migration step, or could those start after migrations
+       complete?), or reducing per-service worker counts specifically for
+       CI (e.g. via the Phase 53 env vars -- `WEB_CPUS`/`CELERY_CPUS`
+       don't cap memory the way `docker-compose.yml`'s `deploy.resources.limits`
+       already do, but those limits could be the thing causing an
+       in-container OOM if they're now too tight for a cold-start Django
+       import -- worth checking `docker-compose.yml`'s current limits
+       against what a genuinely fresh Django+Wagtail import needs).
+    c. If (a) shows the `web` container was already dead: diagnose why
+       separately (its own crash log via `docker compose logs web`, not
+       assumed to be memory-related at all).
+
+  Not verifiable from this dev box (no live compose stack, and CI itself
+  is genuinely resource-constrained in a way this local box isn't) -- the
+  diagnostic step (a) needs to run in CI and be read from a real log,
+  same discipline as every other phase this session. Full detail:
+  GOALS_TODOS.md.
+
+Phase 67 -- Fix nginx proxying to a dead `web` container after `make upgrade` (S) (DONE)
+  Live production bug on PDX-CL1, caught right after running `make upgrade`
+  (which the user ran on my recommendation to pick up Phases 60-64). The
+  script's own health check failed:
+
+    HEALTH CHECK FAILED after the upgrade.
+
+  Root cause, confirmed from real logs, not guessed:
+    - `web-1` booted clean at 18:43:23 (gunicorn, 3 workers, zero errors)
+      and `docker compose ps` showed it `Up ... (healthy)` the whole time.
+    - `nginx-1` logged repeated `connect() failed (111: Connection
+      refused)` to `web`'s upstream IP, for 10+ minutes straight, on every
+      request the user made to the ops page in a real browser.
+    - `docker inspect backdeezup-web-1`: `OOMKilled=false ExitCode=0
+      Status=running` -- `web` never crashed. `free -h` on the host showed
+      15Gi free. Not memory pressure.
+    - `docker compose ps` showed `nginx-1` at `Up 3 hours` -- i.e. NOT
+      recreated by the upgrade -- versus `web-1` at `Up 11 minutes` --
+      i.e. freshly recreated with a new container (new internal IP).
+    - `scripts/upgrade.sh` (Phase 49) only runs `docker compose up -d` in
+      place -- it recreates `web`/`celery`/`celerybeat` (their image
+      changed) but leaves `nginx` untouched (its image/config didn't
+      change, so compose has no reason to touch it).
+    - `nginx/nginx.conf.template`'s `location /` block does
+      `proxy_pass http://web:8000;` with no `resolver` directive. Stock
+      nginx resolves a bare hostname in `proxy_pass` ONCE, at
+      worker-process startup, and caches that IP for the worker's entire
+      lifetime -- it never re-resolves on its own. So nginx kept sending
+      every request to the OLD (now-dead) `web` container's IP,
+      indefinitely, until nginx itself is restarted. This is the standard,
+      well-known Docker Compose + nginx trap (bare `proxy_pass` hostname +
+      no `resolver` = permanently stale upstream IP across any container
+      recreate that doesn't also recreate nginx).
+    - Confirmed `make redeploy` does NOT have this bug: it runs `docker
+      compose down` before `up -d`, which tears down and recreates nginx
+      too, so nginx always gets a fresh DNS lookup on start. Only the
+      in-place `upgrade` path is affected.
+  Live fix already run to restore PDX-CL1 immediately: `docker compose
+  restart nginx` (told to user directly, not a code change).
+  Real fix (structural, not a one-off restart): make nginx re-resolve
+  `web`'s IP periodically instead of caching it forever, using Docker's
+  embedded DNS at 127.0.0.11 with a variable-based proxy_pass:
+    resolver 127.0.0.11 valid=10s ipv6=off;
+    set $upstream_web web:8000;
+    proxy_pass http://$upstream_web;
+  This self-heals within ~10s of any future `web` recreate, on ANY deploy
+  path (upgrade, a manual `docker compose up -d --no-deps web`, etc.) --
+  not just today's specific trigger -- with no change needed to
+  scripts/upgrade.sh or the Makefile. upgrade.sh's health-check loop
+  already waits up to 50s (10 x 5s), well past the 10s re-resolution
+  window, so it will pass on its own once this ships.
+  Verify: `docker compose config -q` / nginx config test
+  (`docker compose exec nginx nginx -t`) after templating; then a real
+  local repro -- start the stack, `docker compose up -d --force-recreate
+  --no-deps web` (simulates upgrade's in-place recreate), confirm nginx
+  keeps working within ~10s without a manual nginx restart. Full detail:
+  GOALS_TODOS.md.
 
 NOT PHASED (backlog, needs a user decision first): restore to a different Google
 account, restore into Drive, per-rule cleanup schedules, NAS packages, animated

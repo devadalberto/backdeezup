@@ -7,7 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Phase 67** — live PDX-CL1 bug: after `make upgrade`, `web` came back up healthy but
+  nginx kept returning 502/504 (`Connection refused`) for 10+ minutes straight, on every
+  request. Root cause: `upgrade.sh`'s in-place `docker compose up -d` recreates
+  `web`/`celery`/`celerybeat` (new container, new internal IP) but never touches `nginx`,
+  and `nginx.conf.template`'s `proxy_pass http://web:8000;` had no `resolver` directive —
+  nginx resolves a bare hostname once at worker startup and caches it forever, so it kept
+  talking to the dead pre-upgrade `web` container indefinitely. `make redeploy` is
+  unaffected (it does `docker compose down` first, recreating nginx too). Fix: added
+  `resolver 127.0.0.11 valid=10s ipv6=off;` plus a variable-based
+  `proxy_pass http://$upstream_web;` so nginx re-resolves `web` every 10s via Docker's
+  embedded DNS — self-heals automatically after any future in-place `web` recreate, no
+  script changes needed. Verified with a real side-by-side regression test (two throwaway
+  nginx containers, one on the old config and one on the new, both pointed at a
+  force-recreated upstream container with a different IP): the old config stayed broken
+  indefinitely; the new one self-healed within the 10s TTL window with zero manual
+  intervention.
+
 ### Added
+- **Phase 66** — after Phase 65, `compose-smoke` got past volume creation
+  for the first time ever, then died on the very next step ("Run Django
+  migrations via compose") with exit 137 (SIGKILL) ~3 seconds in. Not yet
+  a fix — this is a diagnosis-first phase, since exit 137 could mean
+  genuine OOM across the 6 simultaneously-starting containers, or a
+  container that had already died independently, and there wasn't enough
+  evidence in the existing log to tell which. Added a "Capture resource
+  diagnostics before migrations" step (`free -h`, `docker compose ps`,
+  `docker stats --no-stream`) right before both `compose-smoke`'s and
+  `playwright`'s equivalent migration steps (the latter hits the identical
+  pattern once it actually runs). Root cause intentionally left open until
+  the next CI run's real evidence comes back.
 - **Phase 53** — celery worker concurrency (`-c 2`) and the per-service CPU/memory
   limits in `docker-compose.yml` (`web` 1.0/512M, `celery` 2.0/1G, `celerybeat`
   0.25/192M) were hardcoded, with no way to raise them on bigger hardware short of
