@@ -314,6 +314,20 @@ PHASE 55 -- Fix broken CI (lint, sast-bandit, test jobs all failing)
        happen on PDX-CL1, not here.
   Full detail + required diagnostic steps before each fix: GOALS_TODOS.md.
 
+PHASE 56 -- Fix `make gmail-loop` ignoring WORKERS= (XS) (DONE)
+  Confirmed live: user set a bigger `WORKERS=` value (12-vCPU/36GB VM, Phase 53
+  follow-up) and `gmail-loop` kept using 10. Root cause confirmed by reading the
+  code, not guessed: `make gmail-download` correctly passes `--workers $(WORKERS)`
+  to `gmail_pipeline download` (Makefile:407), but `gmail-loop`'s own download
+  call (Makefile:424) never forwards `--workers` at all, so it silently falls
+  back to the management command's own hardcoded `default=10`
+  (`gmail_pipeline.py:23`) no matter what `WORKERS=` is set to on the command
+  line. `gmail-loop`'s `verify` call has no `--workers` flag to begin with (not
+  a bug -- `verify` doesn't take one, confirmed by reading its `add_arguments`).
+  Fix: add `--workers $(WORKERS)` to `gmail-loop`'s download line, matching
+  `gmail-download` exactly. One line, no behavior change for anyone who doesn't
+  override `WORKERS=` (still defaults to 10). Full detail: GOALS_TODOS.md.
+
 NOT PHASED (backlog, needs a user decision first): restore to a different Google
 account, restore into Drive, per-rule cleanup schedules, NAS packages, animated
 demos, sample-Google-data test install, SBOM-signed releases.

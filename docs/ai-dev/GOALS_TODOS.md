@@ -1654,3 +1654,41 @@ PHASE 55 -- Fix broken CI (lint, sast-bandit, test jobs all failing)
   green run on the PR/commit that carries this fix, for all three jobs
   specifically (lint, sast-bandit, test) -- not just "CI passed" as PR jobs may
   differ from the full workflow.
+
+PHASE 56 -- Fix `make gmail-loop` ignoring WORKERS= (XS)
+  Facts confirmed by reading the code (not guessed):
+    - Makefile:404 `WORKERS ?= 10` -- a make variable, overridable on the
+      command line (`make gmail-loop WORKERS=40`) or left at its default.
+    - Makefile:406-407 `gmail-download` target:
+        docker compose exec web python manage.py gmail_pipeline download \
+          --limit $(LIMIT) --workers $(WORKERS)
+      correctly forwards `WORKERS`.
+    - Makefile:421-430 `gmail-loop` target's download line (424):
+        docker compose exec web python manage.py gmail_pipeline download --limit $(LIMIT);
+      does NOT forward `--workers $(WORKERS)` at all.
+    - `backend_django/google_gmail_backup/management/commands/gmail_pipeline.py:23`:
+        parser.add_argument("--workers", type=int, default=10, ...)
+      so when `gmail-loop` omits the flag, argparse silently falls back to 10,
+      regardless of what `WORKERS=` was set to on the `make gmail-loop` command
+      line. This is exactly the user-observed symptom ("it still using 10
+      workers" after bumping `WORKERS=` on a bigger VM).
+    - `gmail-loop`'s `verify` call (Makefile:425) has no `--workers` flag in the
+      first place -- confirmed by reading `verify`'s `add_arguments` in the same
+      file, it doesn't take one. Not a bug; leave it as-is.
+  Fix: change Makefile:424 to
+        docker compose exec web python manage.py gmail_pipeline download --limit $(LIMIT) --workers $(WORKERS);
+      matching `gmail-download`'s line exactly. One-line change, `WORKERS ?= 10`
+      default unchanged, so anyone not overriding `WORKERS=` sees no behavior
+      change.
+  Verify: `make gmail-loop WORKERS=40` (dry-read the target, or run once against
+  a real queue) and confirm the `gmail_pipeline download` log line
+  ("using {workers} workers", `gmail_pipeline.py:192`) actually prints 40, not
+  10, on the very first iteration of the loop.
+
+  STATUS: DONE (2026-09-28). Applied the exact one-line fix above. Verified via
+  `make -n gmail-loop WORKERS=40` and `make -n gmail-loop` (no override) --
+  the dry-run recipe shows `--workers 40` and `--workers 10` respectively,
+  confirming the override now reaches the download call and the unset default
+  is unchanged. No live queue was used for verification (no PDX-CL1 shell
+  access from here); `gmail_pipeline.py`'s own log line will confirm the same
+  on the next real run.

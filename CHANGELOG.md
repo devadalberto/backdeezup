@@ -27,6 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   about sizing a 12-vCPU/36GB deployment. No application code changes.
 
 ### Fixed
+- **Phase 56** — `make gmail-loop` ignored `WORKERS=` entirely: its download call
+  never forwarded `--workers $(WORKERS)` (unlike `make gmail-download`, which does),
+  so it silently fell back to the management command's hardcoded `default=10` no
+  matter what `WORKERS=` was set to. Surfaced by a user bumping the concurrency on a
+  bigger VM (Phase 53) and seeing it stay at 10. Fixed: forward `--workers $(WORKERS)`
+  in `gmail-loop`'s download line, matching `gmail-download` exactly. Verified with
+  `make -n gmail-loop WORKERS=40` — now expands to `--workers 40`; unset still
+  defaults to `--workers 10`, unchanged.
 - **Phase 55 (partial: lint + sast-bandit)** — CI's `lint`, `sast-bandit`, and `test`
   jobs had all been failing since ~2026-07-30; confirmed live via `gh run view
   --log-failed`, not assumed. Two of the three independent root causes fixed here:
