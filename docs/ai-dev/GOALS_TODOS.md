@@ -1396,3 +1396,261 @@ PHASE 52 -- Fix NOT NULL crash on every successful Gmail download/verify
   the bug by reverting the fix and watching it fail before restoring it. The real
   PostgreSQL failure text (`violates not-null constraint`) was captured live on
   PDX-CL1 first, independent of this test.
+
+PHASE 53 -- Configurable concurrency + resource limits for bigger hardware
+  Size: XS-S.  Risk: low (env-driven defaults reproduce today's hardcoded values
+  exactly; no application code changes, no migrations).
+
+  Trigger: user is moving the PDX-CL1 deployment to a 12-vCPU/36GB VM and asked
+  how many gmail-loop workers to run there "as fast as possible."
+
+  Facts gathered before writing this phase (not guessed -- read the actual
+  files, not assumed):
+    - `gmail_pipeline.py`'s `--workers` CLI flag (default 10, gmail_pipeline.py:23)
+      drives a `ThreadPoolExecutor(max_workers=workers)` (gmail_pipeline.py:176)
+      for the actual Gmail downloads. This already accepts a value via
+      `make gmail-loop WORKERS=N` -- no code change needed to raise it.
+    - Celery worker concurrency is HARDCODED: `docker-compose.yml:62` --
+      `celery -A celery_app worker -l info -c 2 ...`. This governs how many
+      Celery TASKS run in parallel (reconcile, verify, media backup, etc), not
+      the ThreadPoolExecutor inside a single gmail-loop batch task.
+    - `deploy.resources.limits` are HARDCODED per service, none read from .env:
+        web       : cpus 1.0 / memory 512M  (docker-compose.yml:52-56)
+        celery    : cpus 2.0 / memory 1G    (docker-compose.yml:82-86)
+        celerybeat: cpus 0.25 / memory 192M (docker-compose.yml:112-116)
+      Raising any of these today requires hand-editing docker-compose.yml,
+      which a `git pull` / upgrade would then conflict with or silently revert.
+    - `MAX_CONCURRENT_DOWNLOADS` (default 2, `core/ratelimit.py:21`, Redis
+      semaphore) only gates `google_media_backup/services_google.py` (Drive/
+      media downloads) -- confirmed by grep, it does NOT gate the Gmail
+      download path at all today.
+    - `GOOGLE_API_MAX_RPS` (default 0 = disabled, `core/ratelimit.py:22`) is a
+      token-bucket rate limiter, independent of the 429/5xx backoff already
+      built into the google-api-python-client retry logic.
+    - Gmail downloads are I/O-bound: network call + EML write + SHA-256 hash +
+      DB save (`gmail_pipeline.py:111-174`), nothing CPU-heavy. More vCPUs
+      raises the ceiling on how many threads CAN run without contending for
+      cores, but Gmail's own per-user API quota is almost always the binding
+      constraint before core count is, past roughly 15-20 concurrent workers.
+
+  Fix (config-only, additive, defaults reproduce today's exact values):
+    1. `docker-compose.yml`:
+       - `celery` command: change `-c 2` to `-c ${CELERY_CONCURRENCY:-2}` (env
+         substitution works inside the `command:` string via docker compose's
+         own interpolation -- same pattern already used for
+         `${BIND_ADDR:-127.0.0.1}` elsewhere in this file).
+       - `web.deploy.resources.limits`: `cpus: '${WEB_CPUS:-1.0}'`,
+         `memory: ${WEB_MEMORY:-512M}`.
+       - `celery.deploy.resources.limits`: `cpus: '${CELERY_CPUS:-2.0}'`,
+         `memory: ${CELERY_MEMORY:-1G}`.
+       - `celerybeat.deploy.resources.limits`: `cpus: '${CELERYBEAT_CPUS:-0.25}'`,
+         `memory: ${CELERYBEAT_MEMORY:-192M}`.
+    2. `.env.sample`: document the six new vars near the existing
+       `MAX_CONCURRENT_DOWNLOADS`/`GOOGLE_API_MAX_RPS` block (~lines 51-55),
+       each commented with its default and one line on when to raise it.
+    3. `docs/operations.md`: add a "Sizing for bigger hardware" table, e.g.:
+
+         | Hardware       | WORKERS | CELERY_CONCURRENCY | CELERY_CPUS/MEM   | MAX_CONCURRENT_DOWNLOADS |
+         |----------------|---------|---------------------|--------------------|--------------------------|
+         | 2 vCPU / 4GB   | 10      | 2 (default)         | 2.0 / 1G (default) | 2 (default)              |
+         | 4 vCPU / 8GB   | 12-15   | 3                   | 3.0 / 2G           | 3                        |
+         | 12 vCPU / 36GB | 16-20   | 4                   | 4.0 / 4G           | 4                        |
+
+       With a short note: Gmail's per-user API quota, not CPU, is the real
+       ceiling on WORKERS -- going past ~20 mostly trades throughput for 429s.
+       Raise `GOOGLE_API_MAX_RPS` as a backstop only if 429s actually show up
+       in logs; don't preemptively throttle.
+    4. README: if it has a hardware/platform matrix (Phase 45), add a pointer
+       to this new table rather than duplicating it.
+
+  Verify:
+    - `docker compose config` with no new env vars set must show cpus/memory/
+      concurrency values byte-identical to today's hardcoded ones (proves the
+      defaults are truly additive -- zero behavior change for existing
+      deployments that don't set the new vars).
+    - `docker compose config` with e.g. `CELERY_CONCURRENCY=4 CELERY_CPUS=4.0
+      CELERY_MEMORY=4G` set must reflect exactly those overridden values.
+    - No Python test needed -- this phase touches no application code, only
+      compose/env/docs.
+
+  STATUS: DONE. Verified via `docker compose config` (temp local `.env`, deleted
+  after): defaults reproduce the original hardcoded values byte-for-byte
+  (`cpus: 2` / `memory: "1073741824"` for celery, `cpus: 0.25` /
+  `memory: "201326592"` for celerybeat, `cpus: 1` / `memory: "536870912"` for
+  web, `-c "2"` in the celery command args), and overrides
+  (`CELERY_CONCURRENCY=4`, `CELERY_MEMORY=4G`, etc.) apply correctly
+  (`-c "4"`, `memory: "4294967296"`). README's hardware section updated with a
+  pointer. graphify updated.
+
+PHASE 54 -- Apply Phase 51's 404-permanent-gone fix to api.py's /sync/download
+  Size: XS.  Risk: low (mirrors an already-proven fix, one file, additive
+  branch inside an existing except block, no schema/migration change).
+
+  Facts confirmed by reading the actual code (not guessed):
+    - `backend_django/google_gmail_backup/api.py`, the `/sync/download` endpoint
+      (function starting ~line 225, loop at lines 236-283): the `except Exception
+      as e:` block at lines 277-281 does exactly what gmail_pipeline.py did
+      before Phase 51 -- `msg.error = str(e); msg.last_attempt_at = timezone.now();
+      msg.save(...); errors += 1` -- no state transition, no 404 check.
+    - `HttpError` is already imported at api.py:10 (module level) -- no new
+      import needed for the exception-type check.
+    - `_mark_soft_deleted(gmail_id, source, now)` (tasks.py:357-369) sets
+      `state=STATE_SOFT_DELETED`, `deleted_at`, `deletion_source`, and a
+      `metadata_snapshot` if not already set. Confirmed importable from api.py
+      with no circular dependency: api.py does not import from tasks.py at
+      module level (only one function-level import elsewhere, unrelated), and
+      tasks.py only imports `.models`/`.schemas` at module level.
+    - gmail_pipeline.py's exact Phase 51 pattern (lines 162-167):
+        exc_str = str(exc)
+        is_gone = isinstance(exc, HttpError) and exc.resp.status == 404
+        is_gone = is_gone or "404" in exc_str or "notFound" in exc_str
+        if is_gone:
+            from google_gmail_backup.tasks import _mark_soft_deleted
+            _mark_soft_deleted(msg.gmail_id, "gmail_404_on_download", timezone.now())
+
+  Fix: apply the identical `is_gone` check inside api.py's `except Exception as
+  e:` block (lines 277-281) -- on a confirmed-gone message, call
+  `_mark_soft_deleted(msg.gmail_id, "gmail_404_on_download", timezone.now())`
+  instead of the current unconditional `msg.error = str(e)` + save. Every other
+  exception type keeps today's exact behavior (error recorded, state unchanged,
+  retried next call) -- same non-goal as Phase 51: no general retry-limit/backoff
+  system here.
+
+  Before finalizing: check whether gmail_pipeline.py's Phase 51 fix increments
+  its `errors` counter on the soft-deleted branch or treats it separately, and
+  mirror that choice here so `/sync/download`'s returned `{"downloaded":
+  ..., "errors": ...}` counts stay consistent with the CLI loop's semantics.
+
+  Verify: extend `google_gmail_backup/tests_regression.py` (or add a sibling
+  test file for the API layer) with an equivalent of `GmailDownload404Test` --
+  mock `get_message_raw` to raise an `HttpError`-shaped 404 against the
+  `/sync/download` endpoint (Django test client + `django_auth`, same pattern
+  Phase 50's oauth test used), assert the message ends up `SOFT_DELETED` with
+  `deletion_source="gmail_404_on_download"`, and a non-404 exception leaves
+  state unchanged. No live Google network needed.
+
+  STATUS: DONE. `GmailApiDownload404Test` (2 tests) added to tests_regression.py.
+  Full suite: 35 tests, OK (2 skipped, pre-existing/environmental, unrelated).
+  Confirmed the new test actually catches the bug: reverted the except-block fix,
+  re-ran `GmailApiDownload404Test` alone -- `test_confirmed_404_marks_soft_deleted_
+  not_stuck_discovered` failed with `AssertionError: 'DISCOVERED' !=
+  GmailMessage.State.SOFT_DELETED` as expected -- then restored the fix and
+  re-ran the full suite clean. Counter semantics matched: `errors` increments on
+  both the soft-deleted and non-404 branches, same as gmail_pipeline.py's `err`
+  counter (a soft-deleted message isn't "downloaded" either).
+
+PHASE 55 -- Fix broken CI (lint, sast-bandit, test jobs all failing)
+  Size: S.  Risk: low for the lint fix (mechanical); sast-bandit and test require
+  diagnosis before the fix is even chosen -- do not skip that step.
+
+  Confirmed live via `gh run list --workflow=ci.yml` + `gh run view --log-failed`
+  on run 36363155626, commit 7a9a275 (current HEAD as of this writing) -- still
+  failing, not a one-off flake. Three unrelated root causes:
+
+  STEP 1 -- lint (ready to fix, root cause fully confirmed)
+    `.github/workflows/ci.yml`'s lint job runs:
+      uv run ruff check backend_django/ --select E,F,W --ignore E501,E701,E702
+    25 real `F401` (unused import) violations, e.g.:
+      - `core.setup.views` unused in backend_django/core/tests_setup_wizard2.py:15
+      - `django.utils.timezone` unused in google_gmail_backup/admin.py:94
+      - `json` unused in google_gmail_backup/tests_cleanup_safeguards.py:4
+      - `os` unused in google_media_backup/management/commands/drive_pipeline.py:281
+      - `requests` unused in google_media_backup/services_google.py:463,465
+      - several unused model imports in tests_smoke.py (Q, GmailSyncState,
+        CleanupRule, ProtectedSender, CleanupAuditLog, GmailAttachment, MediaItem,
+        RunLog, VaultImage, VaultMedia, VaultDocument)
+    Fix: `uv run ruff check backend_django/ --select E,F,W --ignore E501,E701,E702
+    --fix`, then review the diff (ruff reported all 25 as auto-fixable) --
+    confirm no import removal changes runtime behavior (e.g. an import kept only
+    for its side effect, though none of the listed ones look like that).
+
+  STEP 2 -- sast-bandit (root cause CONFIRMED 2026-09-27, fix verified locally)
+    `.github/workflows/ci.yml`'s sast-bandit job:
+      bandit -r backend_django/ -x backend_django/**/migrations -f sarif \
+        -o bandit.sarif --severity-level medium || true
+      (then github/codeql-action/upload-sarif@v3 with sarif_file: bandit.sarif)
+    Confirmed via `gh run view 36363155626 --log` on the "Run Bandit SAST" step
+    itself (not the upload step): bandit exits with its own usage error --
+      bandit: error: unrecognized arguments: backend_django/core/migrations
+      backend_django/google_gmail_backup/migrations
+      backend_django/google_media_backup/migrations backend_django/media_vault/migrations
+    Root cause: `-x backend_django/**/migrations` is UNQUOTED in the workflow's
+    `run:` block. The runner's shell (`sh -e`, dash -- no globstar) glob-expands
+    `**` like a plain `*` before bandit ever sees it, so the single intended
+    argument becomes 4 separate filesystem paths. The first one is consumed by
+    `-x`; the other 3 land as unrecognized positional targets -> bandit prints
+    usage and exits nonzero -> `|| true` swallows that exit code -> `bandit.sarif`
+    is never written (or left stale/empty) -> upload-sarif's JSON parse hits EOF.
+    NOT the suspected "zero-findings SARIF formatter bug" theory -- that was
+    disproven: quoting the argument alone fixes it and findings are non-zero.
+    Fix (verified locally with `uv tool run --with 'bandit[sarif]' bandit ...`
+    against this exact repo state): quote the `-x` value so the shell passes it
+    to bandit as one literal string --
+      -x "backend_django/**/migrations" \
+    bandit itself does its own fnmatch-style path exclusion on that string (it's
+    not relying on shell globbing), so this correctly excludes all 4 migrations
+    dirs. Confirmed via local run: exit 1 (real findings exist, expected --
+    `|| true` still swallows it same as before), valid JSON (`json.load()`
+    succeeds), 22 results at `--severity-level medium`, zero results whose file
+    path contains "migrations".
+
+  STEP 3 -- test (partially diagnosed 2026-09-27; real fix needs a PDX-CL1 run)
+    `.github/workflows/ci.yml`'s test job runs:
+      uv run python backend_django/manage.py test google_media_backup
+      google_gmail_backup --verbosity=2
+    Ends with exit code 137 (OOM-killed). Separately, Django's test discovery
+    reports 6 modules as `_FailedTest` (failed to import): tests_resumable_download,
+    .tests_unit (google_media_backup), .tests_cleanup_safeguards, .tests_notify_wiring,
+    .tests_schemas, .tests_undo_protect (google_gmail_backup).
+
+    New finding, confirmed from the raw `gh run view 36363155626 --log-failed`
+    output (saved in full, not sampled): the `_FailedTest ... ERROR` lines are
+    unittest placeholders emitted at test-discovery time, BEFORE any test runs;
+    their actual ImportError tracebacks only print in unittest's end-of-run
+    "ERRORS:" summary block -- which this run never reaches, because the OOM
+    kill (exit 137) happens mid-suite. So (a) from below is currently
+    UNANSWERABLE from any existing CI log; it requires a run that survives long
+    enough to print that summary, which the OOM itself prevents.
+
+    Also confirmed from the same log: right before the kill, the log shows a
+    SECOND occurrence of `Applying wagtailusers.0015_userprofile_keyboard_shortcuts...`
+    (no trailing "OK") -- the initial per-run migration block already completed
+    cleanly through `wagtailusers.0014_userprofile_contrast... OK` earlier in the
+    same log, followed by dozens of real tests passing. A second, later
+    migration-apply appearing mid-suite (only one "Creating test database for
+    alias 'default'" line exists, so this isn't a second DB alias) is consistent
+    with something re-triggering database setup partway through -- worth
+    checking `tests_regression.py`'s `TransactionTestCase`-based tests
+    (Phases 51/52, the newest code touching this path) first, but this is a lead,
+    not a confirmed cause.
+
+    Locally confirmed (scoped, per the user's standing instruction to run only
+    light/targeted test subsets here -- Google Drive/Gmail aren't reachable from
+    this machine anyway, so full validation happens on PDX-CL1): running exactly
+    the 6 `_FailedTest` modules together in isolation --
+      timeout 90 uv run python backend_django/manage.py test
+        google_media_backup.tests_resumable_download google_media_backup.tests_unit
+        google_gmail_backup.tests_cleanup_safeguards google_gmail_backup.tests_notify_wiring
+        google_gmail_backup.tests_schemas google_gmail_backup.tests_undo_protect -v2
+    -- all pass cleanly (exit 0). So the import failure is NOT intrinsic to these
+    6 files; it only manifests as part of the full two-app discovery, meaning
+    either ordering/interaction with another test module, or the OOM itself
+    corrupting/truncating discovery output for those 6 specifically.
+
+    Before writing any fix, still needed (do not guess a patch without this):
+      a. A CI (or PDX-CL1) run that reaches the ERRORS: summary -- only possible
+         once the OOM is far enough resolved (or the run given more memory) for
+         the process to survive to the end. This cannot be produced from a
+         local, WSL-safe scoped run here -- run the full two-app command on
+         PDX-CL1, not on this machine.
+      b. Identify what's consuming memory before the OOM kill using that same
+         PDX-CL1 run (e.g. `/usr/bin/time -v` or a memory profiler), focusing
+         first on whichever test triggers the second migration-apply above.
+    Only write the actual fix once (a) and (b) are confirmed with real
+    evidence from that run -- this step's job is still diagnosis, not a
+    guessed patch.
+
+  Verify (after all 3 steps): `gh run list --workflow=ci.yml --limit 1` shows a
+  green run on the PR/commit that carries this fix, for all three jobs
+  specifically (lint, sast-bandit, test) -- not just "CI passed" as PR jobs may
+  differ from the full workflow.

@@ -460,9 +460,7 @@ def download_photos_item(drive_file_id: str, out_path: str, size_hint: int | Non
 
 def _download_photos_item_legacy(media_item_id: str, out_path: str) -> bool:
     """Legacy Photos Library API download — kept for reference only. DO NOT USE."""
-    import requests
     try:
-        import requests as _req
         # This would need photos_service() which requires photoslibrary scope
         raise NotImplementedError("photoslibrary scope blocked — use download_photos_item() via Drive")
     except Exception:

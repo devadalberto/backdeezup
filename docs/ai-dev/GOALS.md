@@ -227,12 +227,92 @@ PHASE 52 -- Fix NOT NULL crash on every successful Gmail download/verify (DONE)
   unaffected (different code path, no request-based redirect_uri) and is the
   working fallback until this lands.
 
-Known gap, not yet phased: `google_gmail_backup/api.py`'s HTTP-triggered download
-endpoint (`/sync/download`, around line 277) has the same Phase-51-shaped bug --
-its `except Exception as e:` unconditionally sets `error` with no 404/permanent-
-gone check, so it can still get stuck the way `gmail_pipeline.py`'s download did
-before Phase 51. Not fixed here (out of scope for Phase 52, which only touched the
-`error = None` NOT NULL issue) -- noticed while reading the surrounding code.
+================================================================
+POST-ROADMAP ENHANCEMENTS (not bugs -- optional tuning)
+================================================================
+PHASE 53 -- Configurable concurrency + resource limits for bigger hardware (DONE)
+  User is moving PDX-CL1 to a 12-vCPU/36GB VM and asked how to size gmail-loop
+  workers for it. Today's answer is capped by three HARDCODED values in
+  docker-compose.yml, none read from .env: celery worker `-c 2` (this governs
+  how many Celery TASKS run in parallel -- reconcile/verify/media -- not the
+  ThreadPoolExecutor inside a single gmail-loop batch task, which already
+  takes WORKERS=N via `make gmail-loop`), and cpu/memory deploy.resources.limits
+  on web (1.0/512M), celery (2.0/1G), celerybeat (0.25/192M). Gmail downloads
+  are I/O-bound (network + hash + DB save, confirmed by reading
+  gmail_pipeline.py's _process() -- nothing CPU-heavy), so the real ceiling on
+  worker count is Gmail's per-user API quota, not vCPU count -- going far past
+  ~15-20 threads mostly trades throughput for 429s. `MAX_CONCURRENT_DOWNLOADS`
+  (default 2) only gates Drive/media downloads today, not Gmail -- confirmed
+  by grep. Fix: make the three hardcoded values env-driven with today's exact
+  values as defaults (zero behavior change), add a hardware-sizing table to
+  docs/operations.md so this doesn't need to be answered ad hoc again. No
+  application code changes, no migrations. Full detail: GOALS_TODOS.md.
+
+PHASE 54 -- Apply Phase 51's 404-permanent-gone fix to api.py's /sync/download (DONE)
+  `google_gmail_backup/api.py`'s HTTP-triggered download endpoint (lines 236-283)
+  has the same Phase-51-shaped bug -- its `except Exception as e:` block
+  (lines 277-281) unconditionally sets `error` with no 404/permanent-gone check,
+  so a confirmed-gone message can still get stuck here the way `gmail_pipeline.py`'s
+  download did before Phase 51. Not fixed in Phase 52 (out of scope -- that phase
+  only touched the `error = None` NOT NULL issue) -- noticed while reading the
+  surrounding code, now confirmed by reading it again in full.
+  Fix mirrors Phase 51 exactly: `HttpError` is already imported at api.py:10
+  (module level, no new import needed). `_mark_soft_deleted` (tasks.py:357-369)
+  is confirmed importable from api.py with no circular dependency (api.py doesn't
+  import from tasks.py at module level; tasks.py only imports `.models`/`.schemas`).
+  Add the same `is_gone` check gmail_pipeline.py uses (`isinstance(e, HttpError)
+  and e.resp.status == 404`, or `"404"`/`"notFound"` string fallback) to the
+  except block; on a confirmed-gone message call `_mark_soft_deleted(msg.gmail_id,
+  "gmail_404_on_download", timezone.now())` instead of just setting `error`.
+  Check gmail_pipeline.py's exact `errors` counter behavior on the soft-deleted
+  branch before mirroring it here, so the two endpoints report progress
+  consistently. Full detail: GOALS_TODOS.md.
+
+PHASE 55 -- Fix broken CI (lint, sast-bandit, test jobs all failing)
+  Surfaced when the CI badge was added to README; confirmed still failing on
+  current HEAD (commit 7a9a275, run 36363155626, inspected via `gh run view
+  --log-failed`) -- not a flake, three independent root causes:
+    1. lint -- 25 real `F401` unused-import violations across the codebase
+       (e.g. `core.setup.views` in tests_setup_wizard2.py:15, `django.utils.timezone`
+       in google_gmail_backup/admin.py:94, several unused model imports in
+       tests_smoke.py). Auto-fixable: `ruff check backend_django/ --select E,F,W
+       --ignore E501,E701,E702 --fix`.
+    2. sast-bandit -- FIXED (confirmed root cause, 2026-09-27). `bandit.sarif`
+       came out malformed/truncated ("Invalid SARIF. JSON syntax error:
+       Unexpected end of JSON input") at the upload-sarif step. Confirmed via
+       the "Run Bandit SAST" step's own output (not the upload step): bandit
+       itself errors out ("unrecognized arguments: backend_django/core/migrations
+       ..."), because `-x backend_django/**/migrations` is unquoted in the
+       workflow -- the runner's `sh` glob-expands `**` into 4 separate paths
+       before bandit sees them, only the first is consumed by `-x`, the rest
+       become invalid positional args, bandit exits nonzero, `|| true` hides it,
+       and `bandit.sarif` never gets written. Not the suspected zero-findings
+       SARIF-formatter bug -- disproven; quoting alone fixes it and findings
+       are non-zero (22 at `--severity-level medium`). Fix: quote the value --
+       `-x "backend_django/**/migrations"` -- verified locally with
+       `uv tool run --with 'bandit[sarif]' bandit ...` against this exact repo
+       (valid JSON, 22 results, zero touching migrations).
+    3. test -- exit 137 (OOM-killed) on the `test` job's container, AND 6 test
+       modules fail to even import as `_FailedTest`: google_media_backup's
+       tests_resumable_download + tests_unit, google_gmail_backup's
+       tests_cleanup_safeguards + tests_notify_wiring + tests_schemas +
+       tests_undo_protect. Partially diagnosed 2026-09-27: the `_FailedTest`
+       placeholders are emitted at discovery time, but their real tracebacks
+       only print in unittest's end-of-run summary, which this run never
+       reaches because the OOM kill happens first -- so the traceback text is
+       unobtainable from any existing CI log. A scoped local run of exactly
+       those 6 modules together passes cleanly (exit 0), so the failure isn't
+       intrinsic to those files alone -- it only shows up as part of the full
+       two-app suite. The raw log also shows a second, unexplained
+       `wagtailusers.0015` migration-apply appearing mid-suite (only one test
+       DB is ever created), right before the kill -- a lead pointing at
+       something re-triggering DB setup mid-run, not a confirmed cause.
+       Getting the real evidence needs a run that survives to print the
+       summary (i.e., more memory / a run on PDX-CL1) -- this repo's local dev
+       box cannot safely run the full two-app suite (WSL) and can't reach
+       Google Drive/Gmail anyway, so this step's remaining diagnosis and fix
+       happen on PDX-CL1, not here.
+  Full detail + required diagnostic steps before each fix: GOALS_TODOS.md.
 
 NOT PHASED (backlog, needs a user decision first): restore to a different Google
 account, restore into Drive, per-rule cleanup schedules, NAS packages, animated

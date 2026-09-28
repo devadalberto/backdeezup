@@ -86,7 +86,7 @@ jobs:
       - name: Run Bandit SAST
         run: |
           bandit -r backend_django/ \
-            -x backend_django/**/migrations \
+            -x "backend_django/**/migrations" \
             -f sarif \
             -o bandit.sarif \
             --severity-level medium \

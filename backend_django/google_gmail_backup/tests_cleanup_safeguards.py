@@ -1,7 +1,6 @@
 """Phase 34 — cleanup safeguards: dry-run-required confirm, global pause,
 never-delete-with-attachments. Isolated from tests.py (the large Gmail suite).
 """
-import json
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 

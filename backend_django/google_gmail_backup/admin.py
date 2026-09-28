@@ -91,7 +91,6 @@ class GmailMessageAdmin(admin.ModelAdmin):
     @admin.action(description="Restore selected to Gmail inbox (re-upload .eml)")
     def action_restore_to_gmail(self, request, queryset):
         from .services_gmail import restore_to_gmail
-        from django.utils import timezone
         ok = failed = 0
         for msg in queryset.filter(state=GmailMessage.STATE_SOFT_DELETED):
             success, result = restore_to_gmail(msg)

@@ -265,7 +265,6 @@ class Command(BaseCommand):
         ))
 
     def _mark_delete(self, limit, source):
-        from django.utils import timezone
         from google_media_backup.models import DriveAsset
 
         qs = DriveAsset.objects.filter(state="VERIFIED")
@@ -278,7 +277,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Marked {count} assets for deletion."))
 
     def _commit_delete(self, limit, source):
-        import os
         from datetime import timedelta
         from decouple import config
         from django.utils import timezone

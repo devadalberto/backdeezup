@@ -25,7 +25,6 @@ from collections import defaultdict
 from datetime import datetime
 
 from django.core.management.base import BaseCommand
-from django.db.models import Q
 
 from media_vault.models import VaultImage
 

@@ -7,7 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Phase 53** — celery worker concurrency (`-c 2`) and the per-service CPU/memory
+  limits in `docker-compose.yml` (`web` 1.0/512M, `celery` 2.0/1G, `celerybeat`
+  0.25/192M) were hardcoded, with no way to raise them on bigger hardware short of
+  hand-editing the compose file. Made all six values env-driven
+  (`CELERY_CONCURRENCY`, `WEB_CPUS`/`WEB_MEMORY`, `CELERY_CPUS`/`CELERY_MEMORY`,
+  `CELERYBEAT_CPUS`/`CELERYBEAT_MEMORY`, documented in `.env.sample`) with
+  defaults matching the original hardcoded values exactly — verified via
+  `docker compose config` byte-for-byte against the pre-change output (`cpus: 2`
+  / `memory: "1073741824"` etc., and `-c "2"` in the celery command), and again
+  with overrides applied, before and after. Zero behavior change for anyone who
+  doesn't set the new vars. Added a "Sizing for Bigger Hardware" table to
+  `docs/operations.md` (and a pointer from README's hardware section) mapping
+  vCPU/RAM tiers to recommended values — Gmail downloads are I/O-bound, so the
+  real ceiling on `make gmail-loop WORKERS=N` is Gmail's own per-user API quota,
+  not CPU count; the table also flags `GOOGLE_API_MAX_RPS` as a backstop to use
+  only if 429s actually appear, not preemptively. Triggered by a real question
+  about sizing a 12-vCPU/36GB deployment. No application code changes.
+
 ### Fixed
+- **Phase 55 (partial: lint + sast-bandit)** — CI's `lint`, `sast-bandit`, and `test`
+  jobs had all been failing since ~2026-07-30; confirmed live via `gh run view
+  --log-failed`, not assumed. Two of the three independent root causes fixed here:
+  - `lint`: 25 real `F401` unused-import violations across 9 files (e.g.
+    `core.setup.views` in `tests_setup_wizard2.py`, `django.utils.timezone` in
+    `google_gmail_backup/admin.py`, several unused model imports in
+    `tests_smoke.py`) plus one stray `F541` f-string with no placeholders in a
+    Phase 54 test. Fixed with `ruff check --fix`; `ruff check` now passes clean.
+  - `sast-bandit`: the `upload-sarif` step failed with "Invalid SARIF. JSON
+    syntax error: Unexpected end of JSON input". Root cause confirmed from the
+    Bandit step's own log (not the upload step): `-x backend_django/**/migrations`
+    was unquoted in `ci.yml`, so the runner's shell glob-expanded it into 4
+    separate paths before Bandit ever saw them — Bandit rejected the extras as
+    unrecognized arguments and exited before writing `bandit.sarif`, which the
+    workflow's `|| true` silently swallowed. Fixed by quoting the value; verified
+    locally with a real Bandit run against this repo (valid SARIF JSON, 22
+    findings at `--severity-level medium`, all 4 migrations dirs still excluded).
+  `test`'s exit-137 OOM and 6 `_FailedTest` import failures remain open — the
+  OOM kill happens before unittest ever prints its traceback summary, so the
+  real cause isn't visible in any existing CI log; needs a run on hardware that
+  can survive long enough to produce it. Full detail: `docs/ai-dev/GOALS_TODOS.md`.
+- **Phase 54** — `google_gmail_backup/api.py`'s `/sync/download` endpoint (a separate,
+  HTTP-triggered duplicate of `gmail_pipeline.py`'s download logic) never got Phase
+  51's fix: its `except Exception as e:` block unconditionally recorded the error
+  with no state transition, so a message Gmail confirms is gone (404 on
+  `messages.get`) would stay `DISCOVERED` forever via this endpoint too — same
+  failure shape as Phase 51, just a different code path. Flagged as a known gap
+  when Phase 52 was written, now fixed: mirrors Phase 51 exactly — a confirmed
+  404 (`HttpError.resp.status == 404`, or `"404"`/`"notFound"` string fallback)
+  now calls the same `_mark_soft_deleted` helper instead of leaving the message
+  stuck; every other exception keeps today's behavior unchanged. New
+  `GmailApiDownload404Test` (2 tests) confirmed to actually catch the bug by
+  reverting the fix and watching the 404 test fail before restoring it.
 - **Phase 52** — every successful Gmail download/verify crashed on save, on both
   Postgres and SQLite: `GmailMessage.error = models.TextField(blank=True, default="")`
   has no `null=True` — `blank=True` only affects form validation, the real DB column

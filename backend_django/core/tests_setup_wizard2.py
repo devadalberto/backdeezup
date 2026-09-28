@@ -12,7 +12,6 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from core import models as core_models
-from core.setup import views as wizard_views
 
 
 def _state_at(step, **extra):
