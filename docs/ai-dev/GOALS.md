@@ -540,7 +540,7 @@ PHASE 61 -- Fix ops console Output panel: not collapsible, grows unbounded and d
   long output scrolls within its own fixed box instead of growing the
   sticky container. Template-only, no backend change. Full detail: GOALS_TODOS.md.
 
-PHASE 62 -- Fix django_ratelimit's Ratelimited returning raw Django 403 instead of clean JSON (XS-S)
+PHASE 62 -- Fix django_ratelimit's Ratelimited returning raw Django 403 instead of clean JSON (XS-S) (DONE)
   Found live: clicking "Execute" on a cleanup rule returned a raw, unstyled
   "403 Forbidden" page with no explanation. Confirmed byte-for-byte this is
   Django's own generic `permission_denied` fallback page (rendered locally

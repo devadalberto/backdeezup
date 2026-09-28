@@ -27,6 +27,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   about sizing a 12-vCPU/36GB deployment. No application code changes.
 
 ### Fixed
+- **Phase 62** — clicking "Execute" on a cleanup rule returned a raw,
+  unstyled "403 Forbidden" page with no explanation. Confirmed byte-for-byte
+  this is Django's own generic `permission_denied` fallback page (rendered
+  locally and compared character-for-character to the reported output) —
+  meaning `django_ratelimit`'s `Ratelimited` exception (a `PermissionDenied`
+  subclass, raised by the 4 `@ratelimit(...)`-decorated endpoints in
+  `api.py`, all on `gmail_api`) was unhandled by Ninja and fell through to
+  Django's default error handling instead of a clean JSON response. Very
+  likely a genuine hit of the `10/h` execute limit (or `3/h` run-all limit)
+  from extensive testing this session — the rate limit itself is a
+  reasonable safety feature; the bug was purely the broken error
+  presentation. Fixed: registered one
+  `@gmail_api.exception_handler(Ratelimited)` returning a clean `429` JSON
+  body — covers all 4 rate-limited endpoints at once. Verified against the
+  real module: `gmail_api._exception_handlers` includes `Ratelimited`
+  alongside Ninja's built-ins, `gmail_api.urls` still builds with no
+  conflicts, and calling the handler directly with a real request returns
+  `429` with the expected JSON body.
 - **Phase 61** — the ops console's ("`/admin/gmail/ops/`") Output panel had two
   bugs: the "▶ Output" header was a static unicode glyph inside a plain `<b>`
   tag — no `onclick`, no `<details>`/`<summary>`, confirmed by grepping the

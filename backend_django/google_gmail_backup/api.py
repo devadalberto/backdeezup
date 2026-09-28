@@ -5,6 +5,7 @@ import datetime as dt
 
 from django.utils import timezone
 from django_ratelimit.decorators import ratelimit
+from django_ratelimit.exceptions import Ratelimited
 from ninja import NinjaAPI, Schema, Query
 from ninja.security import django_auth
 from googleapiclient.errors import HttpError
@@ -28,6 +29,21 @@ from .services_gmail import (
 log = logging.getLogger(__name__)
 
 gmail_api = NinjaAPI(urls_namespace="gmail", docs_url="/docs", auth=django_auth)
+
+
+@gmail_api.exception_handler(Ratelimited)
+def ratelimited_handler(request, exc):
+    """Phase 62: without this, django_ratelimit's Ratelimited (raised by the
+    @ratelimit-decorated endpoints below) falls through unhandled to Django's
+    generic permission_denied view -- a raw, unstyled "403 Forbidden" HTML
+    page with no explanation, instead of a JSON response the ops console can
+    actually display. 429 is the semantically correct status (rate limit,
+    not a permissions problem)."""
+    return gmail_api.create_response(
+        request,
+        {"error": "Rate limit exceeded. Please wait before trying again."},
+        status=429,
+    )
 
 
 # ── Schemas ───────────────────────────────────────────────────────────────────

@@ -1563,6 +1563,30 @@ PHASE 62 -- Fix django_ratelimit's Ratelimited returning raw Django 403 instead 
   naturally the next time someone gets rate-limited on PDX-CL1 and sees a
   clean JSON message instead of a bare "403 Forbidden" page.
 
+  STATUS: DONE (2026-09-28). Applied the exact fix above -- added `from
+  django_ratelimit.exceptions import Ratelimited` and the
+  `@gmail_api.exception_handler(Ratelimited)` handler right after
+  `gmail_api`'s definition. Verified against the REAL module (not just the
+  throwaway isolated instance):
+    - `from google_gmail_backup.api import gmail_api` -- imports cleanly,
+      `gmail_api._exception_handlers` includes
+      `django_ratelimit.exceptions.Ratelimited` alongside Ninja's built-in
+      handlers (`Exception`, `Http404`, `HttpError`, `ValidationError`).
+    - `gmail_api.urls` builds successfully (a tuple) -- confirms no
+      route/decorator registration conflicts across all endpoints,
+      including the 4 rate-limited ones.
+    - Called the real `ratelimited_handler(request, Ratelimited())`
+      directly with a `RequestFactory`-built request: returns `429` with
+      body `{"error": "Rate limit exceeded. Please wait before trying
+      again."}` -- exact match to what was verified in isolation, now
+      confirmed against the actual production code path.
+  Could not trigger a real rate-limit hit through the full decorator chain
+  from this dev box (no live compose stack, no reason to spin one up just
+  for this) -- calling the handler directly with the exception it's
+  designed to catch is the practical ceiling of verification here. Full
+  live confirmation happens the next time someone gets rate-limited on
+  PDX-CL1.
+
 PHASE 63 -- Wire pytest into CI so it actually runs the 6 pytest-native test files (S)
   Size: S. Risk: low -- CI workflow only, no application code touched.
   Completes Phase 55's `test` job, once and for all.
