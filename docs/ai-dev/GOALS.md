@@ -268,7 +268,7 @@ PHASE 54 -- Apply Phase 51's 404-permanent-gone fix to api.py's /sync/download (
   branch before mirroring it here, so the two endpoints report progress
   consistently. Full detail: GOALS_TODOS.md.
 
-PHASE 55 -- Fix broken CI (lint, sast-bandit, test jobs all failing)
+PHASE 55 -- Fix broken CI (lint, sast-bandit, test jobs all failing) (DIAGNOSIS COMPLETE, fix is PHASE 63)
   Surfaced when the CI badge was added to README; confirmed still failing on
   current HEAD (commit 7a9a275, run 36363155626, inspected via `gh run view
   --log-failed`) -- not a flake, three independent root causes:
@@ -321,7 +321,25 @@ PHASE 55 -- Fix broken CI (lint, sast-bandit, test jobs all failing)
        but this test (and 3 siblings in the same file) mock `svc` without
        configuring `.list()`, so that call returns a permanently-truthy `MagicMock`
        and the loop never breaks -- a very plausible match for the OOM (no sleep,
-       unbounded `mock_calls` growth per iteration). Not a production bug. Fix: PHASE 57.
+       unbounded `mock_calls` growth per iteration). Not a production bug. Fixed: PHASE 57.
+       ROOT CAUSE CONFIRMED 2026-09-28 (after Phase 57 deployed): a full local run
+       on PDX-CL1 (`DATABASE_URL=` cleared) now completes cleanly in 5s -- "Ran 74
+       tests ... OK (skipped=2)" -- confirming Phase 57's infinite loop was the
+       entire OOM story. But CI's own run on this same commit still fails the
+       `test` job (`gh run 36452103678`), now FAST (45s, no OOM) with real
+       tracebacks finally visible (the OOM used to prevent them from ever
+       printing): all 6 modules fail with the identical `ModuleNotFoundError: No
+       module named 'pytest'`. Confirmed by reading each file: all 6 are genuine
+       pytest-native tests (`@pytest.mark.django_db`, `@pytest.fixture`,
+       `@pytest.mark.unit`, `tmp_path`/`monkeypatch` fixtures) -- not
+       unittest.TestCase-based like the rest of the codebase. `pyproject.toml`
+       already has a fully-configured `[tool.pytest.ini_options]` section and a
+       declared `test` optional-dependency group (`pytest`, `pytest-django`,
+       `pytest-cov`, `pytest-mock`) -- but CI's `test` job's `uv sync` (no
+       `--extra test`) never installs it, and CI never runs `pytest` at all.
+       These 6 files have likely never actually executed in CI, ever. Verified
+       locally: `uv sync --extra test` + `uv run pytest <the 6 files> -v` --
+       65 passed, 0 failed, 7.69s. Fix: PHASE 63.
   Full detail + required diagnostic steps before each fix: GOALS_TODOS.md.
 
 PHASE 56 -- Fix `make gmail-loop` ignoring WORKERS= (XS) (DONE)
@@ -507,6 +525,73 @@ PHASE 60 -- Fix tqdm crash breaking cleanup-dry, cleanup-run, and real empty-tra
   the corrected code against the same pattern already proven fixed in
   `run_cleanup.py`, and let the user confirm on PDX-CL1 when they actually
   run `make gmail-empty-trash` for real. Full detail: GOALS_TODOS.md.
+
+PHASE 61 -- Fix ops console Output panel: not collapsible, grows unbounded and drags the page (XS-S) (DONE)
+  Found live on `/admin/gmail/ops/`: the "▶ Output" header is a static
+  unicode glyph inside a plain `<b>` tag -- no `onclick`, no `<details>`/
+  `<summary>`, confirmed by grepping the whole file (zero matches for
+  "details"/"summary"). Looks clickable, does nothing. Separately, `<pre
+  id="out">` has no `max-height`/`overflow`, and its container is
+  `position:sticky` -- so as output grows (e.g. a 20-rule dry-run's JSON),
+  the box's own height grows unbounded and, being sticky, visibly drags the
+  page around. Fix: replace the static `<b>` with a real `<details open>`/
+  `<summary>` (native, accessible, free expand/collapse triangle, no JS
+  needed) and add `max-height:320px;overflow-y:auto;` to `<pre id="out">` so
+  long output scrolls within its own fixed box instead of growing the
+  sticky container. Template-only, no backend change. Full detail: GOALS_TODOS.md.
+
+PHASE 62 -- Fix django_ratelimit's Ratelimited returning raw Django 403 instead of clean JSON (XS-S)
+  Found live: clicking "Execute" on a cleanup rule returned a raw, unstyled
+  "403 Forbidden" page with no explanation. Confirmed byte-for-byte this is
+  Django's own generic `permission_denied` fallback page (rendered locally
+  and compared character-for-character) -- meaning `django_ratelimit`'s
+  `Ratelimited` exception (a `PermissionDenied` subclass, raised by the 4
+  `@ratelimit(...)`-decorated endpoints in `api.py`, all on `gmail_api`) is
+  unhandled by Ninja and falls through to Django's default error handling
+  instead of a clean JSON response. Very likely the user genuinely hit the
+  `10/h` execute limit (or `3/h` run-all limit) from extensive testing this
+  session -- the rate limit itself is a reasonable safety feature; the bug
+  is purely the broken error presentation. Fix: register one
+  `@gmail_api.exception_handler(Ratelimited)` returning a clean `429` JSON
+  body (`{"error": "Rate limit exceeded. Please wait before trying again."}`)
+  -- covers all 4 rate-limited endpoints at once. Verified working end-to-end
+  with `ninja.testing.TestClient` against a throwaway API instance before
+  writing the real code. Full detail: GOALS_TODOS.md.
+
+PHASE 63 -- Wire pytest into CI so it actually runs the 6 pytest-native test files (S)
+  Completes Phase 55: the `test` job's real remaining failure
+  (`ModuleNotFoundError: No module named 'pytest'` on 6 files) is fully
+  diagnosed -- these are genuine pytest-native tests (fixtures, `django_db`/
+  `unit` markers) that `pyproject.toml` already declares a `test` optional-
+  dependency group for (`pytest`, `pytest-django`, `pytest-cov`,
+  `pytest-mock`) and a full `[tool.pytest.ini_options]` config for -- but
+  CI's `test` job's `uv sync` never installs that group, and CI never
+  invokes `pytest` at all. These 6 files have likely never actually run in
+  CI. Verified locally: `uv sync --extra test` + `uv run pytest <the 6
+  files> -v` -> 65 passed, 0 failed, 7.69s.
+  Fix: in `.github/workflows/ci.yml`'s `test` job, change `uv sync` ->
+  `uv sync --extra test`, and add one more step after the existing
+  `manage.py test` step, running `pytest` scoped to exactly the 6 files
+  (not a bare `pytest` across `backend_django/` -- that would also
+  re-collect and re-run every unittest.TestCase-based file `manage.py test`
+  already covers, doubling CI time for no benefit):
+      - name: Run tests (pytest-native)
+        run: |
+          uv run pytest \
+            backend_django/google_media_backup/tests_resumable_download.py \
+            backend_django/google_media_backup/tests_unit.py \
+            backend_django/google_gmail_backup/tests_cleanup_safeguards.py \
+            backend_django/google_gmail_backup/tests_notify_wiring.py \
+            backend_django/google_gmail_backup/tests_schemas.py \
+            backend_django/google_gmail_backup/tests_undo_protect.py \
+            -v
+  The workflow-level `env:` block (DJANGO_SECRET_KEY, DATABASE_URL: "", etc.,
+  lines 9-13) already applies to every step in every job -- no new env vars
+  needed for this step.
+  Verify: `gh run list --workflow=ci.yml --limit 1` shows a fully green run
+  (lint, sast-bandit, AND test all passing) on the commit carrying this fix
+  -- this is Phase 55's own original verify step, finally achievable. Full
+  detail: GOALS_TODOS.md.
 
 NOT PHASED (backlog, needs a user decision first): restore to a different Google
 account, restore into Drive, per-rule cleanup schedules, NAS packages, animated

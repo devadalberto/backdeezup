@@ -1211,334 +1211,6 @@ USER DECISIONS (2026-09-26) -- all resolved
 BUGS FOUND POST-ROADMAP
 ================================================================
 
-PHASE 50 -- Fix OAuth redirect_uri behind reverse proxy (browser flow)
-  Size: S.  Risk: low (settings + nginx/Caddy config only, no schema/data changes,
-  no behavior change for the unaffected `make auth` CLI flow).
-
-  Root cause (confirmed by reading the actual code, not guessed):
-    - `backend_django/core/oauth.py` builds the OAuth redirect_uri via
-      `request.build_absolute_uri(reverse("oauth_callback"))` on both the start
-      and callback legs -- fully dynamic, derived from what Django thinks the
-      current request's scheme/host/port are.
-    - `nginx/nginx.conf`'s `location /` sends `proxy_set_header Host $host;` --
-      nginx's `$host` variable strips any port from the original Host header, so
-      Django's HTTP_HOST arrives as e.g. `localhost` with no port at all,
-      regardless of what port nginx itself is actually listening on.
-    - `backend_django/config/settings.py` never sets `SECURE_PROXY_SSL_HEADER` or
-      `USE_X_FORWARDED_HOST`, even though nginx already sends
-      `X-Forwarded-Proto: https` (`nginx.conf` line ~58). Django ignores that
-      header without those settings, so `request.is_secure()` is False and
-      `request.scheme` defaults to `http`.
-    - Net effect: the redirect_uri actually sent to Google ends up something like
-      `http://localhost/oauth/callback` -- wrong scheme, no port -- which won't
-      match whatever's registered as an authorized redirect URI in Google Cloud
-      Console for this client. Google shows its generic, unhelpful "Something
-      went wrong / Sorry, something went wrong there. Try again." page right
-      after the user approves scopes.
-    - This is **not** host/port-specific -- it would break identically at the
-      documented default (nginx on 8445) exactly as it did on a host running
-      nginx on a remapped port (18445). Found 2026-09-27 debugging a real
-      install on a second machine (unrelated port-conflict investigation
-      surfaced it as a side effect).
-    - The CLI `make auth` flow (`google_media_backup`/`google_gmail_backup`
-      management commands) is a **separate code path** with no
-      request-based redirect_uri construction -- confirmed unaffected, and is
-      the working fallback in the interim.
-
-  Fix:
-    1. `backend_django/config/settings.py`: add
-       `SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')` and
-       `USE_X_FORWARDED_HOST = True`. Standard Django guidance for exactly this
-       deployment shape (app only ever reachable through a proxy that sets
-       X-Forwarded-Proto) -- note in a comment that this trusts nginx/Caddy as
-       the sole entry point, consistent with BIND_ADDR defaulting to
-       127.0.0.1 (Phase 39); don't silently weaken that assumption elsewhere.
-    2. `nginx/nginx.conf`: change `proxy_set_header Host $host;` to
-       `proxy_set_header Host $http_host;` in the HTTPS server block's
-       `location /` (`$http_host` preserves the port the client actually
-       connected on; `$host` does not). Only that one location block proxies to
-       `web` -- the HTTP 80 block just redirects to HTTPS and doesn't need this.
-    3. Check `Caddyfile` (Phase 48) for the same class of bug before assuming
-       it's fine -- Caddy's `reverse_proxy` forwards the original Host header
-       and sets X-Forwarded-Proto automatically by default, so it may already be
-       correct, but verify rather than assume.
-    4. Check `docs/authentication.md` and README's "Connect Google" section for
-       any claim that the browser OAuth flow works today -- correct if it
-       overstates it.
-
-  Verify: this can be checked without live Google network access (no Google
-  network from vertex-dev -- see memory). Use Django's RequestFactory (or the
-  test client) to simulate exactly the headers nginx now sends
-  (`X-Forwarded-Proto: https`, `Host: <host>:<port>` as `$http_host` would send
-  it) against the oauth-start view, and confirm `request.build_absolute_uri(...)`
-  / the actual redirect_uri passed to the Google auth flow now comes out as
-  `https://<host>:<port>/...` -- not by hitting Google, by inspecting what the
-  app itself constructs. A scoped test file for this (e.g.
-  `core/tests_oauth_redirect.py`) is reasonable given Phase 6's per-view-test
-  convention.
-
-PHASE 51 -- Fix gmail-loop infinite-retry on permanently-gone messages
-  Size: S.  Risk: low (one code path, additive state-transition logic only, no
-  schema/migration changes -- GmailMessage.state/deleted_at/deletion_source
-  already exist and are already used this exact way elsewhere).
-
-  Root cause (confirmed live, on a real account with 57,895 discovered messages,
-  not guessed): `backend_django/google_gmail_backup/management/commands/
-  gmail_pipeline.py`'s `_download()` -> `_process(msg)` inner function, on any
-  exception, only does:
-    msg.error = str(exc); msg.last_attempt_at = timezone.now(); msg.save(...)
-  It never touches `msg.state`. A message stays STATE_DISCOVERED forever, even
-  when the failure is Gmail itself confirming the message no longer exists
-  (`HttpError 404 ... reason: notFound` on `messages.get`). Since `_download`'s
-  query is `GmailMessage.objects.filter(state=STATE_DISCOVERED)
-  .order_by("discovered_at")[:limit]`, the *same* oldest dead messages get
-  re-selected on every single invocation -- `make gmail-loop` (a bash loop
-  calling this repeatedly until the DISCOVERED queue is empty) can never
-  progress past them to the remaining, actually-downloadable messages behind
-  them in discovered_at order. Reproduced live: a 500-message batch was 100%
-  404/notFound, loop made zero forward progress.
-
-  `task_gmail_reconcile` (`tasks.py`) already has the exact right handling for
-  this signal -- `_mark_soft_deleted(gmail_id, source, now)` on a confirmed 404
-  -- but it only scans `state__in=[VERIFIED, DOWNLOADED]`, never `DISCOVERED`,
-  so it does not help this case.
-
-  Fix:
-    1. In `_process(msg)`'s exception handler, detect a confirmed-permanent
-       failure -- `HttpError` with `.resp.status == 404` (preferred, exact) or
-       the existing string-matching fallback already used elsewhere in this
-       file (`"404" in exc_str or "notFound" in exc_str`) if the raised
-       exception type varies by call site. On that specific signal, call the
-       existing `_mark_soft_deleted(msg.gmail_id, "gmail_404_on_download",
-       timezone.now())` from `google_gmail_backup.tasks` instead of just
-       setting `error` -- reuse the proven helper, don't reinvent it.
-    2. Every other exception type (network errors, "Empty raw response",
-       rate limits, etc.) keeps today's exact behavior -- `error` +
-       `last_attempt_at` set, state unchanged, eligible for retry on the next
-       loop pass. Do NOT invent a general retry-limit/backoff system here --
-       that's a separate, bigger feature; out of scope for this fix. Note it
-       in GOALS.md's NOT PHASED backlog if it turns out other error types also
-       get permanently stuck in real-world use (unconfirmed as of this
-       writing -- only the 404 case has been proven to actually happen).
-    3. `docs/operations.md` / `docs/troubleshoot`-style docs: if `make
-       gmail-loop` looks stuck at a high err count with no progress, this is
-       now a known, self-resolving situation (the fix skips past confirmed-gone
-       messages automatically) rather than something to manually intervene on
-       -- add a line to the Troubleshooting table if one doesn't already cover
-       "0 downloaded, all errors."
-
-  Verify: `core/tests_gmail_download_404.py` or extend an existing
-  `google_gmail_backup/tests_*.py` file (check what exists first) --
-  mock `get_message_raw`/the Gmail service call to raise an `HttpError`-shaped
-  404, call `_process`/the download path, and assert the message ends up
-  `STATE_SOFT_DELETED` with `deletion_source="gmail_404_on_download"` and
-  `deleted_at` set -- not left in `DISCOVERED`. Also assert a non-404 exception
-  (e.g. a plain `ConnectionError`) leaves state unchanged (regression guard for
-  point 2 above, so a future change doesn't accidentally soft-delete on
-  transient errors). No live Google network needed -- mock-based, same
-  constraint as every other Google-API test in this repo.
-
-PHASE 52 -- Fix NOT NULL crash on every successful Gmail download/verify
-  Size: XS.  Risk: low (application-code correction to match a field's own already-
-  declared Python default; no schema/migration change).
-
-  Root cause (confirmed by reading the model field and all 4 call sites, not
-  guessed): `google_gmail_backup/models.py` line 96:
-    error = models.TextField(blank=True, default="")
-  `blank=True` only affects Django form/admin validation -- it does NOT make the
-  database column nullable. With no `null=True`, the real column is NOT NULL. Four
-  call sites set `msg.error = None` on a successful download/verify, instead of `""`
-  (the field's own declared default, already used correctly elsewhere in the same
-  files for the "no error yet" case):
-    - `google_gmail_backup/management/commands/gmail_pipeline.py:144`
-      (`_download`/`_process` success path)
-    - `google_gmail_backup/management/commands/gmail_pipeline.py:208`
-      (`_verify` success path)
-    - `google_gmail_backup/api.py:270` (HTTP-API equivalent of the download success path)
-    - `google_gmail_backup/api.py:302` (HTTP-API equivalent of the verify success path)
-  Every one of these crashes `.save()` on PostgreSQL with:
-    django.db.utils.IntegrityError: null value in column "error" of relation
-    "google_gmail_backup_gmailmessage" violates not-null constraint
-  Confirmed live on a real account: 348 messages stuck in DISCOVERED with exactly
-  this error text after a successful-looking download attempt (file present on disk,
-  checksum computed) -- the final .save() that would have advanced state to
-  DOWNLOADED crashed instead, so the row never left DISCOVERED and got retried
-  forever (same failure *shape* as Phase 51, different cause -- Phase 51's fix
-  doesn't touch this at all, `is_gone` correctly does NOT match this exception, and
-  it shouldn't).
-
-  Never caught by any test in this repo -- NOT because SQLite is permissive about
-  NOT NULL (verified while implementing: it enforces this identically to Postgres,
-  reverting the fix fails the new test here with the same IntegrityError). The real
-  reason: no existing test ever exercised the actual download/verify *success* path
-  with real data -- `ConcurrentDownloaderTest` only ever runs `limit=0` (empty
-  queue), specifically to dodge the ThreadPoolExecutor/TestCase deadlock Phase 51
-  hit, which incidentally meant this `.save()` call never actually ran under any
-  test until Phase 52's new one. DriveAsset has the identical field shape
-  (`google_media_backup/models.py:82`,
-  same `blank=True, default=""`, no `null=True`) but grepped clean -- no
-  `asset.error = None` anywhere in that app, so Drive is NOT affected by this
-  specific bug. Confirmed by grep, not assumed.
-
-  Fix: change all 4 call sites from `msg.error = None` to `msg.error = ""` --
-  matches the field's own declared default, zero schema change, zero migration.
-  Grepped the rest of the codebase for anything reading `.error` and expecting
-  `None` specifically (`is None` checks, `error__isnull` queries) -- found none,
-  so this change is safe everywhere the field is read.
-
-  Verify: turns out SQLite enforces this NOT NULL constraint identically to
-  Postgres (confirmed while implementing -- reverting the fix fails a real test
-  here with the same IntegrityError), so a normal `TransactionTestCase` exercising
-  the actual success path is sufficient; no Postgres-specific test infrastructure
-  needed. Added `GmailErrorFieldNotNullTest` (download success + verify success,
-  both assert `msg.error == ""`, never `None`) to
-  `google_gmail_backup/tests_regression.py`. Confirmed each test actually catches
-  the bug by reverting the fix and watching it fail before restoring it. The real
-  PostgreSQL failure text (`violates not-null constraint`) was captured live on
-  PDX-CL1 first, independent of this test.
-
-PHASE 53 -- Configurable concurrency + resource limits for bigger hardware
-  Size: XS-S.  Risk: low (env-driven defaults reproduce today's hardcoded values
-  exactly; no application code changes, no migrations).
-
-  Trigger: user is moving the PDX-CL1 deployment to a 12-vCPU/36GB VM and asked
-  how many gmail-loop workers to run there "as fast as possible."
-
-  Facts gathered before writing this phase (not guessed -- read the actual
-  files, not assumed):
-    - `gmail_pipeline.py`'s `--workers` CLI flag (default 10, gmail_pipeline.py:23)
-      drives a `ThreadPoolExecutor(max_workers=workers)` (gmail_pipeline.py:176)
-      for the actual Gmail downloads. This already accepts a value via
-      `make gmail-loop WORKERS=N` -- no code change needed to raise it.
-    - Celery worker concurrency is HARDCODED: `docker-compose.yml:62` --
-      `celery -A celery_app worker -l info -c 2 ...`. This governs how many
-      Celery TASKS run in parallel (reconcile, verify, media backup, etc), not
-      the ThreadPoolExecutor inside a single gmail-loop batch task.
-    - `deploy.resources.limits` are HARDCODED per service, none read from .env:
-        web       : cpus 1.0 / memory 512M  (docker-compose.yml:52-56)
-        celery    : cpus 2.0 / memory 1G    (docker-compose.yml:82-86)
-        celerybeat: cpus 0.25 / memory 192M (docker-compose.yml:112-116)
-      Raising any of these today requires hand-editing docker-compose.yml,
-      which a `git pull` / upgrade would then conflict with or silently revert.
-    - `MAX_CONCURRENT_DOWNLOADS` (default 2, `core/ratelimit.py:21`, Redis
-      semaphore) only gates `google_media_backup/services_google.py` (Drive/
-      media downloads) -- confirmed by grep, it does NOT gate the Gmail
-      download path at all today.
-    - `GOOGLE_API_MAX_RPS` (default 0 = disabled, `core/ratelimit.py:22`) is a
-      token-bucket rate limiter, independent of the 429/5xx backoff already
-      built into the google-api-python-client retry logic.
-    - Gmail downloads are I/O-bound: network call + EML write + SHA-256 hash +
-      DB save (`gmail_pipeline.py:111-174`), nothing CPU-heavy. More vCPUs
-      raises the ceiling on how many threads CAN run without contending for
-      cores, but Gmail's own per-user API quota is almost always the binding
-      constraint before core count is, past roughly 15-20 concurrent workers.
-
-  Fix (config-only, additive, defaults reproduce today's exact values):
-    1. `docker-compose.yml`:
-       - `celery` command: change `-c 2` to `-c ${CELERY_CONCURRENCY:-2}` (env
-         substitution works inside the `command:` string via docker compose's
-         own interpolation -- same pattern already used for
-         `${BIND_ADDR:-127.0.0.1}` elsewhere in this file).
-       - `web.deploy.resources.limits`: `cpus: '${WEB_CPUS:-1.0}'`,
-         `memory: ${WEB_MEMORY:-512M}`.
-       - `celery.deploy.resources.limits`: `cpus: '${CELERY_CPUS:-2.0}'`,
-         `memory: ${CELERY_MEMORY:-1G}`.
-       - `celerybeat.deploy.resources.limits`: `cpus: '${CELERYBEAT_CPUS:-0.25}'`,
-         `memory: ${CELERYBEAT_MEMORY:-192M}`.
-    2. `.env.sample`: document the six new vars near the existing
-       `MAX_CONCURRENT_DOWNLOADS`/`GOOGLE_API_MAX_RPS` block (~lines 51-55),
-       each commented with its default and one line on when to raise it.
-    3. `docs/operations.md`: add a "Sizing for bigger hardware" table, e.g.:
-
-         | Hardware       | WORKERS | CELERY_CONCURRENCY | CELERY_CPUS/MEM   | MAX_CONCURRENT_DOWNLOADS |
-         |----------------|---------|---------------------|--------------------|--------------------------|
-         | 2 vCPU / 4GB   | 10      | 2 (default)         | 2.0 / 1G (default) | 2 (default)              |
-         | 4 vCPU / 8GB   | 12-15   | 3                   | 3.0 / 2G           | 3                        |
-         | 12 vCPU / 36GB | 16-20   | 4                   | 4.0 / 4G           | 4                        |
-
-       With a short note: Gmail's per-user API quota, not CPU, is the real
-       ceiling on WORKERS -- going past ~20 mostly trades throughput for 429s.
-       Raise `GOOGLE_API_MAX_RPS` as a backstop only if 429s actually show up
-       in logs; don't preemptively throttle.
-    4. README: if it has a hardware/platform matrix (Phase 45), add a pointer
-       to this new table rather than duplicating it.
-
-  Verify:
-    - `docker compose config` with no new env vars set must show cpus/memory/
-      concurrency values byte-identical to today's hardcoded ones (proves the
-      defaults are truly additive -- zero behavior change for existing
-      deployments that don't set the new vars).
-    - `docker compose config` with e.g. `CELERY_CONCURRENCY=4 CELERY_CPUS=4.0
-      CELERY_MEMORY=4G` set must reflect exactly those overridden values.
-    - No Python test needed -- this phase touches no application code, only
-      compose/env/docs.
-
-  STATUS: DONE. Verified via `docker compose config` (temp local `.env`, deleted
-  after): defaults reproduce the original hardcoded values byte-for-byte
-  (`cpus: 2` / `memory: "1073741824"` for celery, `cpus: 0.25` /
-  `memory: "201326592"` for celerybeat, `cpus: 1` / `memory: "536870912"` for
-  web, `-c "2"` in the celery command args), and overrides
-  (`CELERY_CONCURRENCY=4`, `CELERY_MEMORY=4G`, etc.) apply correctly
-  (`-c "4"`, `memory: "4294967296"`). README's hardware section updated with a
-  pointer. graphify updated.
-
-PHASE 54 -- Apply Phase 51's 404-permanent-gone fix to api.py's /sync/download
-  Size: XS.  Risk: low (mirrors an already-proven fix, one file, additive
-  branch inside an existing except block, no schema/migration change).
-
-  Facts confirmed by reading the actual code (not guessed):
-    - `backend_django/google_gmail_backup/api.py`, the `/sync/download` endpoint
-      (function starting ~line 225, loop at lines 236-283): the `except Exception
-      as e:` block at lines 277-281 does exactly what gmail_pipeline.py did
-      before Phase 51 -- `msg.error = str(e); msg.last_attempt_at = timezone.now();
-      msg.save(...); errors += 1` -- no state transition, no 404 check.
-    - `HttpError` is already imported at api.py:10 (module level) -- no new
-      import needed for the exception-type check.
-    - `_mark_soft_deleted(gmail_id, source, now)` (tasks.py:357-369) sets
-      `state=STATE_SOFT_DELETED`, `deleted_at`, `deletion_source`, and a
-      `metadata_snapshot` if not already set. Confirmed importable from api.py
-      with no circular dependency: api.py does not import from tasks.py at
-      module level (only one function-level import elsewhere, unrelated), and
-      tasks.py only imports `.models`/`.schemas` at module level.
-    - gmail_pipeline.py's exact Phase 51 pattern (lines 162-167):
-        exc_str = str(exc)
-        is_gone = isinstance(exc, HttpError) and exc.resp.status == 404
-        is_gone = is_gone or "404" in exc_str or "notFound" in exc_str
-        if is_gone:
-            from google_gmail_backup.tasks import _mark_soft_deleted
-            _mark_soft_deleted(msg.gmail_id, "gmail_404_on_download", timezone.now())
-
-  Fix: apply the identical `is_gone` check inside api.py's `except Exception as
-  e:` block (lines 277-281) -- on a confirmed-gone message, call
-  `_mark_soft_deleted(msg.gmail_id, "gmail_404_on_download", timezone.now())`
-  instead of the current unconditional `msg.error = str(e)` + save. Every other
-  exception type keeps today's exact behavior (error recorded, state unchanged,
-  retried next call) -- same non-goal as Phase 51: no general retry-limit/backoff
-  system here.
-
-  Before finalizing: check whether gmail_pipeline.py's Phase 51 fix increments
-  its `errors` counter on the soft-deleted branch or treats it separately, and
-  mirror that choice here so `/sync/download`'s returned `{"downloaded":
-  ..., "errors": ...}` counts stay consistent with the CLI loop's semantics.
-
-  Verify: extend `google_gmail_backup/tests_regression.py` (or add a sibling
-  test file for the API layer) with an equivalent of `GmailDownload404Test` --
-  mock `get_message_raw` to raise an `HttpError`-shaped 404 against the
-  `/sync/download` endpoint (Django test client + `django_auth`, same pattern
-  Phase 50's oauth test used), assert the message ends up `SOFT_DELETED` with
-  `deletion_source="gmail_404_on_download"`, and a non-404 exception leaves
-  state unchanged. No live Google network needed.
-
-  STATUS: DONE. `GmailApiDownload404Test` (2 tests) added to tests_regression.py.
-  Full suite: 35 tests, OK (2 skipped, pre-existing/environmental, unrelated).
-  Confirmed the new test actually catches the bug: reverted the except-block fix,
-  re-ran `GmailApiDownload404Test` alone -- `test_confirmed_404_marks_soft_deleted_
-  not_stuck_discovered` failed with `AssertionError: 'DISCOVERED' !=
-  GmailMessage.State.SOFT_DELETED` as expected -- then restored the fix and
-  re-ran the full suite clean. Counter semantics matched: `errors` increments on
-  both the soft-deleted and non-404 branches, same as gmail_pipeline.py's `err`
-  counter (a soft-deleted message isn't "downloaded" either).
-
 PHASE 55 -- Fix broken CI (lint, sast-bandit, test jobs all failing)
   Size: S.  Risk: low for the lint fix (mechanical); sast-bandit and test require
   diagnosis before the fix is even chosen -- do not skip that step.
@@ -1688,465 +1360,264 @@ PHASE 55 -- Fix broken CI (lint, sast-bandit, test jobs all failing)
     run, so it hangs first and blocks the other 3 from ever executing.
     This does NOT explain the 6 `_FailedTest` import failures (those are
     discovery-time import errors, unrelated to this runtime hang) -- that part
-    of (a) is still open. Fix for this part: PHASE 57 (see below).
+    of (a) is still open. Fix for this part: PHASE 57 (DONE -- see CHANGELOG.md).
 
   Verify (after all 3 steps): `gh run list --workflow=ci.yml --limit 1` shows a
   green run on the PR/commit that carries this fix, for all three jobs
   specifically (lint, sast-bandit, test) -- not just "CI passed" as PR jobs may
   differ from the full workflow.
 
-PHASE 56 -- Fix `make gmail-loop` ignoring WORKERS= (XS)
-  Facts confirmed by reading the code (not guessed):
-    - Makefile:404 `WORKERS ?= 10` -- a make variable, overridable on the
-      command line (`make gmail-loop WORKERS=40`) or left at its default.
-    - Makefile:406-407 `gmail-download` target:
-        docker compose exec web python manage.py gmail_pipeline download \
-          --limit $(LIMIT) --workers $(WORKERS)
-      correctly forwards `WORKERS`.
-    - Makefile:421-430 `gmail-loop` target's download line (424):
-        docker compose exec web python manage.py gmail_pipeline download --limit $(LIMIT);
-      does NOT forward `--workers $(WORKERS)` at all.
-    - `backend_django/google_gmail_backup/management/commands/gmail_pipeline.py:23`:
-        parser.add_argument("--workers", type=int, default=10, ...)
-      so when `gmail-loop` omits the flag, argparse silently falls back to 10,
-      regardless of what `WORKERS=` was set to on the `make gmail-loop` command
-      line. This is exactly the user-observed symptom ("it still using 10
-      workers" after bumping `WORKERS=` on a bigger VM).
-    - `gmail-loop`'s `verify` call (Makefile:425) has no `--workers` flag in the
-      first place -- confirmed by reading `verify`'s `add_arguments` in the same
-      file, it doesn't take one. Not a bug; leave it as-is.
-  Fix: change Makefile:424 to
-        docker compose exec web python manage.py gmail_pipeline download --limit $(LIMIT) --workers $(WORKERS);
-      matching `gmail-download`'s line exactly. One-line change, `WORKERS ?= 10`
-      default unchanged, so anyone not overriding `WORKERS=` sees no behavior
-      change.
-  Verify: `make gmail-loop WORKERS=40` (dry-read the target, or run once against
-  a real queue) and confirm the `gmail_pipeline download` log line
-  ("using {workers} workers", `gmail_pipeline.py:192`) actually prints 40, not
-  10, on the very first iteration of the loop.
+  ROOT CAUSE OF (a) CONFIRMED, 2026-09-28 -- the piece that was genuinely
+  unobtainable before is now fully in hand:
+    - With Phase 57 deployed on PDX-CL1, ran the full suite locally
+      (`DATABASE_URL=` cleared, same command as always):
+        DJANGO_SECRET_KEY=... GOOGLE_ENCRYPTION_KEY=... DATABASE_URL= \
+          uv run python backend_django/manage.py test google_media_backup google_gmail_backup --verbosity=2
+      Result: "Ran 74 tests in 5.071s / OK (skipped=2)" -- clean, fast, no
+      OOM. Confirms Phase 57's infinite loop was the entire OOM story.
+    - But CI's own run on this same commit (`gh run 36452103678`, triggered
+      by the Phase 60 push) still fails the `test` job -- now in 45s (not the
+      old multi-minute-then-OOM pattern), with real tracebacks finally
+      printing, since nothing kills the process early anymore. All 6
+      `_FailedTest` modules show the IDENTICAL error:
+        ModuleNotFoundError: No module named 'pytest'
+      ("Ran 80 tests in 7.997s / FAILED (errors=6, skipped=2)" -- CI's count
+      differs slightly from the local 74/no-pytest-installed count because
+      CI's environment differs, not because of a new bug -- not worth
+      chasing further, the real finding is the shared root cause below.)
+    - Confirmed by reading all 6 files (not guessed): every one is genuinely
+      pytest-native --
+        google_media_backup/tests_resumable_download.py: `import pytest`,
+          bare functions (no TestCase), uses fixtures implicitly via pytest
+          conventions.
+        google_media_backup/tests_unit.py: `@pytest.mark.unit` classes,
+          `tmp_path`/`monkeypatch` fixture args.
+        google_gmail_backup/tests_cleanup_safeguards.py: `@pytest.fixture`
+          (a `rule` fixture), `@pytest.mark.django_db` on every test
+          function, a `settings` fixture arg (pytest-django's).
+        google_gmail_backup/tests_notify_wiring.py: `@pytest.mark.django_db`
+          on bare functions.
+        google_gmail_backup/tests_schemas.py: `@pytest.mark.unit` class.
+        google_gmail_backup/tests_undo_protect.py: `@pytest.mark.django_db`,
+          `pytest.raises(RuntimeError)`.
+      None of these are `unittest.TestCase` subclasses -- Django's test
+      runner can import them (once `pytest` itself is importable) but would
+      never actually discover any tests inside them, since unittest's
+      loader only picks up TestCase subclasses.
+    - `pyproject.toml` already has everything needed for these to run
+      correctly, just never wired into CI:
+        [project.optional-dependencies]
+        test = ["pytest>=8.0", "pytest-django>=4.8", "pytest-cov>=5.0", "pytest-mock>=3.14"]
+        [tool.pytest.ini_options]
+        DJANGO_SETTINGS_MODULE = "config.settings"
+        pythonpath = ["backend_django"]
+        testpaths = ["backend_django"]
+        python_files = ["tests.py", "tests_*.py", "test_*.py"]
+        markers = ["unit: ...", "integration: ...", "api: ...", "smoke: ..."]
+      -- matches exactly how these 6 files use `pytest.mark.unit` etc.
+      Someone clearly intended a dual test-runner setup (unittest via
+      `manage.py test` for most of the codebase, pytest for this subset) and
+      either forgot to wire CI up for the pytest half, or it regressed.
+    - `.github/workflows/ci.yml`'s `test` job's `Install dependencies` step
+      is a bare `uv sync` (line 66) -- never `--extra test`, so the `test`
+      optional group is never installed in CI. Confirmed via `grep -n
+      "pytest"` across the whole workflow file: zero matches anywhere --
+      `pytest` is never invoked in CI at all, ever.
+    - Verified locally that installing + running it actually works:
+        uv sync --extra test
+        DJANGO_SECRET_KEY=... GOOGLE_ENCRYPTION_KEY=... DATABASE_URL= \
+          uv run pytest \
+            backend_django/google_media_backup/tests_resumable_download.py \
+            backend_django/google_media_backup/tests_unit.py \
+            backend_django/google_gmail_backup/tests_cleanup_safeguards.py \
+            backend_django/google_gmail_backup/tests_notify_wiring.py \
+            backend_django/google_gmail_backup/tests_schemas.py \
+            backend_django/google_gmail_backup/tests_undo_protect.py \
+            -v
+      Result: "65 passed, 5 warnings in 7.69s" -- these tests are correct
+      and valuable, they've just never been given a chance to run.
+    - `git status --short` after `uv sync --extra test` confirmed no tracked
+      file (e.g. `uv.lock`) was modified by installing the extra locally.
+  The actual fix for this is PHASE 63 (see below) -- installing the extra
+  and wiring `pytest` into CI, not a change to these test files themselves.
 
-  STATUS: DONE (2026-09-28). Applied the exact one-line fix above. Verified via
-  `make -n gmail-loop WORKERS=40` and `make -n gmail-loop` (no override) --
-  the dry-run recipe shows `--workers 40` and `--workers 10` respectively,
-  confirming the override now reaches the download call and the unset default
-  is unchanged. No live queue was used for verification (no PDX-CL1 shell
-  access from here); `gmail_pipeline.py`'s own log line will confirm the same
-  on the next real run.
+PHASE 61 -- Fix ops console Output panel: not collapsible, grows unbounded and drags the page (XS-S)
+  Size: XS-S. Risk: none -- template/CSS only, no backend change.
 
-PHASE 57 -- Fix infinite loop in 4 task_gmail_reconcile tests (under-mocked `.list()`) (XS-S)
-  Size: XS-S. Risk: none -- test-only change, no production code touched.
+  Trigger: user reported the Output panel "moving up along with the page" as
+  it grows, and "the expand also seems not working (the triangle thing)" on
+  `/admin/gmail/ops/`.
 
-  Trigger: while diagnosing Phase 55 Step 3's `test` job OOM on PDX-CL1 (with
-  `DATABASE_URL=` cleared to force the same SQLite path CI uses), the run got
-  past everything CI's log ever showed and then hung indefinitely (not
-  crashed) at `ProtectedSenderReconcileTest
-  .test_protected_sender_still_soft_deleted_on_404`. Full diagnosis in Phase 55
-  Step 3's "MAJOR FINDING" above -- summarized here for the fix itself.
-
-  Facts confirmed by reading `tasks.py` and reproducing in an isolated Python
-  shell (not guessed):
-    - `task_gmail_reconcile()` (`tasks.py:283-293`) paginates via a `while True`
-      loop: `res = svc.users().messages().list(**params).execute()`, then
-      `page_token = res.get("nextPageToken")`, `if not page_token: break`.
-    - 4 tests in `backend_django/google_gmail_backup/tests_reconciliation.py`
-      call `task_gmail_reconcile()` against a bare `svc = MagicMock()` that only
-      configures `.get()`, never `.list()`:
-        - `Reconcile404Test.test_404_marks_soft_deleted`
-        - `ReconcileTrashLabelTest.test_trash_label_present_marks_soft_deleted`
-        - `ReconcileMessageAliveTest.test_alive_message_stays_verified`
-        - `ProtectedSenderReconcileTest.test_protected_sender_still_soft_deleted_on_404`
-    - Verified empirically: `MagicMock().get("nextPageToken")` returns a
-      truthy `MagicMock` object, the same one every call, so `page_token` is
-      never falsy and the loop never breaks. No `sleep` in the loop body, so
-      it spins as fast as the mock chain allows, appending to `mock_calls`
-      history every iteration -- unbounded memory growth, a strong candidate
-      for CI's exit-137 OOM.
-    - Not a production bug: real Gmail API responses are real dicts that
-      correctly omit/`None` `nextPageToken` on the last page.
-    - `RulesEngineMetadataSnapshotTest` also uses a bare `MagicMock()` but
-      calls `apply_rule()`, not `task_gmail_reconcile()` -- confirmed
-      unaffected by reading its test body; leave it untouched.
-
-  Fix: in each of the 4 affected tests, configure `.list()`'s return value
-  before calling `task_gmail_reconcile()`, e.g.:
-      svc.users().messages().list.return_value.execute.return_value = {
-          "messages": [], "nextPageToken": None,
-      }
-  (or omit `"nextPageToken"` entirely -- a real dict's `.get()` returns `None`
-  for a missing key either way) so the pagination loop terminates after one
-  page, matching what a real "no more results" Gmail API response looks like.
-  Add this line to each of the 4 tests' bodies, right after
-  `mock_gmail_svc.return_value = svc`.
-
-  Verify: run the file scoped (safe locally -- single file, not the full
-  suite): `uv run python backend_django/manage.py test
-  google_gmail_backup.tests_reconciliation -v2`. All tests in the file must
-  complete (not hang) and pass. Then, on PDX-CL1 (or CI), re-run the full
-  `test google_media_backup google_gmail_backup` command and confirm it no
-  longer hangs/OOMs at this point -- this doesn't by itself resolve the 6
-  `_FailedTest` import failures (separate, still-open half of Phase 55
-  Step 3), but removes this specific infinite loop from the picture so
-  whatever's left can actually be diagnosed.
-
-  STATUS: DONE (2026-09-28). Applied the exact fix above to all 4 tests.
-  Verified with CI-matching env (`DJANGO_SECRET_KEY`/`GOOGLE_ENCRYPTION_KEY`/
-  `DATABASE_URL=` set the same as CI, forcing SQLite) and `timeout 60` as a
-  safety guard: `uv run python backend_django/manage.py test
-  google_gmail_backup.tests_reconciliation -v2` -- all 9 tests in the file
-  pass in 0.328s (was: hangs forever on this dev box too once reached).
-  `ProtectedSenderReconcileTest` now logs "fetched 0 live IDs in 1 pages"
-  instead of looping. Did not re-revert the fix to prove it (that would mean
-  deliberately re-triggering the infinite loop); the isolated `MagicMock()`
-  reproduction from Phase 55 Step 3's diagnosis already proves the mechanism.
-  Not yet re-verified against the full two-app suite on PDX-CL1 (that's the
-  Verify step above, still pending) or against CI.
-
-PHASE 58 -- Fix nginx's HTTP->HTTPS redirect hardcoding port 8445 (S)
-  Size: S. Risk: low-medium -- only changes the nginx container's startup
-  command and how one config file reaches it; doesn't touch Django, OAuth
-  (Phase 50), or any other service. Test carefully before/after on a real
-  compose stack, not just `docker compose config`.
-
-  Trigger: user asked "so how i access it then" after seeing PDX-CL1's `docker
-  ps` show nginx on `127.0.0.1:18844->80/tcp, 127.0.0.1:18445->443/tcp` (not
-  the documented default 8844/8445) -- while checking whether docs needed a
-  port update, found this is an actual live bug, not a docs gap.
-
-  Facts confirmed by reading the code (not guessed):
-    - `nginx/nginx.conf:13`: `return 301 https://$host:8445$request_uri;` --
-      the HTTP (port 80) server block's redirect to HTTPS. Literal `8445`,
-      no variable.
-    - `docker-compose.yml:118-128` (nginx service): mounts nginx.conf as a
-      static, read-only file --
-        volumes:
-          - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-        ports:
-          - "${BIND_ADDR:-127.0.0.1}:${NGINX_HTTP_PORT:-8844}:80"
-          - "${BIND_ADDR:-127.0.0.1}:${NGINX_HTTPS_PORT:-8445}:443"
-      The `ports:` mapping correctly reads `NGINX_HTTPS_PORT` (that's how PDX-CL1
-      ended up on 18445), but nginx.conf itself is never touched by any
-      substitution -- it's the exact bytes on disk, always.
-    - Docker's port remapping is transparent to the container: nginx has no
-      built-in way to know "my container port 443 is externally published as
-      host port 18445" -- that mapping lives entirely in Docker's networking
-      layer. No nginx variable (`$server_port` = container-internal port,
-      `$http_host` = whatever port the CURRENT request came in on, which for
-      the HTTP server block is the HTTP port, not the HTTPS port -- and HTTP
-      and HTTPS use *different* custom host ports here, 18844 vs 18445) can
-      substitute for this. The value must come from outside the container.
-    - Confirmed impact on PDX-CL1's actual deployment: `http://<host>:18844/`
-      redirects to `https://<host>:8445/...` -- a port not in PDX-CL1's
-      published ports at all (confirmed via its own `docker ps` output), so
-      the request fails outright. The user is currently only working because
-      they go straight to `https://localhost:18445` and never hit the HTTP
-      port.
-    - The official `nginx:stable-alpine` image's built-in template
-      auto-processing (files in `/etc/nginx/templates/*.template` ->
-      `envsubst`'d into `/etc/nginx/conf.d/*.conf` on container start) doesn't
-      fit this repo's structure: our `nginx.conf` replaces the *entire* file
-      (`worker_processes`, `events {}`, the `http {}` wrapper), not a
-      `conf.d/*.conf` fragment included by a base `nginx.conf` -- the built-in
-      mechanism is designed for the latter, not the former. Restructuring into
-      that convention would mean splitting top-level directives out of this
-      file, which is more invasive than necessary.
-
-  Fix (self-contained, doesn't require restructuring into conf.d):
-    1. `git mv nginx/nginx.conf nginx/nginx.conf.template`, and inside it
-       change the hardcoded `8445` to `${NGINX_HTTPS_PORT}`:
-         return 301 https://$host:${NGINX_HTTPS_PORT}$request_uri;
-    2. In `docker-compose.yml`'s `nginx` service:
-       - Change the volume mount to point at the template:
-           - ./nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro
-       - Add an `environment:` block so the container actually has the
-         variable to substitute:
-           environment:
-             - NGINX_HTTPS_PORT=${NGINX_HTTPS_PORT:-8445}
-       - Add a `command:` override that runs `envsubst` before starting nginx
-         (the base image's default `docker-entrypoint.sh` still runs first via
-         `ENTRYPOINT`, so this `command:` becomes its final exec target,
-         consistent with how the official image's own entrypoint script
-         chains into whatever `command` is given):
-           command: ["/bin/sh", "-c", "envsubst '$$NGINX_HTTPS_PORT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]
-         (the `$$` escapes docker-compose's own `${...}` interpolation so the
-         container's shell -- and therefore `envsubst` -- sees a literal
-         `$NGINX_HTTPS_PORT` to substitute, not compose pre-expanding it into
-         a plain number that then has no `$` left for `envsubst` to act on;
-         restricting `envsubst` to that one explicit variable name also
-         avoids it accidentally mangling nginx's own `$host`/`$request_uri`/
-         etc. directive variables, since only variable names explicitly
-         listed are substituted -- everything else passes through untouched.)
-    3. Default behavior unchanged: unset `NGINX_HTTPS_PORT` still renders
-       `8445`, byte-identical to today's hardcoded value.
-
-  Verify:
-    - `docker compose config` shows the new `command`/`environment` on the
-      `nginx` service.
-    - Start the real stack (default ports) and `curl -I http://localhost:8844/`
-      -- confirm the `Location` header says `https://localhost:8445/...`
-      (unchanged from today).
-    - Start again with `NGINX_HTTP_PORT`/`NGINX_HTTPS_PORT` overridden (e.g.
-      18844/18445, matching PDX-CL1) and repeat -- confirm the `Location`
-      header now says `https://localhost:18445/...`, not `8445`. This is the
-      actual regression test; don't consider this phase done without it,
-      since it's exactly the bug that was found live.
-    - Since this can't be tested from this dev box (no way to actually bring
-      up the compose stack in a way that matters here -- Google network isn't
-      the blocker for this one, but there's no reason to stand up nginx/certs
-      locally just to prove a redirect header), do the real verification on
-      PDX-CL1 directly, or in CI's `compose-smoke` job if it already curls
-      through nginx (confirm by reading `.github/workflows/ci.yml`'s
-      `compose-smoke` job before assuming it does or doesn't).
-
-  STATUS: DONE (2026-09-28). Applied the exact fix above:
-  `git mv nginx/nginx.conf nginx/nginx.conf.template`, hardcoded `8445` ->
-  `${NGINX_HTTPS_PORT}`; `docker-compose.yml`'s `nginx` service updated with
-  the template mount, `environment: NGINX_HTTPS_PORT`, and the `envsubst`
-  `command:` override, exactly as planned.
-
-  Turned out this COULD be verified locally after all, stronger than the
-  runbook assumed -- Docker itself is available here, this bug has nothing to
-  do with Google network access. Verified in 3 layers:
-    1. `envsubst '$NGINX_HTTPS_PORT' < nginx.conf.template` run directly (not
-       through Docker) with `NGINX_HTTPS_PORT=8445` produces output
-       byte-identical (`diff`, zero output) to the original committed
-       `nginx.conf` -- proves the restricted-variable-list `envsubst` call
-       doesn't touch nginx's own `$host`/`$request_uri`/etc. directives.
-    2. `docker compose config` (with a temporary throwaway `.env`, deleted
-       after) shows the new `command`/`environment` rendered correctly on the
-       `nginx` service.
-    3. Real end-to-end test: ran the actual `nginx:stable-alpine` image
-       standalone (`docker run`, with throwaway self-signed dev certs and
-       `--add-host web:127.0.0.1` to satisfy the unrelated `proxy_pass
-       http://web:8000` upstream check nginx does at config-load time) with
-       the exact `command:` from `docker-compose.yml`, twice:
-       - `NGINX_HTTPS_PORT=8445` (default): `curl -I http://localhost/`
-         returns `Location: https://localhost:8445/` -- unchanged from today.
-       - `NGINX_HTTPS_PORT=18445` (matching PDX-CL1's actual deployment):
-         `curl -I http://localhost/` returns `Location: https://localhost:18445/`
-         -- the actual bug, actually fixed, actually proven with a live
-         container, not just config inspection.
-    All test containers and throwaway certs cleaned up after.
-    Not yet deployed to PDX-CL1 itself (that requires pulling this commit and
-    restarting the stack there) -- the fix is verified correct here, but
-    PDX-CL1's own redirect won't reflect it until that deploy happens.
-
-PHASE 59 -- Fix Makefile ops commands hardcoding port 8844/8845 (ignoring custom ports) (S)
-  Size: S. Risk: low -- Makefile-only, no application code, no compose/nginx
-  changes; behavior-preserving for anyone without a customized `.env`.
-
-  Trigger: right after Phase 58 was deployed on PDX-CL1, `make gmail-progress`
-  failed there with `python3 -m json.tool`'s "Expecting value: line 1 column 1
-  (char 0)" -- traced live to `curl -s "$(HOST)/api/gmail/progress"` silently
-  returning zero bytes, because `$(HOST)` defaults to a port this deployment
-  doesn't even have bound.
-
-  Facts confirmed by reading the Makefile (not guessed):
-    - `HOST ?= http://localhost:8844` (Makefile:292).
-    - 9 targets curl `$(HOST)/...`: `progress` (353), `sync-download` (356-357),
-      `sync-run` (359-383, 3 separate curl calls inline in its shell script),
-      `sync-import` (385-386), `sync-verify` (388-389), `sync-mark-delete`
-      (391-392), `sync-commit-delete` (394-395), `gmail-incremental` (401-402),
-      `gmail-progress` (432-433).
-    - All use `curl -s` (silent), none add `-S` -- so on a genuine connection
-      failure, curl exits nonzero with ZERO output and no error text, which
-      then gets piped into `python3 -m json.tool`, producing that confusing
-      "Expecting value" message instead of anything actionable. Confirmed this
-      exact sequence live on PDX-CL1 (port 8844 isn't in its `docker ps`
-      output at all -- only 18844/18445 are published).
-    - `check-services` (Makefile:172 target, hardcoded ports at lines 204 and
-      212) checks literal `8845`/`8844` directly, no variable at all -- same
-      gap, and currently has no override mechanism whatsoever.
-    - Three other places in the codebase already establish the convention of
-      hitting the HTTPS endpoint directly with `-k` for this self-signed-cert
-      setup: `docs/api.md:12` (`curl -k https://localhost:8445/api/docs`),
-      `URL_INDEX.md` (all its example URLs are `https://localhost:8445/...`),
-      and `docs/upgrading.md:57`. None of the 9 Makefile curl calls do this --
-      they go through the plain HTTP port and rely on an unfollowed 301
-      (Phase 58's redirect) that `curl` without `-L` never actually follows.
-    - Confirmed env var names/defaults by reading `docker-compose.yml` and
-      `.env.sample`: `NGINX_HTTP_PORT` (8844), `NGINX_HTTPS_PORT` (8445),
-      `WEB_PORT` (8845) -- all three already documented in
-      `docs/configuration.md`.
-    - This is the third recurrence of "hardcoded default, ignores the actual
-      `.env` override" this session: Phase 56 (`gmail-loop`/`WORKERS=`),
-      Phase 58 (nginx's redirect port), now this.
+  Facts confirmed by reading `ops.html` (not guessed):
+    - The "Output" header (line ~303) is:
+        <b style="color:var(--gx)">&#9654; Output</b>
+      -- a STATIC unicode triangle glyph (`&#9654;` = ▶) inside a plain `<b>`
+      tag. No `onclick`, no `<details>`/`<summary>`, no JS toggle logic
+      anywhere in the file for this element -- it looks clickable but does
+      nothing. Confirmed via `grep -n "details\|summary"` returning zero
+      matches in the whole file.
+    - The container div has `position:sticky;bottom:12px;z-index:50;` (line
+      ~302), and `<pre id="out">` (line ~305) has no `max-height` or
+      `overflow` -- so as output text grows (e.g. the cleanup-rules dry-run
+      JSON, which can be hundreds of lines across 20 rules), the box's own
+      height grows unbounded, and since it's `position: sticky`, the growth
+      visibly drags the surrounding page content as the sticky box's height
+      changes -- matches the reported "moving up along with the page"
+      exactly.
+    - No other `<details>` usage exists anywhere in the codebase (grepped) --
+      this will be the first, no existing pattern to break by changing it.
 
   Fix:
-    1. Compute `HOST` once, at Makefile-parse time, reading `.env` if it
-       exists, falling back to today's exact defaults if it doesn't (so a bare
-       git checkout with no `.env` yet -- like this dev box -- behaves
-       identically to today):
-         NGINX_HTTPS_PORT := $(shell grep -E '^NGINX_HTTPS_PORT=' .env 2>/dev/null | tail -1 | cut -d= -f2)
-         NGINX_HTTPS_PORT := $(if $(NGINX_HTTPS_PORT),$(NGINX_HTTPS_PORT),8445)
-         HOST ?= https://localhost:$(NGINX_HTTPS_PORT)
-       Note this changes the *default scheme* from `http` to `https` (going
-       straight to the real endpoint instead of an unfollowed redirect) --
-       intentional, matches the rest of the project's documented convention.
-       `HOST=` on the command line still overrides via `?=`, unchanged.
-    2. On each of the 9 `$(HOST)`-using curl calls: add `-k` (self-signed
-       cert), and change `-s` to `-sS` (silent progress, but show real
-       errors).
-    3. `check-services`: replace the two hardcoded port literals with the same
-       `.env`-read pattern used for `HOST` (`WEB_PORT` for 8845,
-       `NGINX_HTTP_PORT` for 8844), defaults unchanged.
-    4. `docs/operations.md`: one short note that these `make` ops commands
-       read `.env`'s ports automatically, so routine use on a customized
-       deployment doesn't need a manual `HOST=` override.
+    - Replace the static `<b>▶ Output</b>` with a real `<details open>` /
+      `<summary>` element -- gives a genuine, browser-native, accessible
+      expand/collapse triangle for free, no JS needed:
+        <details open>
+          <summary style="cursor:pointer;color:var(--gx);font-weight:bold;font-family:monospace;letter-spacing:1px;">
+            Output <span style="font-size:11px;color:var(--gd);font-weight:normal">— result of last action appears here</span>
+          </summary>
+          <pre id="out" style="margin-top:8px;max-height:320px;overflow-y:auto;">(click any button above — result appears here)</pre>
+        </details>
+    - Add `max-height:320px;overflow-y:auto;` to `<pre id="out">` so long
+      output scrolls WITHIN its own fixed-size box instead of growing the
+      sticky container and dragging the page.
+    - Keep `position:sticky;bottom:12px;` on the outer `.card` div -- that
+      part of the intent (stay visible without scrolling to the bottom after
+      every action) is fine; it's the unbounded growth that was the actual
+      bug, not the sticky positioning itself.
 
-  Verify:
-    - `make -n gmail-progress` (dry-run, prints the command without running
-      it) in this git checkout (no `.env` present) must show
-      `curl -skS "https://localhost:8445/api/gmail/progress" | ...` --
-      confirms the no-`.env` fallback matches today's effective default
-      exactly (scheme change from http->https is intentional and expected;
-      the *port number* must still be 8445).
-    - Create a throwaway `.env` containing only `NGINX_HTTPS_PORT=18445`,
-      re-run the same dry-run, confirm it now shows
-      `https://localhost:18445` -- delete the throwaway `.env` immediately
-      after (same discipline as Phase 53/58's verification: never leave a
-      stray `.env` in the working tree).
-    - Repeat both dry-runs for `check-services` (or at least trace through by
-      hand, since it's a `@bash -c` block, not a simple curl one-liner) to
-      confirm its two port checks also pick up the override.
-    - Full end-to-end proof (an actual `make gmail-progress` succeeding
-      against a real custom-port deployment) needs PDX-CL1, same as Phase 58 --
-      this dev box has no live compose stack to test against.
+  Verify: open `/admin/gmail/ops/` in a browser, click the `<summary>` to
+  confirm it now genuinely collapses/expands (native browser behavior, easy
+  to eyeball); trigger an action with long output (e.g. a rules dry-run) and
+  confirm the Output box stays a fixed size with its own scrollbar instead of
+  growing/dragging the page. This is a template-only change with no way to
+  verify headlessly from this dev box (no browser here) -- verify visually on
+  PDX-CL1 or via a screenshot after deploying.
 
-  STATUS: DONE (2026-09-28). Applied the exact fix above: `NGINX_HTTPS_PORT`/
-  `NGINX_HTTP_PORT`/`WEB_PORT` computed once from `.env` (Makefile, right
-  before `HOST`'s definition), all 9 `$(HOST)`-using curl calls got `-k`
-  (plus `-sS` on the 6 standalone targets; the 4 calls inside `sync-run`'s
-  shell block kept `-s` since they already redirect stderr to `/dev/null` by
-  design -- `-S` would be a no-op there, but `-k` was still required or the
-  target would break entirely once `HOST` defaults to `https://`),
-  `check-services`'s two hardcoded port spots now use the same variables, and
-  a short note was added to `docs/operations.md`.
+  STATUS: DONE (2026-09-28). Applied the exact fix above -- replaced the
+  static `<b>▶ Output</b>` with `<details open><summary>...</summary><pre
+  id="out" style="...max-height:320px;overflow-y:auto;">...</pre></details>`,
+  no other markup changed. Verified the template still parses correctly via
+  Django's template engine (`engines['django'].get_template(...)`, no
+  render needed since that only checks syntax, not runtime context) --
+  clean, no errors. Visual confirmation (does it actually collapse/expand
+  and stay fixed-size in a real browser) still needs to happen on PDX-CL1 --
+  no browser available on this dev box.
 
-  Verified exactly as planned, with no `.env` in this checkout (confirmed via
-  `ls .env` before starting):
-    - `make -n gmail-progress` -> `curl -skS "https://localhost:8445/api/gmail/progress" ...`
-      -- port unchanged from today's effective default (8445); scheme change
-      http->https is the intentional part of this fix.
-    - `make -n check-services`'s port loop -> `for port in 8845 8844; do ...`
-      -- unchanged.
-    - With a throwaway `.env` (`NGINX_HTTPS_PORT=18445`, `NGINX_HTTP_PORT=18844`,
-      `WEB_PORT=8846`, deleted immediately after each check):
-      `make -n gmail-progress` -> `https://localhost:18445`;
-      `make -n check-services` -> `for port in 8846 18844` and
-      `HTTP :18844/ (nginx) responds`. All matched the plan exactly.
-  Confirmed via `git status --short` that no `.env` was left behind.
-  Not yet deployed to PDX-CL1 (same as Phase 58 -- needs `git pull` + this
-  fix doesn't require a container rebuild/restart since it's Makefile-only,
-  just a `git pull` on that box).
+PHASE 62 -- Fix django_ratelimit's Ratelimited returning raw Django 403 instead of clean JSON (XS-S)
+  Size: XS-S. Risk: low -- adds one exception handler to the `gmail_api`
+  NinjaAPI instance; doesn't change any rate-limit values or endpoint logic.
 
-PHASE 60 -- Fix tqdm crash breaking cleanup-dry, cleanup-run, and real empty-trash (S)
-  Size: S. Risk: low -- only touches two `tqdm` progress-bar constructions,
-  no logic/query changes.
+  Trigger: user clicked "Execute" on a cleanup rule and got a raw, unstyled
+  page reading "403 Forbidden" with no explanation -- reported as an error.
 
-  Trigger: `make cleanup-dry` crashed live with
-    TypeError: string indices must be integers, not 'str'
-  right after seeding 20 cleanup rules and confirming the backup is 100%
-  complete -- this is the exact next step needed to actually clean up the
-  inbox and eventually empty Gmail's already-8976-message trash.
+  Facts confirmed (not guessed):
+    - `api.py` has 4 `@ratelimit(key="user", ..., block=True)`-decorated
+      endpoints, all on `gmail_api`: `/sync/discover` (5/h, line 84),
+      `/rules/{rule_id}/execute` (10/h, line 449), `/rules/run-all` (3/h,
+      line 468), `/audit-log/{audit_id}/undo` (10/h, line 494). Confirmed via
+      `grep -rln "@ratelimit"` that no other file/API instance in the
+      codebase uses this decorator -- the fix only needs to touch `gmail_api`.
+    - `django_ratelimit`'s `Ratelimited` exception (raised when `block=True`
+      and the rate is exceeded) is a subclass of `django.core.exceptions.PermissionDenied`
+      -- confirmed via `Ratelimited.__mro__`.
+    - Ninja has no built-in handler for `Ratelimited`, so it propagates up to
+      Django's own default exception-to-response conversion, which calls
+      `django.views.defaults.permission_denied` -- confirmed byte-for-byte by
+      rendering that exact view locally and comparing its output to the raw
+      HTML the user saw: both are
+        '\n<!doctype html>\n<html lang="en">\n<head>\n  <title>403 Forbidden</title>\n</head>\n<body>\n  <h1>403 Forbidden</h1><p></p>\n</body>\n</html>\n'
+      -- an exact match, confirming this is Django's generic 403 page, not
+      nginx or anything else.
+    - Given the user has been extensively testing/re-clicking rule actions
+      this session (Phase 60 debugging, etc.), hitting the `10/h` execute
+      limit (or the `3/h` run-all limit -- also plausible for the earlier
+      "dry-run seemed stuck" report) is very plausible and not itself a bug --
+      the rate limit is a reasonable safety feature. The bug is purely the
+      broken/unhelpful error presentation.
 
-  Facts confirmed (reproduced in an isolated Python shell with `uv run
-  python3`, not guessed):
-    - `run_cleanup.py:68-79` builds:
-        with tqdm(
-            rules_list, desc="rules", unit="rule",
-            bar_format=(
-                "{desc}: {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} "
-                "[{elapsed}<{remaining}, {rate_fmt}] msgs={postfix[msgs]}"
-            ),
-            postfix={"msgs": 0}, ...
-        ) as pbar:
-      Reproducing this exact `bar_format` + `postfix` combination standalone
-      crashes with the identical error, on the tqdm CONSTRUCTOR's own initial
-      `refresh()` call -- before the `for rule in pbar:` loop body ever runs.
-      Root cause, confirmed by inspecting `pbar.format_dict['postfix']`
-      directly: tqdm converts `postfix` into a plain STRING (e.g. `"msgs=42"`)
-      for display purposes, not a dict -- so `{postfix[msgs]}` in the format
-      string evaluates as `"msgs=42"["msgs"]`, a string subscripted by a
-      string key, which is exactly the observed `TypeError`.
-    - `run_cleanup.py:92-93` (mid-loop): `pbar.postfix["msgs"] = total_affected;
-      pbar.set_postfix(pbar.postfix)`. Confirmed via a SEPARATE isolated
-      reproduction (after fixing only the `bar_format` string) that this ALSO
-      crashes -- `pbar.postfix` is the same already-stringified value by this
-      point, so item assignment raises `'str' object does not support item
-      assignment`. Both bugs must be fixed together, or the second one
-      surfaces the moment the first is patched.
-    - `empty_gmail_trash.py:120-132` has the exact same pattern (`{postfix[d]}`
-      in `bar_format`, `pbar.postfix["d"] = deleted; pbar.set_postfix(pbar.postfix)`
-      mid-loop) -- same two bugs, confirmed by reading the code (same
-      structure as the now-confirmed-broken `run_cleanup.py` pattern).
-    - Impact scoping, confirmed by tracing control flow: `make gmail-empty-trash-dry`
-      is NOT affected -- `empty_gmail_trash.py`'s `handle()` returns early
-      (line 96-102, the `if not confirmed:` branch) before ever reaching the
-      tqdm block at line 117+. Only the REAL delete path (`make
-      gmail-empty-trash`, i.e. `--confirm`'d) goes through the broken tqdm
-      code. Not yet triggered live (the user hasn't run the real delete yet),
-      but confirmed by reading the code that it would crash identically to
-      `cleanup-dry` the moment it's tried.
-    - `make cleanup-run` shares the exact same `run_cleanup.py` code path as
-      `cleanup-dry` (same tqdm block, `dry_run` only changes what `apply_rule`
-      does internally) -- so it's equally broken, not yet separately
-      reproduced live since `cleanup-dry` already fails first.
+  Fix (verified working end-to-end with `ninja.testing.TestClient` against a
+  throwaway `NinjaAPI` instance before writing the real code -- confirmed
+  `429` + clean JSON body, not a guess):
+    In `api.py`, near `gmail_api`'s definition, add:
+        from django_ratelimit.exceptions import Ratelimited
 
-  Fix (each step verified empirically in an isolated `uv run python3` shell
-  before being written into the actual files):
-    1. `bar_format`: change `msgs={postfix[msgs]}` -> `{postfix}` in
-       `run_cleanup.py`, and `deleted={postfix[d]}` -> `{postfix}` in
-       `empty_gmail_trash.py`. Drop the literal `msgs=`/`deleted=` text --
-       tqdm's own postfix string already includes the key name (confirmed:
-       `pbar.set_postfix(msgs=42)` produces exactly `"msgs=42"` via
-       `format_dict['postfix']`, no extra formatting needed).
-    2. Mid-loop update: change
-         pbar.postfix["msgs"] = total_affected
-         pbar.set_postfix(pbar.postfix)
-       to the single correct call:
-         pbar.set_postfix(msgs=total_affected)
-       (same pattern for `empty_gmail_trash.py`'s `d` key -> `deleted=deleted`
-       key name, matching the literal text it's replacing so the rendered
-       output still reads naturally, e.g. `deleted=1000`).
-    3. Drop the now-unused `postfix={"msgs": 0}` / `postfix={"d": 0}`
-       constructor kwarg in both files -- no longer read by anything once
-       `bar_format` doesn't reference `{postfix[...]}` before the first real
-       `set_postfix()` call.
-    Verified the fully-corrected pattern (steps 1+2 together, matching what
-    will actually ship) runs a complete loop with no exception, in the
-    isolated shell, before touching either file.
+        @gmail_api.exception_handler(Ratelimited)
+        def ratelimited_handler(request, exc):
+            return gmail_api.create_response(
+                request,
+                {"error": "Rate limit exceeded. Please wait before trying again."},
+                status=429,
+            )
+    `429 Too Many Requests` is the semantically correct status (not `403`,
+    which implies a permissions problem rather than a temporary rate limit).
+    This is registered ONCE on `gmail_api` and covers all 4 rate-limited
+    endpoints uniformly -- no per-endpoint changes needed.
 
-  Verify:
-    - `make cleanup-dry` completes without a traceback, prints the "Cleanup
-      Rules — DRY RUN (N rules)" header and real per-rule affected counts,
-      ending with "Total would affect: N messages" -- confirms BOTH bugs in
-      `run_cleanup.py` are actually gone (constructor-time AND mid-loop), not
-      just the first one.
-    - `empty_gmail_trash.py`'s real-delete tqdm block can't be safely
-      exercised from here (irreversible, real Gmail data, no live compose
-      stack on this dev box) -- verify by inspecting the corrected code
-      matches the exact same pattern already proven fixed in
-      `run_cleanup.py`, and have the user confirm live on PDX-CL1 the next
-      time they actually run `make gmail-empty-trash` for real (their
-      `gmail-empty-trash-dry` run already showed 8976 messages waiting, so
-      this will get exercised soon regardless).
+  Verify: the isolated `TestClient` reproduction above already proves the
+  mechanism works (`STATUS: 429`, clean JSON `{"error": "..."}`). After
+  applying to the real `api.py`, confirm `gmail_api`'s full URL list still
+  loads (`manage.py check` / import the module cleanly) -- can't safely
+  trigger a REAL rate-limit hit against a live deployment from this dev box
+  without an actual running stack; the isolated reproduction is the
+  practical ceiling of verification here. Full confirmation happens
+  naturally the next time someone gets rate-limited on PDX-CL1 and sees a
+  clean JSON message instead of a bare "403 Forbidden" page.
 
-  STATUS: DONE (2026-09-28). Applied the exact fix above to both files.
-  Went further than an isolated tqdm repro for `run_cleanup.py` specifically
-  -- ran the REAL command end-to-end against a throwaway local SQLite DB
-  (safe, lightweight: `manage.py migrate --run-syncdb` + one throwaway
-  `CleanupRule`/`GmailMessage` pair via `manage.py shell`, not the heavy
-  test suite; `DATABASE_URL=` cleared, same CI-matching env as prior phases):
-    DJANGO_SECRET_KEY=... GOOGLE_ENCRYPTION_KEY=... DATABASE_URL= \
-      uv run python backend_django/manage.py run_cleanup --dry-run
-  Output: "Cleanup Rules — DRY RUN (1 rules)", "[DRY] phase60-verify-rule —
-  1 messages", "Total would affect: 1 messages" -- exit 0, no traceback.
-  This exercises BOTH the constructor-time bug (bar_format) and the
-  mid-loop bug (`pbar.set_postfix`) for real, not just in isolation.
-  Cleaned up the throwaway rule/message/audit-log rows and deleted
-  `backend_django/db.sqlite3` after -- confirmed via `git status --short`
-  that nothing sqlite-related was left tracked or untracked.
-  `empty_gmail_trash.py`'s real-delete path verified by code inspection only
-  (matches the now-proven-working pattern exactly) -- not yet exercised live,
-  since that requires an actual `make gmail-empty-trash --confirm` against
-  real Gmail data on PDX-CL1, irreversible, not something to trigger from here.
+PHASE 63 -- Wire pytest into CI so it actually runs the 6 pytest-native test files (S)
+  Size: S. Risk: low -- CI workflow only, no application code touched.
+  Completes Phase 55's `test` job, once and for all.
+
+  Trigger: Phase 55's root-cause investigation (see that section above) fully
+  diagnosed the last remaining CI failure: all 6 previously-`_FailedTest`
+  modules fail with the identical `ModuleNotFoundError: No module named
+  'pytest'`, because they're genuinely pytest-native tests that CI never
+  installs pytest for and never runs via `pytest`.
+
+  Facts confirmed (full detail in Phase 55's entry above -- summarized here
+  for the fix itself):
+    - `pyproject.toml:46-51` already declares a `test` optional-dependency
+      group (`pytest`, `pytest-django`, `pytest-cov`, `pytest-mock`) and
+      `pyproject.toml:74-90` already has a full `[tool.pytest.ini_options]`
+      config matching exactly how these 6 files use `pytest.mark.unit`/
+      `django_db`/fixtures.
+    - `.github/workflows/ci.yml`'s `test` job's `Install dependencies` step
+      (line 66) is a bare `uv sync` -- never installs the `test` extra.
+      `grep -n "pytest" .github/workflows/ci.yml` returns zero matches --
+      `pytest` is never invoked anywhere in CI.
+    - Verified locally: `uv sync --extra test` then running exactly these 6
+      files via `uv run pytest <files> -v` -> "65 passed, 5 warnings in
+      7.69s". These tests are correct and valuable; they've just never had
+      the chance to run.
+
+  Fix: in `.github/workflows/ci.yml`'s `test` job (lines 53-72):
+    1. Change line 66 from `run: uv sync` to `run: uv sync --extra test`.
+    2. Add one new step, after the existing "Run tests (SQLite)" step,
+       scoped to exactly the 6 files (NOT a bare `uv run pytest` across
+       `backend_django/` -- that would also re-collect and re-run every
+       unittest.TestCase-based file the existing `manage.py test` step
+       already covers, since pytest can discover and execute unittest-style
+       TestCase subclasses too -- wasteful double-execution, not a
+       correctness issue, but no reason to pay that CI-time cost):
+        - name: Run tests (pytest-native)
+          run: |
+            uv run pytest \
+              backend_django/google_media_backup/tests_resumable_download.py \
+              backend_django/google_media_backup/tests_unit.py \
+              backend_django/google_gmail_backup/tests_cleanup_safeguards.py \
+              backend_django/google_gmail_backup/tests_notify_wiring.py \
+              backend_django/google_gmail_backup/tests_schemas.py \
+              backend_django/google_gmail_backup/tests_undo_protect.py \
+              -v
+    3. No new `env:` needed for this step -- the workflow-level `env:` block
+       (lines 9-13: `DJANGO_SECRET_KEY`, `DATABASE_URL: ""`, etc.) already
+       applies to every step in every job, confirmed by the existing
+       `manage.py test` step relying on the same mechanism without a
+       step-level override.
+
+  Verify: `gh run list --workflow=ci.yml --limit 1` on the commit carrying
+  this fix shows ALL THREE jobs green -- lint, sast-bandit, AND test. This
+  is Phase 55's own original verify step from when it was first written up,
+  finally achievable once this lands. If the new pytest step somehow fails
+  in CI despite passing locally, do not guess -- pull the actual CI log
+  (same discipline as every other phase this session) before changing
+  anything.

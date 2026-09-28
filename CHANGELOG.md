@@ -27,6 +27,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   about sizing a 12-vCPU/36GB deployment. No application code changes.
 
 ### Fixed
+- **Phase 61** — the ops console's ("`/admin/gmail/ops/`") Output panel had two
+  bugs: the "▶ Output" header was a static unicode glyph inside a plain `<b>`
+  tag — no `onclick`, no `<details>`/`<summary>`, confirmed by grepping the
+  whole template (zero matches for "details"/"summary") — so it looked
+  clickable but did nothing. Separately, `<pre id="out">` had no
+  `max-height`/`overflow`, and its container is `position:sticky`, so as
+  output grew (e.g. a 20-rule dry-run's JSON), the box's own height grew
+  unbounded and, being sticky, visibly dragged the page around. Fixed:
+  replaced the static header with a real `<details open>`/`<summary>`
+  (native, accessible, free expand/collapse triangle, no JS needed) and
+  added `max-height:320px;overflow-y:auto;` to `<pre id="out">` so long
+  output scrolls within its own fixed box instead of growing the sticky
+  container. Template-only change; verified the template still parses
+  correctly via Django's template engine.
 - **Phase 60** — `make cleanup-dry`/`make cleanup-run` (both via
   `run_cleanup.py`) crashed unconditionally with `TypeError: string indices
   must be integers, not 'str'`, and the real (non-dry) path of `make

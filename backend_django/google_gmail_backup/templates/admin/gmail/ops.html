@@ -300,9 +300,10 @@ li { margin: 3px 0; }
 
 <!-- Output — lives here so result is immediately visible after any action -->
 <div class="card" style="border-color:var(--gm);position:sticky;bottom:12px;z-index:50;">
-  <b style="color:var(--gx)">&#9654; Output</b>
-  <span style="font-size:11px;color:var(--gd);margin-left:8px">— result of last action appears here</span>
-  <pre id="out" style="margin-top:8px">(click any button above — result appears here)</pre>
+  <details open>
+    <summary style="cursor:pointer;color:var(--gx);font-family:monospace;letter-spacing:1px;font-weight:bold;">Output <span style="font-size:11px;color:var(--gd);font-weight:normal;letter-spacing:normal">— result of last action appears here</span></summary>
+    <pre id="out" style="margin-top:8px;max-height:320px;overflow-y:auto;">(click any button above — result appears here)</pre>
+  </details>
 </div>
 
 <!-- Export -->
