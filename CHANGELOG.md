@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Phase 51** — `make gmail-loop` could get permanently stuck making zero progress:
+  `gmail_pipeline.py`'s `_download()` never changed a message's state on failure, only
+  recorded the error — so a message Gmail itself confirms is gone (404 `notFound` on
+  `messages.get`) stayed `DISCOVERED` forever, and since the download query always
+  re-selects the *oldest* `DISCOVERED` rows first, one permanently-dead message blocked
+  every message behind it from ever being attempted. Reproduced live on a real account
+  (57,895 discovered messages): a 500-message batch was 100% 404, loop made zero forward
+  progress. `task_gmail_reconcile` already had the right handling for this exact
+  signal — reused its `_mark_soft_deleted` helper here instead of inventing new logic;
+  a confirmed 404 now marks the message `SOFT_DELETED` (`deletion_source =
+  "gmail_404_on_download"`) so the loop moves past it. Any other error keeps today's
+  behavior unchanged (recorded, retried next pass) — deliberately narrow, not a general
+  retry-limit system. New regression tests
+  (`google_gmail_backup/tests_regression.py::GmailDownload404Test`) — confirmed one
+  actually catches the bug by reverting the fix and watching it fail before restoring
+  it. `docs/operations.md`'s Troubleshooting table gained a row for this symptom.
 - **Phase 50** — the Phase 28 browser OAuth flow (`/dashboard/connect/start/`) was
   broken behind nginx **at any host or port**, including the documented default
   (`localhost:8445`) — not specific to any one install. `core/oauth.py` builds its

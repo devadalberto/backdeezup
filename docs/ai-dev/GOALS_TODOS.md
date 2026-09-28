@@ -1276,3 +1276,64 @@ PHASE 50 -- Fix OAuth redirect_uri behind reverse proxy (browser flow)
   app itself constructs. A scoped test file for this (e.g.
   `core/tests_oauth_redirect.py`) is reasonable given Phase 6's per-view-test
   convention.
+
+PHASE 51 -- Fix gmail-loop infinite-retry on permanently-gone messages
+  Size: S.  Risk: low (one code path, additive state-transition logic only, no
+  schema/migration changes -- GmailMessage.state/deleted_at/deletion_source
+  already exist and are already used this exact way elsewhere).
+
+  Root cause (confirmed live, on a real account with 57,895 discovered messages,
+  not guessed): `backend_django/google_gmail_backup/management/commands/
+  gmail_pipeline.py`'s `_download()` -> `_process(msg)` inner function, on any
+  exception, only does:
+    msg.error = str(exc); msg.last_attempt_at = timezone.now(); msg.save(...)
+  It never touches `msg.state`. A message stays STATE_DISCOVERED forever, even
+  when the failure is Gmail itself confirming the message no longer exists
+  (`HttpError 404 ... reason: notFound` on `messages.get`). Since `_download`'s
+  query is `GmailMessage.objects.filter(state=STATE_DISCOVERED)
+  .order_by("discovered_at")[:limit]`, the *same* oldest dead messages get
+  re-selected on every single invocation -- `make gmail-loop` (a bash loop
+  calling this repeatedly until the DISCOVERED queue is empty) can never
+  progress past them to the remaining, actually-downloadable messages behind
+  them in discovered_at order. Reproduced live: a 500-message batch was 100%
+  404/notFound, loop made zero forward progress.
+
+  `task_gmail_reconcile` (`tasks.py`) already has the exact right handling for
+  this signal -- `_mark_soft_deleted(gmail_id, source, now)` on a confirmed 404
+  -- but it only scans `state__in=[VERIFIED, DOWNLOADED]`, never `DISCOVERED`,
+  so it does not help this case.
+
+  Fix:
+    1. In `_process(msg)`'s exception handler, detect a confirmed-permanent
+       failure -- `HttpError` with `.resp.status == 404` (preferred, exact) or
+       the existing string-matching fallback already used elsewhere in this
+       file (`"404" in exc_str or "notFound" in exc_str`) if the raised
+       exception type varies by call site. On that specific signal, call the
+       existing `_mark_soft_deleted(msg.gmail_id, "gmail_404_on_download",
+       timezone.now())` from `google_gmail_backup.tasks` instead of just
+       setting `error` -- reuse the proven helper, don't reinvent it.
+    2. Every other exception type (network errors, "Empty raw response",
+       rate limits, etc.) keeps today's exact behavior -- `error` +
+       `last_attempt_at` set, state unchanged, eligible for retry on the next
+       loop pass. Do NOT invent a general retry-limit/backoff system here --
+       that's a separate, bigger feature; out of scope for this fix. Note it
+       in GOALS.md's NOT PHASED backlog if it turns out other error types also
+       get permanently stuck in real-world use (unconfirmed as of this
+       writing -- only the 404 case has been proven to actually happen).
+    3. `docs/operations.md` / `docs/troubleshoot`-style docs: if `make
+       gmail-loop` looks stuck at a high err count with no progress, this is
+       now a known, self-resolving situation (the fix skips past confirmed-gone
+       messages automatically) rather than something to manually intervene on
+       -- add a line to the Troubleshooting table if one doesn't already cover
+       "0 downloaded, all errors."
+
+  Verify: `core/tests_gmail_download_404.py` or extend an existing
+  `google_gmail_backup/tests_*.py` file (check what exists first) --
+  mock `get_message_raw`/the Gmail service call to raise an `HttpError`-shaped
+  404, call `_process`/the download path, and assert the message ends up
+  `STATE_SOFT_DELETED` with `deletion_source="gmail_404_on_download"` and
+  `deleted_at` set -- not left in `DISCOVERED`. Also assert a non-404 exception
+  (e.g. a plain `ConnectionError`) leaves state unchanged (regression guard for
+  point 2 above, so a future change doesn't accidentally soft-delete on
+  transient errors). No live Google network needed -- mock-based, same
+  constraint as every other Google-API test in this repo.

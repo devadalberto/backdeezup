@@ -7,7 +7,7 @@ If you break one of these, you've re-introduced a known bug.
 import os
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase, Client, override_settings
+from django.test import TestCase, TransactionTestCase, Client, override_settings
 from django.utils import timezone
 from datetime import timedelta
 
@@ -421,6 +421,73 @@ class ConcurrentDownloaderTest(TestCase):
             stdout=out, stderr=StringIO(),
         )
         self.assertIn("No messages", out.getvalue())
+
+
+# ── BUG: gmail download left permanently-404 messages stuck in DISCOVERED forever ──
+
+class GmailDownload404Test(TransactionTestCase):
+    """
+    BUG (Phase 51): _download()'s exception handler only set error/last_attempt_at,
+    never changed state. A message Gmail confirms is gone (404 on messages.get) stayed
+    DISCOVERED forever, and since the download query always re-selects the oldest
+    DISCOVERED rows first, one permanently-dead message blocked every message behind
+    it -- make gmail-loop could never make forward progress. Reproduced live on a
+    real account: 500/500 messages failed, all 404, zero downloaded.
+    FIX: a confirmed 404 now marks the message SOFT_DELETED (reusing the same helper
+    task_gmail_reconcile already uses for this exact signal) instead of leaving it
+    stuck. Any other exception keeps the original behavior -- state untouched, error
+    recorded, eligible for retry.
+
+    TransactionTestCase (not TestCase): _download() spawns a real ThreadPoolExecutor
+    worker thread that opens its own DB connection -- TestCase's SAVEPOINT-wrapped
+    transaction on the main thread isn't visible to it and deadlocks against SQLite's
+    single-writer lock. Same reason ConcurrentDownloaderTest above only ever exercises
+    the empty-queue path.
+    """
+    def setUp(self):
+        self.msg_404 = make_message("gone1", state=GmailMessage.STATE_DISCOVERED)
+        self.msg_other = make_message("flaky1", state=GmailMessage.STATE_DISCOVERED)
+
+    def test_confirmed_404_marks_soft_deleted_not_stuck_discovered(self):
+        from unittest.mock import patch
+        from io import StringIO
+        from django.core.management import call_command
+        from googleapiclient.errors import HttpError
+
+        class FakeResp:
+            status = 404
+            reason = "Not Found"
+
+        error = HttpError(FakeResp(), b'{"error": {"message": "Requested entity was not found."}}')
+
+        with patch("google_gmail_backup.services_gmail.get_message_raw", side_effect=error):
+            call_command(
+                "gmail_pipeline", "download",
+                limit=10, workers=1,
+                stdout=StringIO(), stderr=StringIO(),
+            )
+
+        self.msg_404.refresh_from_db()
+        self.assertEqual(self.msg_404.state, GmailMessage.STATE_SOFT_DELETED)
+        self.assertEqual(self.msg_404.deletion_source, "gmail_404_on_download")
+        self.assertIsNotNone(self.msg_404.deleted_at)
+
+    def test_non_404_error_leaves_state_untouched_for_retry(self):
+        from unittest.mock import patch
+        from io import StringIO
+        from django.core.management import call_command
+
+        with patch("google_gmail_backup.services_gmail.get_message_raw",
+                   side_effect=ConnectionError("network blip")):
+            call_command(
+                "gmail_pipeline", "download",
+                limit=10, workers=1,
+                stdout=StringIO(), stderr=StringIO(),
+            )
+
+        self.msg_other.refresh_from_db()
+        self.assertEqual(self.msg_other.state, GmailMessage.STATE_DISCOVERED)
+        self.assertIn("network blip", self.msg_other.error)
 
 
 # ── BUG: sync state total_messages count was wrong after re-discovery ─────────

@@ -227,6 +227,7 @@ both, and how far you can get back.
 | CSRF 403 on login | New hostname not in .env | Add to `CSRF_TRUSTED_ORIGINS` in `.env`, then `make up` |
 | Progress bar "Loading..." | HTMX not loaded | `Ctrl+Shift+R` (hard refresh) |
 | `docker compose restart` didn't pick up .env change | restart reuses old env | Always `make up` (not restart) after .env edits |
+| `gmail-loop` shows 0 downloaded, errors climbing every pass | `docker compose exec web python manage.py shell -c "from google_gmail_backup.models import GmailMessage; print(GmailMessage.objects.exclude(error='').values_list('error', flat=True).first())"` | If the error is a 404/`notFound`: self-resolving since Phase 51 (a confirmed-gone message is marked `SOFT_DELETED` instead of blocking the queue forever) — just retry. Any other error: investigate that message specifically, it's still just being retried |
 
 ---
 

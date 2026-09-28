@@ -183,6 +183,17 @@ PHASE 49 -- One-line installer + upgrade script (DONE -- final phase of this roa
 BUGS FOUND POST-ROADMAP (not part of the original V2 plan)
 ================================================================
 PHASE 50 -- Fix OAuth redirect_uri behind reverse proxy (browser flow) (DONE)
+PHASE 51 -- Fix gmail-loop infinite-retry on permanently-gone messages (DONE)
+  Found 2026-09-27 on a real account (57,895 discovered messages): `_download()` in
+  gmail_pipeline.py never transitions GmailMessage.state on failure -- only sets
+  error/last_attempt_at. A message Gmail confirms is gone (404/notFound on
+  messages.get) stays DISCOVERED forever, and since the download query is
+  `filter(state=DISCOVERED).order_by("discovered_at")[:limit]`, the same oldest
+  dead messages get re-selected on every loop pass -- `make gmail-loop`'s "loop
+  until DISCOVERED queue is empty" can never make forward progress past them.
+  Reproduced live: 500/500 failed, all 404, loop stuck. task_gmail_reconcile
+  already handles this exact signal correctly (marks SOFT_DELETED) but only scans
+  VERIFIED/DOWNLOADED messages, not DISCOVERED ones -- doesn't help here.
   Found 2026-09-27 debugging a real install (PDX-CL1): the Phase 28 browser OAuth
   flow fails universally behind nginx (any host, any port, not specific to that
   machine) -- Google shows a generic "Something went wrong" after the user approves

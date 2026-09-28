@@ -76,6 +76,7 @@ class Command(BaseCommand):
         from concurrent.futures import ThreadPoolExecutor, as_completed
         from django.utils import timezone
         from django import db
+        from googleapiclient.errors import HttpError
         from google_gmail_backup.models import GmailMessage
         from google_gmail_backup.services_gmail import (
             get_message_metadata, get_message_raw, extract_headers,
@@ -148,9 +149,26 @@ class Command(BaseCommand):
                 ])
                 return True
             except Exception as exc:
-                msg.error = str(exc)
-                msg.last_attempt_at = timezone.now()
-                msg.save(update_fields=["error", "last_attempt_at"])
+                # Phase 51: a confirmed-permanent 404 (Gmail itself says the message
+                # is gone) must not just sit in DISCOVERED forever -- the download
+                # query always re-selects the oldest DISCOVERED rows first, so a
+                # permanently-dead message blocks every message behind it from ever
+                # being attempted. task_gmail_reconcile already handles this exact
+                # signal for VERIFIED/DOWNLOADED messages via the same helper; reuse
+                # it here rather than inventing new logic. Any other exception keeps
+                # today's behavior unchanged (error recorded, state untouched, retried
+                # on the next loop pass) -- this is deliberately narrow, not a general
+                # retry-limit system.
+                exc_str = str(exc)
+                is_gone = isinstance(exc, HttpError) and exc.resp.status == 404
+                is_gone = is_gone or "404" in exc_str or "notFound" in exc_str
+                if is_gone:
+                    from google_gmail_backup.tasks import _mark_soft_deleted
+                    _mark_soft_deleted(msg.gmail_id, "gmail_404_on_download", timezone.now())
+                else:
+                    msg.error = exc_str
+                    msg.last_attempt_at = timezone.now()
+                    msg.save(update_fields=["error", "last_attempt_at"])
                 return False
             finally:
                 db.close_old_connections()
