@@ -27,6 +27,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   about sizing a 12-vCPU/36GB deployment. No application code changes.
 
 ### Fixed
+- **Phase 64** — `core/storage.py`'s `usage()` called
+  `shutil.disk_usage(settings.MEDIA_ROOT)` with no check that the directory
+  exists first. Found live: pushing Phase 63 triggered a real CI run of the
+  new pytest step, which came back 64/65 passed — a genuine bug the new
+  step immediately caught, not a flaw in Phase 63's wiring. `MEDIA_ROOT`
+  defaults to `backend_django/media` (`config/settings.py:158`); in the real
+  Docker deployment this is masked because `docker-compose.yml`'s `media:`
+  named volume auto-creates its mount point the moment it's first attached,
+  before any file is ever downloaded — but a bare `manage.py`/`pytest` run
+  (exactly what CI does) has no such guarantee, and a genuinely fresh
+  non-Docker install would hit the same crash on its very first download
+  task. Fixed: `os.makedirs(settings.MEDIA_ROOT, exist_ok=True)` before
+  measuring disk usage. Verified by moving the real `media/` directory
+  aside locally (reproducing CI's exact missing-directory condition) —
+  the previously-failing test now passes (14/14), and the full 6-file
+  scoped suite from Phase 63 passes cleanly (65/65) — then restored the
+  original directory content afterward.
 - **Phase 63** — closes out Phase 55: CI's `test` job's last remaining
   failure was `ModuleNotFoundError: No module named 'pytest'` on 6 modules
   (`google_media_backup/tests_resumable_download.py`, `.../tests_unit.py`,

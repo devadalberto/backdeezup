@@ -593,6 +593,43 @@ PHASE 63 -- Wire pytest into CI so it actually runs the 6 pytest-native test fil
   -- this is Phase 55's own original verify step, finally achievable. Full
   detail: GOALS_TODOS.md.
 
+PHASE 64 -- Fix core/storage.py crashing when MEDIA_ROOT doesn't exist yet (XS) (DONE)
+  Found live: pushing Phase 63 triggered a real CI run of the new pytest
+  step -- 64/65 passed, 1 failed:
+  `google_media_backup/tests_resumable_download.py::test_task_photos_download_batch_passes_db_size_bytes_as_size_hint`
+  -- `FileNotFoundError: [Errno 2] No such file or directory:
+  '/__w/backdeezup/backdeezup/backend_django/media'`. This is a real bug the
+  new CI step immediately caught, not a flaw in Phase 63's wiring -- passed
+  locally only because this dev box happens to already have a stray
+  `backend_django/media/` directory sitting around from earlier session
+  activity, masking it.
+  Root cause, confirmed by reading the code: `core/storage.py:24`'s
+  `usage()` calls `shutil.disk_usage(settings.MEDIA_ROOT)` with no check
+  that the directory exists first. `MEDIA_ROOT` defaults to `BASE_DIR /
+  'media'` (`config/settings.py:158`). In the real Docker deployment this
+  is masked -- `docker-compose.yml`'s `media:` named volume auto-creates
+  its mount point directory the first time it's attached, even before any
+  file is ever downloaded -- but a bare `manage.py`/`pytest` run with no
+  Docker volume involved (exactly what CI does, and what a local dev
+  environment would do before Docker is ever brought up) has no such
+  guarantee. This task is called from
+  `google_media_backup/tasks.py:58`'s `task_photos_download_batch`, which
+  the storage guard (Phase 32) checks before every download batch --
+  meaning the very first download task on a sufficiently fresh install
+  (outside the lucky Docker-volume side effect) could crash before
+  downloading anything.
+  Fix: in `core/storage.py`'s `usage()`, ensure `MEDIA_ROOT` exists before
+  calling `shutil.disk_usage()` on it (`os.makedirs(settings.MEDIA_ROOT,
+  exist_ok=True)`) -- matches Django's own convention elsewhere in this
+  codebase of creating storage directories defensively rather than
+  assuming they exist. No test-file change needed; this is a real
+  production-code gap, not a test-environment workaround.
+  Verify: delete/rename `backend_django/media/` locally (or just test in a
+  scratch checkout that never had one), re-run the exact failing test --
+  confirm `usage()` no longer crashes and the test passes. Then confirm the
+  scoped full pytest run (all 6 files, same as Phase 63's verification)
+  passes cleanly. Full detail: GOALS_TODOS.md.
+
 NOT PHASED (backlog, needs a user decision first): restore to a different Google
 account, restore into Drive, per-rule cleanup schedules, NAS packages, animated
 demos, sample-Google-data test install, SBOM-signed releases.

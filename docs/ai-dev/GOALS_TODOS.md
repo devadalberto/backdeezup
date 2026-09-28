@@ -1659,3 +1659,88 @@ PHASE 63 -- Wire pytest into CI so it actually runs the 6 pytest-native test fil
   own Verify step) will happen once this commit is pushed -- can't run
   GitHub Actions from this dev box, only reproduce its exact command
   locally.
+
+  CI RESULT after pushing (2026-09-28): confirmed 64/65 passed -- exactly
+  one new, real, previously-invisible failure. See PHASE 64 below.
+
+PHASE 64 -- Fix core/storage.py crashing when MEDIA_ROOT doesn't exist yet (XS)
+  Size: XS. Risk: none -- one defensive `os.makedirs` call, no behavior
+  change once the directory already exists (the common case).
+
+  Trigger: Phase 63's push triggered a real CI run. Result: 64/65 passed,
+  1 failed --
+    google_media_backup/tests_resumable_download.py::test_task_photos_download_batch_passes_db_size_bytes_as_size_hint
+    FileNotFoundError: [Errno 2] No such file or directory:
+    '/__w/backdeezup/backdeezup/backend_django/media'
+  Not a flaw in Phase 63's CI wiring -- the wiring is correct and did
+  exactly its job: ran a test for the first time ever and it immediately
+  caught something real. Passed locally only because this dev box already
+  has a stray `backend_django/media/` directory from earlier session
+  activity (confirmed via `ls -la backend_django/media`), which happened to
+  mask the bug here.
+
+  Facts confirmed by reading the code (not guessed):
+    - `core/storage.py:22-26`:
+        def usage():
+            du = shutil.disk_usage(settings.MEDIA_ROOT)
+            ...
+      No existence check on `settings.MEDIA_ROOT` before calling
+      `shutil.disk_usage()`.
+    - `config/settings.py:158`: `MEDIA_ROOT = config('MEDIA_ROOT',
+      default=str(BASE_DIR / 'media'))` -- defaults to
+      `backend_django/media`, matching the exact path in CI's error.
+    - `google_media_backup/tasks.py:58`'s `task_photos_download_batch` is
+      the caller the failing test exercises; this is the storage guard
+      (Phase 32) that runs before every download batch -- so the very
+      first download task on a sufficiently fresh install could crash
+      before downloading anything.
+    - Why this has never been seen in real deployments: `docker-compose.yml`'s
+      `media:` named volume (line 40's mount, confirmed via `docker-compose.yml`
+      grep) auto-creates its mount point directory the moment it's first
+      attached to a container -- before any file is ever written into it.
+      Docker's volume-mount side effect papers over the missing
+      `os.makedirs` call. CI's bare `python manage.py test`/`pytest` run
+      has no Docker volume involved at all, so nothing creates the
+      directory -- exposing the real gap.
+
+  Fix: in `core/storage.py`'s `usage()`, ensure the directory exists before
+  measuring it:
+      import os
+      ...
+      def usage():
+          os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
+          du = shutil.disk_usage(settings.MEDIA_ROOT)
+          ...
+  This is a real production-code fix, not a test-environment workaround --
+  the same gap would bite a genuinely fresh non-Docker install (e.g. local
+  dev via `manage.py runserver` before anything else has touched
+  `MEDIA_ROOT`).
+
+  Verify: temporarily rename/move `backend_django/media/` out of the way
+  locally (confirm it doesn't exist), re-run exactly the failing test:
+      DJANGO_SECRET_KEY=... GOOGLE_ENCRYPTION_KEY=... DATABASE_URL= \
+        uv run pytest backend_django/google_media_backup/tests_resumable_download.py -v
+  -- confirm it now passes with `MEDIA_ROOT` absent. Then re-run the full
+  scoped 6-file pytest command from Phase 63 to confirm nothing else
+  regressed. Restore/leave the directory as it was after (don't leave the
+  dev box in a different state than before verifying).
+
+  STATUS: DONE (2026-09-28). Applied the exact fix above: `import os` +
+  `os.makedirs(settings.MEDIA_ROOT, exist_ok=True)` right before
+  `shutil.disk_usage()` in `usage()`. Verified exactly as planned:
+    - Moved the real `backend_django/media/` (including its `video/`
+      subdirectory) to a scratch backup, confirmed via `ls` that
+      `backend_django/media` genuinely didn't exist.
+    - Re-ran `tests_resumable_download.py` alone: 14/14 passed, including
+      the previously-failing `test_task_photos_download_batch_passes_db_size_bytes_as_size_hint`.
+    - Re-ran the full 6-file scoped set from Phase 63: "65 passed, 5
+      warnings in 7.50s" -- clean, matching Phase 63's own verification
+      exactly, now for real (not masked by a stray local directory).
+    - Restored the original `backend_django/media/` content from the
+      scratch backup afterward -- confirmed via `git status --short` that
+      `media/` isn't git-tracked anyway (gitignored), so this was purely
+      about not leaving the dev box's working state different from before.
+  Not yet confirmed against actual CI (needs the commit pushed first) --
+  the local reproduction (moving the directory away, matching CI's exact
+  missing-directory condition) is the practical ceiling of verification
+  here, and it's a faithful reproduction, not a guess.

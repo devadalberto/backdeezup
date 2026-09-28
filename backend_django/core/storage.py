@@ -5,6 +5,7 @@ floor. STORAGE_GUARD_ENABLED=False restores today's behavior (no refusals).
 """
 import functools
 import logging
+import os
 import shutil
 from datetime import timedelta
 
@@ -21,6 +22,9 @@ GROWTH_WINDOW_DAYS = 30
 
 def usage():
     """{"total", "used", "free"} in bytes, plus "used_pct"."""
+    # Docker's named volume mount auto-creates MEDIA_ROOT before any file is
+    # ever written -- a bare (non-Docker) run has no such guarantee.
+    os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
     du = shutil.disk_usage(settings.MEDIA_ROOT)
     used_pct = du.used / du.total * 100 if du.total else 0.0
     return {"total": du.total, "used": du.used, "free": du.free, "used_pct": used_pct}
