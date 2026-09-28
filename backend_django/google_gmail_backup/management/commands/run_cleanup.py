@@ -71,9 +71,8 @@ class Command(BaseCommand):
             unit="rule",
             bar_format=(
                 "{desc}: {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} "
-                "[{elapsed}<{remaining}, {rate_fmt}] msgs={postfix[msgs]}"
+                "[{elapsed}<{remaining}, {rate_fmt}] {postfix}"
             ),
-            postfix={"msgs": 0},
             file=self.stderr,
             dynamic_ncols=True,
         ) as pbar:
@@ -89,8 +88,7 @@ class Command(BaseCommand):
                         for s in audit.sample_subjects[:3]:
                             self.stdout.write(f"    • {s[:60]}")
                     total_affected += audit.affected_count
-                    pbar.postfix["msgs"] = total_affected
-                    pbar.set_postfix(pbar.postfix)
+                    pbar.set_postfix(msgs=total_affected)
                 except Exception as exc:
                     self.stdout.write(f"  ERROR {rule.name}: {exc}")
 

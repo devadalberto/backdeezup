@@ -27,6 +27,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   about sizing a 12-vCPU/36GB deployment. No application code changes.
 
 ### Fixed
+- **Phase 60** — `make cleanup-dry`/`make cleanup-run` (both via
+  `run_cleanup.py`) crashed unconditionally with `TypeError: string indices
+  must be integers, not 'str'`, and the real (non-dry) path of `make
+  gmail-empty-trash` (`empty_gmail_trash.py`) had the identical bug, ready to
+  crash the moment it was tried. Found live right after seeding 20 cleanup
+  rules and confirming the backup at 100% — this was the exact next step
+  needed to actually clean up the inbox. Root cause, confirmed by
+  reproducing the exact error in an isolated shell: both files built a
+  custom `tqdm` `bar_format` referencing `{postfix[msgs]}`/`{postfix[d]}` as
+  if `postfix` stayed a subscriptable dict — it doesn't, tqdm converts it to
+  a plain string (e.g. `"msgs=42"`) for display, so `"msgs=42"["msgs"]`
+  raised exactly the observed error, on the very first `tqdm(...)`
+  construction. A second, latent bug (`pbar.postfix["msgs"] = value`
+  mid-loop) would have surfaced the moment the first was naively patched —
+  caught and fixed together, confirmed separately in isolation before
+  either file was touched. Fixed: `bar_format` now uses plain `{postfix}`,
+  and postfix updates use the correct `pbar.set_postfix(msgs=value)`
+  keyword form throughout. Verified by running the real `run_cleanup
+  --dry-run` command end-to-end against a throwaway local SQLite DB with a
+  real rule and message (not just the isolated repro) — completed cleanly,
+  no traceback, correct output.
 - **Phase 59** — 9 `make` ops commands (`gmail-progress`, `gmail-incremental`,
   the `sync-*` targets, etc.) hardcoded `HOST ?= http://localhost:8844`, and
   `check-services` hardcoded literal ports `8845`/`8844` directly — neither

@@ -118,8 +118,7 @@ class Command(BaseCommand):
         chunks = [trash_ids[i:i + BATCH_SIZE] for i in range(0, len(trash_ids), BATCH_SIZE)]
 
         with tqdm(chunks, desc="deleting", unit="batch",
-                  bar_format="{desc}: {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} batches [{elapsed}<{remaining}] deleted={postfix[d]}",
-                  postfix={"d": 0},
+                  bar_format="{desc}: {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} batches [{elapsed}<{remaining}] {postfix}",
                   file=self.stderr, dynamic_ncols=True) as pbar:
             for chunk in pbar:
                 try:
@@ -128,8 +127,7 @@ class Command(BaseCommand):
                         body={"ids": chunk},
                     ).execute()
                     deleted += len(chunk)
-                    pbar.postfix["d"] = deleted
-                    pbar.set_postfix(pbar.postfix)
+                    pbar.set_postfix(deleted=deleted)
                 except Exception as exc:
                     log.error("batchDelete chunk failed: %s", exc)
                     errors += len(chunk)

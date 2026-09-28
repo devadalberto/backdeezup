@@ -452,6 +452,62 @@ PHASE 59 -- Fix Makefile ops commands hardcoding port 8844/8845 (ignoring custom
   custom-port deployment) needs to happen on PDX-CL1, same as Phase 58.
   Full detail: GOALS_TODOS.md.
 
+PHASE 60 -- Fix tqdm crash breaking cleanup-dry, cleanup-run, and real empty-trash (S) (DONE)
+  Found live: `make cleanup-dry` crashed immediately with `TypeError: string
+  indices must be integers, not 'str'`. Confirmed root cause by reproducing
+  the exact error in an isolated Python shell (not guessed) and empirically
+  verifying the fix before writing any code.
+
+  Facts confirmed:
+    - `run_cleanup.py` and `empty_gmail_trash.py` both build a custom tqdm
+      `bar_format` referencing `{postfix[msgs]}` / `{postfix[d]}` -- treating
+      `postfix` as if it stays a subscriptable dict inside the format string.
+      It doesn't: tqdm converts `postfix` to a plain string (e.g. `"msgs=42"`)
+      the moment it's used for display -- confirmed via `pbar.format_dict['postfix']`
+      returning a str, not a dict. `"msgs=42"["msgs"]` -> exactly the observed
+      `TypeError`. This crashes on the VERY FIRST `tqdm(...)` construction
+      (inside its own initial `refresh()`), before the loop body ever runs.
+    - There's a SECOND, latent bug the obvious one-line fix would walk
+      straight into: both files also do `pbar.postfix["msgs"] = value` /
+      `pbar.postfix["d"] = value` mid-loop, mutating `pbar.postfix` as if it
+      stays a dict -- but it's already been converted to a string by the
+      first `refresh()`, so this ALSO raises (`'str' object does not support
+      item assignment`), confirmed by reproducing this second error too,
+      separately, before finalizing the fix.
+    - Impact, confirmed live: `make cleanup-dry` and `make cleanup-run` (both
+      go through `run_cleanup.py`) are completely, unconditionally broken --
+      100% reproducible, not intermittent. `make gmail-empty-trash-dry` is
+      NOT affected (it returns early, before ever reaching the tqdm block,
+      confirmed by reading `empty_gmail_trash.py`'s control flow) -- but the
+      REAL execution path (`make gmail-empty-trash`, once `--confirm`'d) goes
+      straight through the same broken tqdm block and would crash too,
+      confirmed by reading the code (not yet triggered live, since the user
+      hasn't run the real delete yet).
+    - This blocks the exact next thing the user is trying to do: dry-run then
+      execute the newly-seeded 20 cleanup rules, and eventually empty the
+      already-8976-message Gmail trash for real.
+
+  Fix (verified empirically in an isolated shell before writing the code):
+    - `bar_format`: replace `{postfix[msgs]}` / `{postfix[d]}` with plain
+      `{postfix}` (drop the redundant literal `msgs=`/`deleted=` text --
+      tqdm's own postfix string already includes the key name, e.g. `"msgs=42"`).
+    - Mid-loop update: replace `pbar.postfix["msgs"] = value; pbar.set_postfix(pbar.postfix)`
+      with the correct keyword-argument API, `pbar.set_postfix(msgs=value)`
+      (same for `empty_gmail_trash.py`'s `d` key). Verified this exact
+      corrected pattern runs a full loop with no exception.
+    - Also drop the now-redundant `postfix={"msgs": 0}` / `postfix={"d": 0}`
+      constructor kwarg (no longer needed once `bar_format` doesn't reference
+      it before the first `set_postfix()` call).
+
+  Verify: `make cleanup-dry` completes without a traceback and prints real
+  per-rule affected counts (confirms both `run_cleanup.py`'s tqdm bugs are
+  actually fixed, not just the constructor-time one). Since the real delete
+  path in `empty_gmail_trash.py` can't be safely tested here (irreversible,
+  real Gmail data, no live stack on this dev box), verify that one by reading
+  the corrected code against the same pattern already proven fixed in
+  `run_cleanup.py`, and let the user confirm on PDX-CL1 when they actually
+  run `make gmail-empty-trash` for real. Full detail: GOALS_TODOS.md.
+
 NOT PHASED (backlog, needs a user decision first): restore to a different Google
 account, restore into Drive, per-rule cleanup schedules, NAS packages, animated
 demos, sample-Google-data test install, SBOM-signed releases.

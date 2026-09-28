@@ -2038,3 +2038,115 @@ PHASE 59 -- Fix Makefile ops commands hardcoding port 8844/8845 (ignoring custom
   Not yet deployed to PDX-CL1 (same as Phase 58 -- needs `git pull` + this
   fix doesn't require a container rebuild/restart since it's Makefile-only,
   just a `git pull` on that box).
+
+PHASE 60 -- Fix tqdm crash breaking cleanup-dry, cleanup-run, and real empty-trash (S)
+  Size: S. Risk: low -- only touches two `tqdm` progress-bar constructions,
+  no logic/query changes.
+
+  Trigger: `make cleanup-dry` crashed live with
+    TypeError: string indices must be integers, not 'str'
+  right after seeding 20 cleanup rules and confirming the backup is 100%
+  complete -- this is the exact next step needed to actually clean up the
+  inbox and eventually empty Gmail's already-8976-message trash.
+
+  Facts confirmed (reproduced in an isolated Python shell with `uv run
+  python3`, not guessed):
+    - `run_cleanup.py:68-79` builds:
+        with tqdm(
+            rules_list, desc="rules", unit="rule",
+            bar_format=(
+                "{desc}: {percentage:3.0f}% |{bar}| {n_fmt}/{total_fmt} "
+                "[{elapsed}<{remaining}, {rate_fmt}] msgs={postfix[msgs]}"
+            ),
+            postfix={"msgs": 0}, ...
+        ) as pbar:
+      Reproducing this exact `bar_format` + `postfix` combination standalone
+      crashes with the identical error, on the tqdm CONSTRUCTOR's own initial
+      `refresh()` call -- before the `for rule in pbar:` loop body ever runs.
+      Root cause, confirmed by inspecting `pbar.format_dict['postfix']`
+      directly: tqdm converts `postfix` into a plain STRING (e.g. `"msgs=42"`)
+      for display purposes, not a dict -- so `{postfix[msgs]}` in the format
+      string evaluates as `"msgs=42"["msgs"]`, a string subscripted by a
+      string key, which is exactly the observed `TypeError`.
+    - `run_cleanup.py:92-93` (mid-loop): `pbar.postfix["msgs"] = total_affected;
+      pbar.set_postfix(pbar.postfix)`. Confirmed via a SEPARATE isolated
+      reproduction (after fixing only the `bar_format` string) that this ALSO
+      crashes -- `pbar.postfix` is the same already-stringified value by this
+      point, so item assignment raises `'str' object does not support item
+      assignment`. Both bugs must be fixed together, or the second one
+      surfaces the moment the first is patched.
+    - `empty_gmail_trash.py:120-132` has the exact same pattern (`{postfix[d]}`
+      in `bar_format`, `pbar.postfix["d"] = deleted; pbar.set_postfix(pbar.postfix)`
+      mid-loop) -- same two bugs, confirmed by reading the code (same
+      structure as the now-confirmed-broken `run_cleanup.py` pattern).
+    - Impact scoping, confirmed by tracing control flow: `make gmail-empty-trash-dry`
+      is NOT affected -- `empty_gmail_trash.py`'s `handle()` returns early
+      (line 96-102, the `if not confirmed:` branch) before ever reaching the
+      tqdm block at line 117+. Only the REAL delete path (`make
+      gmail-empty-trash`, i.e. `--confirm`'d) goes through the broken tqdm
+      code. Not yet triggered live (the user hasn't run the real delete yet),
+      but confirmed by reading the code that it would crash identically to
+      `cleanup-dry` the moment it's tried.
+    - `make cleanup-run` shares the exact same `run_cleanup.py` code path as
+      `cleanup-dry` (same tqdm block, `dry_run` only changes what `apply_rule`
+      does internally) -- so it's equally broken, not yet separately
+      reproduced live since `cleanup-dry` already fails first.
+
+  Fix (each step verified empirically in an isolated `uv run python3` shell
+  before being written into the actual files):
+    1. `bar_format`: change `msgs={postfix[msgs]}` -> `{postfix}` in
+       `run_cleanup.py`, and `deleted={postfix[d]}` -> `{postfix}` in
+       `empty_gmail_trash.py`. Drop the literal `msgs=`/`deleted=` text --
+       tqdm's own postfix string already includes the key name (confirmed:
+       `pbar.set_postfix(msgs=42)` produces exactly `"msgs=42"` via
+       `format_dict['postfix']`, no extra formatting needed).
+    2. Mid-loop update: change
+         pbar.postfix["msgs"] = total_affected
+         pbar.set_postfix(pbar.postfix)
+       to the single correct call:
+         pbar.set_postfix(msgs=total_affected)
+       (same pattern for `empty_gmail_trash.py`'s `d` key -> `deleted=deleted`
+       key name, matching the literal text it's replacing so the rendered
+       output still reads naturally, e.g. `deleted=1000`).
+    3. Drop the now-unused `postfix={"msgs": 0}` / `postfix={"d": 0}`
+       constructor kwarg in both files -- no longer read by anything once
+       `bar_format` doesn't reference `{postfix[...]}` before the first real
+       `set_postfix()` call.
+    Verified the fully-corrected pattern (steps 1+2 together, matching what
+    will actually ship) runs a complete loop with no exception, in the
+    isolated shell, before touching either file.
+
+  Verify:
+    - `make cleanup-dry` completes without a traceback, prints the "Cleanup
+      Rules — DRY RUN (N rules)" header and real per-rule affected counts,
+      ending with "Total would affect: N messages" -- confirms BOTH bugs in
+      `run_cleanup.py` are actually gone (constructor-time AND mid-loop), not
+      just the first one.
+    - `empty_gmail_trash.py`'s real-delete tqdm block can't be safely
+      exercised from here (irreversible, real Gmail data, no live compose
+      stack on this dev box) -- verify by inspecting the corrected code
+      matches the exact same pattern already proven fixed in
+      `run_cleanup.py`, and have the user confirm live on PDX-CL1 the next
+      time they actually run `make gmail-empty-trash` for real (their
+      `gmail-empty-trash-dry` run already showed 8976 messages waiting, so
+      this will get exercised soon regardless).
+
+  STATUS: DONE (2026-09-28). Applied the exact fix above to both files.
+  Went further than an isolated tqdm repro for `run_cleanup.py` specifically
+  -- ran the REAL command end-to-end against a throwaway local SQLite DB
+  (safe, lightweight: `manage.py migrate --run-syncdb` + one throwaway
+  `CleanupRule`/`GmailMessage` pair via `manage.py shell`, not the heavy
+  test suite; `DATABASE_URL=` cleared, same CI-matching env as prior phases):
+    DJANGO_SECRET_KEY=... GOOGLE_ENCRYPTION_KEY=... DATABASE_URL= \
+      uv run python backend_django/manage.py run_cleanup --dry-run
+  Output: "Cleanup Rules — DRY RUN (1 rules)", "[DRY] phase60-verify-rule —
+  1 messages", "Total would affect: 1 messages" -- exit 0, no traceback.
+  This exercises BOTH the constructor-time bug (bar_format) and the
+  mid-loop bug (`pbar.set_postfix`) for real, not just in isolation.
+  Cleaned up the throwaway rule/message/audit-log rows and deleted
+  `backend_django/db.sqlite3` after -- confirmed via `git status --short`
+  that nothing sqlite-related was left tracked or untracked.
+  `empty_gmail_trash.py`'s real-delete path verified by code inspection only
+  (matches the now-proven-working pattern exactly) -- not yet exercised live,
+  since that requires an actual `make gmail-empty-trash --confirm` against
+  real Gmail data on PDX-CL1, irreversible, not something to trigger from here.
