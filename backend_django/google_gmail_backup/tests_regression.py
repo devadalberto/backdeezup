@@ -490,6 +490,61 @@ class GmailDownload404Test(TransactionTestCase):
         self.assertIn("network blip", self.msg_other.error)
 
 
+# ── BUG: api.py's /sync/download had the same 404-stuck-forever bug as Phase 51 ──
+
+class GmailApiDownload404Test(TestCase):
+    """
+    BUG (Phase 54): api.py's /sync/download endpoint is a separate HTTP-triggered
+    code path that duplicates gmail_pipeline.py's download logic, but never got
+    Phase 51's fix -- its except block unconditionally set error/last_attempt_at,
+    same as _download() before Phase 51. A message Gmail confirms is gone (404 on
+    messages.get) would stay DISCOVERED forever via this endpoint too.
+    FIX: mirror Phase 51 exactly -- a confirmed 404 marks the message
+    SOFT_DELETED via the same _mark_soft_deleted helper, instead of leaving it stuck.
+    Any other exception keeps the original behavior.
+
+    Plain TestCase (not TransactionTestCase): unlike gmail_pipeline.py's _download(),
+    this endpoint runs synchronously in the request thread -- no ThreadPoolExecutor,
+    so no SAVEPOINT/connection deadlock risk.
+    """
+    def setUp(self):
+        self.client = Client()
+        self.client.force_login(make_user())
+        self.msg_404 = make_message("api-gone1", state=GmailMessage.STATE_DISCOVERED)
+        self.msg_other = make_message("api-flaky1", state=GmailMessage.STATE_DISCOVERED)
+
+    def test_confirmed_404_marks_soft_deleted_not_stuck_discovered(self):
+        from unittest.mock import patch
+        from googleapiclient.errors import HttpError
+
+        class FakeResp:
+            status = 404
+            reason = "Not Found"
+
+        error = HttpError(FakeResp(), b'{"error": {"message": "Requested entity was not found."}}')
+
+        with patch("google_gmail_backup.api.get_message_raw", side_effect=error):
+            r = self.client.post("/api/gmail/sync/download?limit=10")
+        self.assertEqual(r.status_code, 200)
+
+        self.msg_404.refresh_from_db()
+        self.assertEqual(self.msg_404.state, GmailMessage.STATE_SOFT_DELETED)
+        self.assertEqual(self.msg_404.deletion_source, "gmail_404_on_download")
+        self.assertIsNotNone(self.msg_404.deleted_at)
+
+    def test_non_404_error_leaves_state_untouched_for_retry(self):
+        from unittest.mock import patch
+
+        with patch("google_gmail_backup.api.get_message_raw",
+                   side_effect=ConnectionError("network blip")):
+            r = self.client.post("/api/gmail/sync/download?limit=10")
+        self.assertEqual(r.status_code, 200)
+
+        self.msg_other.refresh_from_db()
+        self.assertEqual(self.msg_other.state, GmailMessage.STATE_DISCOVERED)
+        self.assertIn("network blip", self.msg_other.error)
+
+
 # ── BUG: successful Gmail download/verify crashed on Postgres (error=None) ────
 
 class GmailErrorFieldNotNullTest(TransactionTestCase):

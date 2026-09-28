@@ -275,9 +275,25 @@ def gmail_download(request, limit: int = 20):
             ])
             downloaded += 1
         except Exception as e:
-            msg.error = str(e)
-            msg.last_attempt_at = timezone.now()
-            msg.save(update_fields=["error", "last_attempt_at"])
+            # Phase 54: mirror gmail_pipeline.py's Phase 51 fix -- a confirmed-
+            # permanent 404 (Gmail itself says the message is gone) must not just
+            # sit in DISCOVERED forever, since the download query always re-selects
+            # the oldest DISCOVERED rows first. Reuse the same helper
+            # task_gmail_reconcile/_download already use rather than inventing new
+            # logic. Any other exception keeps today's behavior (error recorded,
+            # state untouched, retried on the next call) -- still counts toward
+            # `errors`, matching gmail_pipeline.py's counter semantics (a soft-
+            # deleted message is not "downloaded" either).
+            exc_str = str(e)
+            is_gone = isinstance(e, HttpError) and e.resp.status == 404
+            is_gone = is_gone or "404" in exc_str or "notFound" in exc_str
+            if is_gone:
+                from google_gmail_backup.tasks import _mark_soft_deleted
+                _mark_soft_deleted(msg.gmail_id, "gmail_404_on_download", timezone.now())
+            else:
+                msg.error = exc_str
+                msg.last_attempt_at = timezone.now()
+                msg.save(update_fields=["error", "last_attempt_at"])
             errors += 1
 
     return {"downloaded": downloaded, "errors": errors}
