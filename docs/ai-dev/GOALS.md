@@ -268,7 +268,7 @@ PHASE 54 -- Apply Phase 51's 404-permanent-gone fix to api.py's /sync/download (
   branch before mirroring it here, so the two endpoints report progress
   consistently. Full detail: GOALS_TODOS.md.
 
-PHASE 55 -- Fix broken CI (lint, sast-bandit, test jobs all failing) (DIAGNOSIS COMPLETE, fix is PHASE 63)
+PHASE 55 -- Fix broken CI (lint, sast-bandit, test jobs all failing) (DONE -- via PHASES 57 + 63)
   Surfaced when the CI badge was added to README; confirmed still failing on
   current HEAD (commit 7a9a275, run 36363155626, inspected via `gh run view
   --log-failed`) -- not a flake, three independent root causes:
@@ -558,7 +558,7 @@ PHASE 62 -- Fix django_ratelimit's Ratelimited returning raw Django 403 instead 
   with `ninja.testing.TestClient` against a throwaway API instance before
   writing the real code. Full detail: GOALS_TODOS.md.
 
-PHASE 63 -- Wire pytest into CI so it actually runs the 6 pytest-native test files (S)
+PHASE 63 -- Wire pytest into CI so it actually runs the 6 pytest-native test files (S) (DONE)
   Completes Phase 55: the `test` job's real remaining failure
   (`ModuleNotFoundError: No module named 'pytest'` on 6 files) is fully
   diagnosed -- these are genuine pytest-native tests (fixtures, `django_db`/

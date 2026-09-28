@@ -27,6 +27,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   about sizing a 12-vCPU/36GB deployment. No application code changes.
 
 ### Fixed
+- **Phase 63** — closes out Phase 55: CI's `test` job's last remaining
+  failure was `ModuleNotFoundError: No module named 'pytest'` on 6 modules
+  (`google_media_backup/tests_resumable_download.py`, `.../tests_unit.py`,
+  `google_gmail_backup/tests_cleanup_safeguards.py`, `.../tests_notify_wiring.py`,
+  `.../tests_schemas.py`, `.../tests_undo_protect.py`). Confirmed by reading
+  every file: all 6 are genuine pytest-native tests (`@pytest.mark.django_db`,
+  `@pytest.fixture`, `@pytest.mark.unit`, `tmp_path`/`monkeypatch` fixtures),
+  not `unittest.TestCase`-based like the rest of the codebase.
+  `pyproject.toml` already declared a `test` optional-dependency group
+  (`pytest`, `pytest-django`, `pytest-cov`, `pytest-mock`) and a fully
+  configured `[tool.pytest.ini_options]` section matching exactly how these
+  files use markers — but CI's `test` job's `uv sync` never installed that
+  group, and CI never ran `pytest` at all. These 6 files had likely never
+  actually executed in CI, ever — this was only fully diagnosable once
+  Phase 57 fixed the OOM that had been hiding the real tracebacks. Fixed:
+  `uv sync` → `uv sync --extra test`, plus a new CI step running `pytest`
+  scoped to exactly these 6 files. Verified locally with CI-matching env
+  vars: 65 passed, 0 failed, twice.
 - **Phase 62** — clicking "Execute" on a cleanup rule returned a raw,
   unstyled "403 Forbidden" page with no explanation. Confirmed byte-for-byte
   this is Django's own generic `permission_denied` fallback page (rendered

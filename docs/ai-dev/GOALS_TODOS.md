@@ -1645,3 +1645,17 @@ PHASE 63 -- Wire pytest into CI so it actually runs the 6 pytest-native test fil
   in CI despite passing locally, do not guess -- pull the actual CI log
   (same discipline as every other phase this session) before changing
   anything.
+
+  STATUS: DONE (2026-09-28). Applied the exact fix above to
+  `.github/workflows/ci.yml`'s `test` job: `uv sync` -> `uv sync --extra
+  test`, plus one new "Run tests (pytest-native)" step scoped to exactly
+  the 6 files. Verified locally twice: `python3 -c "import yaml; ...
+  yaml.safe_load(...)"` confirms the workflow file is still valid YAML with
+  the new step present in the job's step list; and re-ran the exact pytest
+  command with CI-matching env vars (`DJANGO_SECRET_KEY`,
+  `GOOGLE_ENCRYPTION_KEY`, `DATABASE_URL=` empty, same as CI's own workflow
+  env block) -- "65 passed, 5 warnings in 7.50s", matching the earlier
+  isolated verification exactly. Actual CI-green confirmation (this phase's
+  own Verify step) will happen once this commit is pushed -- can't run
+  GitHub Actions from this dev box, only reproduce its exact command
+  locally.

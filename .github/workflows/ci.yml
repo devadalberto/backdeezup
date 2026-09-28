@@ -63,13 +63,24 @@ jobs:
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --extra test
 
       - name: Django system check
         run: uv run python backend_django/manage.py check
 
       - name: Run tests (SQLite)
         run: uv run python backend_django/manage.py test google_media_backup google_gmail_backup --verbosity=2
+
+      - name: Run tests (pytest-native)
+        run: |
+          uv run pytest \
+            backend_django/google_media_backup/tests_resumable_download.py \
+            backend_django/google_media_backup/tests_unit.py \
+            backend_django/google_gmail_backup/tests_cleanup_safeguards.py \
+            backend_django/google_gmail_backup/tests_notify_wiring.py \
+            backend_django/google_gmail_backup/tests_schemas.py \
+            backend_django/google_gmail_backup/tests_undo_protect.py \
+            -v
 
   # ── 3. sast-bandit ────────────────────────────────────────────────────────
   sast-bandit:
