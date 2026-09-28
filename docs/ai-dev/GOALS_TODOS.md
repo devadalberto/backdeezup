@@ -1650,6 +1650,46 @@ PHASE 55 -- Fix broken CI (lint, sast-bandit, test jobs all failing)
     evidence from that run -- this step's job is still diagnosis, not a
     guessed patch.
 
+    MAJOR FINDING (b), confirmed live 2026-09-28 on PDX-CL1: with `DATABASE_URL=`
+    cleared (forcing the SQLite path CI also uses), the full two-app run got much
+    further than any CI log ever showed and then hung indefinitely (not crashed)
+    at `google_gmail_backup.tests_reconciliation.ProtectedSenderReconcileTest
+    .test_protected_sender_still_soft_deleted_on_404`.
+    Root cause confirmed by reading `tasks.py` and reproducing in an isolated
+    Python shell: `task_gmail_reconcile()` (`tasks.py:283-293`) paginates via
+      while True:
+          res = svc.users().messages().list(**params).execute()
+          ...
+          page_token = res.get("nextPageToken")
+          if not page_token: break
+    but the test only configures `svc.users().messages().get(...)`'s mock --
+    `svc` itself is a bare `MagicMock()`, so `.list()` is never configured.
+    Verified empirically: `MagicMock().get("nextPageToken")` returns a
+    **truthy MagicMock object, the same one every call** (mock attribute
+    lookups don't vary by call args unless configured) -- so `if not
+    page_token: break` never fires. The loop spins forever with no `sleep`,
+    and every iteration appends to that mock chain's `mock_calls` history,
+    which grows unbounded -- a very plausible match for CI's exit-137 OOM
+    (a fast, tight, memory-growing infinite loop, not a real production bug --
+    real Gmail API responses correctly omit/`None` `nextPageToken` on the last
+    page).
+    Same bare-`MagicMock()`-without-`.list()` pattern found in 3 other tests in
+    the same file, all of which call `task_gmail_reconcile()` and would hit the
+    identical infinite loop once reached: `Reconcile404Test
+    .test_404_marks_soft_deleted`, `ReconcileTrashLabelTest
+    .test_trash_label_present_marks_soft_deleted`, `ReconcileMessageAliveTest
+    .test_alive_message_stays_verified`. (`RulesEngineMetadataSnapshotTest`
+    also uses a bare `MagicMock()` but calls `apply_rule()`, not
+    `task_gmail_reconcile()` -- unaffected, confirmed by reading its test body.)
+    Alphabetical test ordering explains why CI's OOM and this PDX-CL1 hang both
+    show progress up through `ProtectedSenderReconcileTest` (P-r-o sorts before
+    `PurgeExpiredTest`/`PurgeYoungRecordUntouchedTest` P-u-r and before
+    `Reconcile404Test`/etc. R-e-c) -- it's the first of the 4 affected tests to
+    run, so it hangs first and blocks the other 3 from ever executing.
+    This does NOT explain the 6 `_FailedTest` import failures (those are
+    discovery-time import errors, unrelated to this runtime hang) -- that part
+    of (a) is still open. Fix for this part: PHASE 57 (see below).
+
   Verify (after all 3 steps): `gh run list --workflow=ci.yml --limit 1` shows a
   green run on the PR/commit that carries this fix, for all three jobs
   specifically (lint, sast-bandit, test) -- not just "CI passed" as PR jobs may
@@ -1692,3 +1732,71 @@ PHASE 56 -- Fix `make gmail-loop` ignoring WORKERS= (XS)
   is unchanged. No live queue was used for verification (no PDX-CL1 shell
   access from here); `gmail_pipeline.py`'s own log line will confirm the same
   on the next real run.
+
+PHASE 57 -- Fix infinite loop in 4 task_gmail_reconcile tests (under-mocked `.list()`) (XS-S)
+  Size: XS-S. Risk: none -- test-only change, no production code touched.
+
+  Trigger: while diagnosing Phase 55 Step 3's `test` job OOM on PDX-CL1 (with
+  `DATABASE_URL=` cleared to force the same SQLite path CI uses), the run got
+  past everything CI's log ever showed and then hung indefinitely (not
+  crashed) at `ProtectedSenderReconcileTest
+  .test_protected_sender_still_soft_deleted_on_404`. Full diagnosis in Phase 55
+  Step 3's "MAJOR FINDING" above -- summarized here for the fix itself.
+
+  Facts confirmed by reading `tasks.py` and reproducing in an isolated Python
+  shell (not guessed):
+    - `task_gmail_reconcile()` (`tasks.py:283-293`) paginates via a `while True`
+      loop: `res = svc.users().messages().list(**params).execute()`, then
+      `page_token = res.get("nextPageToken")`, `if not page_token: break`.
+    - 4 tests in `backend_django/google_gmail_backup/tests_reconciliation.py`
+      call `task_gmail_reconcile()` against a bare `svc = MagicMock()` that only
+      configures `.get()`, never `.list()`:
+        - `Reconcile404Test.test_404_marks_soft_deleted`
+        - `ReconcileTrashLabelTest.test_trash_label_present_marks_soft_deleted`
+        - `ReconcileMessageAliveTest.test_alive_message_stays_verified`
+        - `ProtectedSenderReconcileTest.test_protected_sender_still_soft_deleted_on_404`
+    - Verified empirically: `MagicMock().get("nextPageToken")` returns a
+      truthy `MagicMock` object, the same one every call, so `page_token` is
+      never falsy and the loop never breaks. No `sleep` in the loop body, so
+      it spins as fast as the mock chain allows, appending to `mock_calls`
+      history every iteration -- unbounded memory growth, a strong candidate
+      for CI's exit-137 OOM.
+    - Not a production bug: real Gmail API responses are real dicts that
+      correctly omit/`None` `nextPageToken` on the last page.
+    - `RulesEngineMetadataSnapshotTest` also uses a bare `MagicMock()` but
+      calls `apply_rule()`, not `task_gmail_reconcile()` -- confirmed
+      unaffected by reading its test body; leave it untouched.
+
+  Fix: in each of the 4 affected tests, configure `.list()`'s return value
+  before calling `task_gmail_reconcile()`, e.g.:
+      svc.users().messages().list.return_value.execute.return_value = {
+          "messages": [], "nextPageToken": None,
+      }
+  (or omit `"nextPageToken"` entirely -- a real dict's `.get()` returns `None`
+  for a missing key either way) so the pagination loop terminates after one
+  page, matching what a real "no more results" Gmail API response looks like.
+  Add this line to each of the 4 tests' bodies, right after
+  `mock_gmail_svc.return_value = svc`.
+
+  Verify: run the file scoped (safe locally -- single file, not the full
+  suite): `uv run python backend_django/manage.py test
+  google_gmail_backup.tests_reconciliation -v2`. All tests in the file must
+  complete (not hang) and pass. Then, on PDX-CL1 (or CI), re-run the full
+  `test google_media_backup google_gmail_backup` command and confirm it no
+  longer hangs/OOMs at this point -- this doesn't by itself resolve the 6
+  `_FailedTest` import failures (separate, still-open half of Phase 55
+  Step 3), but removes this specific infinite loop from the picture so
+  whatever's left can actually be diagnosed.
+
+  STATUS: DONE (2026-09-28). Applied the exact fix above to all 4 tests.
+  Verified with CI-matching env (`DJANGO_SECRET_KEY`/`GOOGLE_ENCRYPTION_KEY`/
+  `DATABASE_URL=` set the same as CI, forcing SQLite) and `timeout 60` as a
+  safety guard: `uv run python backend_django/manage.py test
+  google_gmail_backup.tests_reconciliation -v2` -- all 9 tests in the file
+  pass in 0.328s (was: hangs forever on this dev box too once reached).
+  `ProtectedSenderReconcileTest` now logs "fetched 0 live IDs in 1 pages"
+  instead of looping. Did not re-revert the fix to prove it (that would mean
+  deliberately re-triggering the infinite loop); the isolated `MagicMock()`
+  reproduction from Phase 55 Step 3's diagnosis already proves the mechanism.
+  Not yet re-verified against the full two-app suite on PDX-CL1 (that's the
+  Verify step above, still pending) or against CI.

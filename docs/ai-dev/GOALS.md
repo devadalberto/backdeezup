@@ -312,6 +312,16 @@ PHASE 55 -- Fix broken CI (lint, sast-bandit, test jobs all failing)
        box cannot safely run the full two-app suite (WSL) and can't reach
        Google Drive/Gmail anyway, so this step's remaining diagnosis and fix
        happen on PDX-CL1, not here.
+       MAJOR FINDING 2026-09-28 (confirmed live on PDX-CL1): with `DATABASE_URL=`
+       cleared to force the SQLite path, the run got past everything CI ever
+       showed and hung indefinitely (not crashed) at `ProtectedSenderReconcileTest
+       .test_protected_sender_still_soft_deleted_on_404` -- a genuine infinite
+       loop, verified by reproducing `MagicMock()` pagination behavior in an
+       isolated shell: `task_gmail_reconcile()` paginates on `res.get("nextPageToken")`,
+       but this test (and 3 siblings in the same file) mock `svc` without
+       configuring `.list()`, so that call returns a permanently-truthy `MagicMock`
+       and the loop never breaks -- a very plausible match for the OOM (no sleep,
+       unbounded `mock_calls` growth per iteration). Not a production bug. Fix: PHASE 57.
   Full detail + required diagnostic steps before each fix: GOALS_TODOS.md.
 
 PHASE 56 -- Fix `make gmail-loop` ignoring WORKERS= (XS) (DONE)
@@ -327,6 +337,22 @@ PHASE 56 -- Fix `make gmail-loop` ignoring WORKERS= (XS) (DONE)
   Fix: add `--workers $(WORKERS)` to `gmail-loop`'s download line, matching
   `gmail-download` exactly. One line, no behavior change for anyone who doesn't
   override `WORKERS=` (still defaults to 10). Full detail: GOALS_TODOS.md.
+
+PHASE 57 -- Fix infinite loop in 4 task_gmail_reconcile tests (under-mocked `.list()`) (XS-S) (DONE)
+  Found live on PDX-CL1 while diagnosing Phase 55 Step 3's OOM: with
+  `DATABASE_URL=` cleared (SQLite, matching CI), the full test run hung
+  indefinitely at `ProtectedSenderReconcileTest
+  .test_protected_sender_still_soft_deleted_on_404`. Confirmed root cause:
+  `task_gmail_reconcile()` (`tasks.py:283-293`) paginates via
+  `page_token = res.get("nextPageToken"); if not page_token: break`, but 4
+  tests in `tests_reconciliation.py` (`Reconcile404Test`, `ReconcileTrashLabelTest`,
+  `ReconcileMessageAliveTest`, `ProtectedSenderReconcileTest`) mock `svc` as a
+  bare `MagicMock()` without configuring `.list()` -- verified empirically that
+  `MagicMock().get("nextPageToken")` returns a permanently-truthy `MagicMock`,
+  so the loop never terminates. No production bug (real API responses are real
+  dicts). Fix: configure `.list()`'s return value (`{"messages": [],
+  "nextPageToken": None}`) in each of the 4 tests before calling
+  `task_gmail_reconcile()`. Test-only change. Full detail: GOALS_TODOS.md.
 
 NOT PHASED (backlog, needs a user decision first): restore to a different Google
 account, restore into Drive, per-rule cleanup schedules, NAS packages, animated

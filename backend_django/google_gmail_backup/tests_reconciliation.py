@@ -150,6 +150,9 @@ class Reconcile404Test(TestCase):
 
         svc = MagicMock()
         mock_gmail_svc.return_value = svc
+        svc.users().messages().list.return_value.execute.return_value = {
+            "messages": [], "nextPageToken": None,
+        }
 
         # messages().get() raises an exception containing "404"
         error = Exception("HttpError 404: Message not found")
@@ -177,6 +180,9 @@ class ReconcileTrashLabelTest(TestCase):
 
         svc = MagicMock()
         mock_gmail_svc.return_value = svc
+        svc.users().messages().list.return_value.execute.return_value = {
+            "messages": [], "nextPageToken": None,
+        }
 
         svc.users().messages().get.return_value.execute.return_value = {
             "id": "msg_in_trash",
@@ -204,6 +210,9 @@ class ReconcileMessageAliveTest(TestCase):
 
         svc = MagicMock()
         mock_gmail_svc.return_value = svc
+        svc.users().messages().list.return_value.execute.return_value = {
+            "messages": [], "nextPageToken": None,
+        }
 
         svc.users().messages().get.return_value.execute.return_value = {
             "id": "msg_alive",
@@ -329,6 +338,9 @@ class ProtectedSenderReconcileTest(TestCase):
 
         svc = MagicMock()
         mock_gmail_svc.return_value = svc
+        svc.users().messages().list.return_value.execute.return_value = {
+            "messages": [], "nextPageToken": None,
+        }
 
         error = Exception("HttpError 404: notFound")
         svc.users().messages().get.return_value.execute.side_effect = error

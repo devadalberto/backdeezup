@@ -27,6 +27,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   about sizing a 12-vCPU/36GB deployment. No application code changes.
 
 ### Fixed
+- **Phase 57** — 4 tests in `google_gmail_backup/tests_reconciliation.py`
+  (`Reconcile404Test`, `ReconcileTrashLabelTest`, `ReconcileMessageAliveTest`,
+  `ProtectedSenderReconcileTest`) mocked `svc` as a bare `MagicMock()` without
+  configuring `.list()`, so `task_gmail_reconcile()`'s pagination loop
+  (`page_token = res.get("nextPageToken"); if not page_token: break`) never
+  terminated — `MagicMock().get("nextPageToken")` returns a permanently-truthy
+  `MagicMock`, the same object every call. Found live on PDX-CL1 while
+  diagnosing Phase 55's CI OOM: with `DATABASE_URL=` cleared (forcing the same
+  SQLite path CI uses), the full test run got past everything any CI log had
+  ever shown and then hung indefinitely — not crashed — at
+  `ProtectedSenderReconcileTest.test_protected_sender_still_soft_deleted_on_404`.
+  Root cause confirmed by reproducing the `MagicMock()` behavior in an isolated
+  shell. A very plausible explanation for CI's exit-137 OOM too: the loop has no
+  `sleep` and every iteration grows the mock's `mock_calls` history unbounded.
+  Not a production bug — real Gmail API responses correctly omit/`None`
+  `nextPageToken` on the last page. Fixed by configuring `.list()`'s return
+  value (`{"messages": [], "nextPageToken": None}`) in all 4 tests. Verified:
+  all 9 tests in the file now pass in 0.328s (previously: hangs forever once
+  reached).
 - **Phase 56** — `make gmail-loop` ignored `WORKERS=` entirely: its download call
   never forwarded `--workers $(WORKERS)` (unlike `make gmail-download`, which does),
   so it silently fell back to the management command's hardcoded `default=10` no
