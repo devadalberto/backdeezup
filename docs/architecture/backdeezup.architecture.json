@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "BackDeezUp Architecture",
+    "output": "backdeezup-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/devadalberto/backdeezup",
+      "revision": "c632a9b6aa72c6191f7bde6b3547f1d8add1142f"
+    },
+    "views": [
+      { "id": "request-path", "label": "Browser request path", "focus": ["browser", "nginx", "web", "db"], "note": "A browser request enters through nginx's TLS termination, hits Django/Gunicorn, and reads or writes Postgres." },
+      { "id": "task-pipeline", "label": "Celery backup pipeline", "focus": ["redis", "celery", "celerybeat", "gmail-api", "drive-api"], "note": "Celery Beat schedules recurring backup/reconcile jobs on Redis; the worker drains them and calls Google's APIs." }
+    ]
+  },
+  "components": [
+    { "id": "browser", "type": "external", "label": "Browser", "sublabel": "admin / ops console", "pos": [30, 300], "size": [120, 60] },
+    { "id": "nginx", "type": "security", "label": "nginx", "sublabel": "TLS termination", "tag": "self-signed dev cert", "pos": [230, 300], "size": [130, 64], "sources": [{ "path": "nginx/nginx.conf.template", "line": 11, "end_line": 54, "label": "listen 80/443, proxy_pass" }] },
+    { "id": "web", "type": "backend", "label": "web", "sublabel": "Gunicorn + Django", "tag": "3 workers :8000", "pos": [450, 300], "size": [140, 64], "sources": [{ "path": "entrypoint.sh", "line": 51, "end_line": 52, "label": "gunicorn config.wsgi" }] },
+    { "id": "db", "type": "database", "label": "PostgreSQL", "sublabel": "db :5432", "pos": [900, 300], "size": [130, 60], "sources": [{ "path": "docker-compose.yml", "line": 2, "end_line": 16, "label": "db service" }] },
+    { "id": "celerybeat", "type": "backend", "label": "celerybeat", "sublabel": "DatabaseScheduler", "pos": [230, 460], "size": [140, 60], "sources": [{ "path": "docker-compose.yml", "line": 92, "label": "celery beat command" }, { "path": "backend_django/celery_app.py", "line": 28, "label": "beat_schedule" }] },
+    { "id": "redis", "type": "messagebus", "label": "Redis", "sublabel": "broker + cache", "pos": [450, 460], "size": [130, 60], "sources": [{ "path": "docker-compose.yml", "line": 17, "end_line": 25, "label": "redis service" }, { "path": "backend_django/config/settings.py", "line": 271, "end_line": 283, "label": "REDIS_URL / CELERY_BROKER_URL" }] },
+    { "id": "celery", "type": "backend", "label": "celery", "sublabel": "worker -c 2", "pos": [680, 460], "size": [130, 60], "sources": [{ "path": "docker-compose.yml", "line": 62, "label": "celery worker command" }] },
+    { "id": "gmail-api", "type": "external", "label": "Gmail API", "sublabel": "v1, OAuth 2.0", "pos": [900, 420], "size": [140, 60], "sources": [{ "path": "backend_django/google_gmail_backup/services_gmail.py", "line": 31, "label": "build(\"gmail\", \"v1\", ...)" }] },
+    { "id": "drive-api", "type": "external", "label": "Drive API", "sublabel": "v3, OAuth 2.0", "pos": [900, 540], "size": [140, 60], "sources": [{ "path": "backend_django/google_media_backup/services_google.py", "line": 155, "label": "build(\"drive\", \"v3\", ...)" }] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "docker-compose.yml stack", "wraps": ["nginx", "web", "db", "celerybeat", "redis", "celery"] }
+  ],
+  "connections": [
+    { "id": "browser-nginx", "from": "browser", "to": "nginx", "label": "HTTPS", "variant": "emphasis", "fromSide": "right", "toSide": "left", "labelDy": -24 },
+    { "id": "nginx-web", "from": "nginx", "to": "web", "label": "proxy_pass :8000", "fromSide": "right", "toSide": "left" },
+    { "id": "web-db", "from": "web", "to": "db", "label": "Django ORM / SQL", "fromSide": "right", "toSide": "left", "labelDy": 48 },
+    { "id": "web-redis", "from": "web", "to": "redis", "label": "enqueue task", "fromSide": "bottom", "toSide": "top", "labelAt": [528, 378] },
+    { "id": "celerybeat-redis", "from": "celerybeat", "to": "redis", "label": "beat_schedule", "fromSide": "right", "toSide": "left" },
+    { "id": "redis-celery", "from": "redis", "to": "celery", "label": "consumes tasks", "fromSide": "right", "toSide": "left" },
+    { "id": "celery-gmail", "from": "celery", "to": "gmail-api", "label": "sync / reconcile", "variant": "security", "fromSide": "right", "toSide": "left" },
+    { "id": "celery-drive", "from": "celery", "to": "drive-api", "label": "discover / download", "variant": "security", "fromSide": "bottom", "toSide": "left" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Edge", "items": ["nginx terminates TLS with a self-signed dev cert", "HTTP :NGINX_HTTP_PORT redirects to HTTPS :NGINX_HTTPS_PORT"] },
+    { "dot": "emerald", "title": "Application", "items": ["Gunicorn runs Django with 3 workers", "3 Django Ninja APIs share one process: /api/ (media), /api/gmail/, /api/vault/ — all behind ninja.security.django_auth", "The web process also calls Gmail/Drive APIs synchronously for on-demand actions (e.g. rule execute), not just via Celery"] },
+    { "dot": "rose", "title": "Backup pipeline", "items": ["Celery Beat schedules Gmail incremental sync, cleanup rules, and reconcile jobs on Redis", "The worker drains Redis, calls Gmail API v1 / Drive API v3 with stored OAuth 2.0 credentials, and writes results back to Postgres via the ORM"] }
+  ]
+}

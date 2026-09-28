@@ -2,6 +2,14 @@
 
 ---
 
+> **Interactive diagram**: [`architecture/backdeezup-architecture.html`](architecture/backdeezup-architecture.html)
+> — pan/zoom, theme switching, and source citations back to the exact file:line
+> in this repo. Generated with [archify](https://github.com/tt-a1i/archify)
+> from the live `docker-compose.yml`/`nginx.conf`/`api.py`/`celery_app.py`
+> at commit `c632a9b`. Regenerate after infra changes: see
+> `docs/architecture/backdeezup.architecture.json` (the spec) and re-run
+> `node bin/archify.mjs deliver architecture docs/architecture/backdeezup.architecture.json docs/architecture/backdeezup-architecture.html --quality showcase --repo-root .` from `~/.claude/skills/archify`.
+
 ## System overview
 
 BackDeezUp is an API-first Django application. The Django-Ninja layer is the primary interface; Django Admin provides a secondary ops console for browsing and managing state.
