@@ -8,6 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Phase 52** — every successful Gmail download/verify crashed on save, on both
+  Postgres and SQLite: `GmailMessage.error = models.TextField(blank=True, default="")`
+  has no `null=True` — `blank=True` only affects form validation, the real DB column
+  is `NOT NULL` — but 4 call sites set `msg.error = None` on success instead of `""`
+  (`gmail_pipeline.py`'s download and verify success paths, and their duplicate
+  HTTP-API equivalents in `api.py`). Confirmed live on a real account, right after
+  Phase 51 was confirmed working (152 messages correctly cleared): 348 *other*
+  messages stuck in `DISCOVERED` with `django.db.utils.IntegrityError: null value in
+  column "error" ... violates not-null constraint` — the file had already downloaded
+  to disk, but the state-advancing save crashed, so the row never left `DISCOVERED`
+  and got retried forever. Fixed: `None` → `""` at all 4 sites, matching the field's
+  own declared default — no schema/migration change. New regression tests
+  (`GmailErrorFieldNotNullTest`) — confirmed each one catches the bug by reverting
+  the fix and watching it fail (an `IntegrityError`, identically on SQLite) before
+  restoring it. That last part corrects an assumption from Phase 51's own notes:
+  this was never a SQLite-vs-Postgres permissiveness gap — no existing test had ever
+  actually run the success path with real data, because the one test that exercised
+  this code always used an empty queue to dodge an unrelated `ThreadPoolExecutor`/
+  `TestCase` deadlock. Flagged, not fixed (separate, narrower issue, noticed while
+  reading the surrounding code): `api.py`'s `/sync/download` endpoint still has the
+  Phase-51-shaped gap (no 404/permanent-gone handling) — out of scope for this phase.
 - **Phase 51** — `make gmail-loop` could get permanently stuck making zero progress:
   `gmail_pipeline.py`'s `_download()` never changed a message's state on failure, only
   recorded the error — so a message Gmail itself confirms is gone (404 `notFound` on

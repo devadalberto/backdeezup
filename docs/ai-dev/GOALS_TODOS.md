@@ -1337,3 +1337,62 @@ PHASE 51 -- Fix gmail-loop infinite-retry on permanently-gone messages
   point 2 above, so a future change doesn't accidentally soft-delete on
   transient errors). No live Google network needed -- mock-based, same
   constraint as every other Google-API test in this repo.
+
+PHASE 52 -- Fix NOT NULL crash on every successful Gmail download/verify
+  Size: XS.  Risk: low (application-code correction to match a field's own already-
+  declared Python default; no schema/migration change).
+
+  Root cause (confirmed by reading the model field and all 4 call sites, not
+  guessed): `google_gmail_backup/models.py` line 96:
+    error = models.TextField(blank=True, default="")
+  `blank=True` only affects Django form/admin validation -- it does NOT make the
+  database column nullable. With no `null=True`, the real column is NOT NULL. Four
+  call sites set `msg.error = None` on a successful download/verify, instead of `""`
+  (the field's own declared default, already used correctly elsewhere in the same
+  files for the "no error yet" case):
+    - `google_gmail_backup/management/commands/gmail_pipeline.py:144`
+      (`_download`/`_process` success path)
+    - `google_gmail_backup/management/commands/gmail_pipeline.py:208`
+      (`_verify` success path)
+    - `google_gmail_backup/api.py:270` (HTTP-API equivalent of the download success path)
+    - `google_gmail_backup/api.py:302` (HTTP-API equivalent of the verify success path)
+  Every one of these crashes `.save()` on PostgreSQL with:
+    django.db.utils.IntegrityError: null value in column "error" of relation
+    "google_gmail_backup_gmailmessage" violates not-null constraint
+  Confirmed live on a real account: 348 messages stuck in DISCOVERED with exactly
+  this error text after a successful-looking download attempt (file present on disk,
+  checksum computed) -- the final .save() that would have advanced state to
+  DOWNLOADED crashed instead, so the row never left DISCOVERED and got retried
+  forever (same failure *shape* as Phase 51, different cause -- Phase 51's fix
+  doesn't touch this at all, `is_gone` correctly does NOT match this exception, and
+  it shouldn't).
+
+  Never caught by any test in this repo -- NOT because SQLite is permissive about
+  NOT NULL (verified while implementing: it enforces this identically to Postgres,
+  reverting the fix fails the new test here with the same IntegrityError). The real
+  reason: no existing test ever exercised the actual download/verify *success* path
+  with real data -- `ConcurrentDownloaderTest` only ever runs `limit=0` (empty
+  queue), specifically to dodge the ThreadPoolExecutor/TestCase deadlock Phase 51
+  hit, which incidentally meant this `.save()` call never actually ran under any
+  test until Phase 52's new one. DriveAsset has the identical field shape
+  (`google_media_backup/models.py:82`,
+  same `blank=True, default=""`, no `null=True`) but grepped clean -- no
+  `asset.error = None` anywhere in that app, so Drive is NOT affected by this
+  specific bug. Confirmed by grep, not assumed.
+
+  Fix: change all 4 call sites from `msg.error = None` to `msg.error = ""` --
+  matches the field's own declared default, zero schema change, zero migration.
+  Grepped the rest of the codebase for anything reading `.error` and expecting
+  `None` specifically (`is None` checks, `error__isnull` queries) -- found none,
+  so this change is safe everywhere the field is read.
+
+  Verify: turns out SQLite enforces this NOT NULL constraint identically to
+  Postgres (confirmed while implementing -- reverting the fix fails a real test
+  here with the same IntegrityError), so a normal `TransactionTestCase` exercising
+  the actual success path is sufficient; no Postgres-specific test infrastructure
+  needed. Added `GmailErrorFieldNotNullTest` (download success + verify success,
+  both assert `msg.error == ""`, never `None`) to
+  `google_gmail_backup/tests_regression.py`. Confirmed each test actually catches
+  the bug by reverting the fix and watching it fail before restoring it. The real
+  PostgreSQL failure text (`violates not-null constraint`) was captured live on
+  PDX-CL1 first, independent of this test.

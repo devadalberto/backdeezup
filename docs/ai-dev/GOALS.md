@@ -184,6 +184,28 @@ BUGS FOUND POST-ROADMAP (not part of the original V2 plan)
 ================================================================
 PHASE 50 -- Fix OAuth redirect_uri behind reverse proxy (browser flow) (DONE)
 PHASE 51 -- Fix gmail-loop infinite-retry on permanently-gone messages (DONE)
+PHASE 52 -- Fix NOT NULL crash on every successful Gmail download/verify (DONE)
+  Found 2026-09-27/28 on the same real account, right after Phase 51 confirmed working
+  (152 messages correctly cleared). 348 OTHER messages stuck in DISCOVERED with a
+  genuinely different error: `null value in column "error" ... violates not-null
+  constraint`. Root cause confirmed by reading the model + all 4 call sites (not
+  guessed): `GmailMessage.error = models.TextField(blank=True, default="")` has no
+  `null=True` -- `blank=True` only affects form validation, the real Postgres column
+  is NOT NULL. `gmail_pipeline.py`'s download success path (line 144) AND verify
+  success path (line 208), plus the duplicate HTTP-API equivalents in `api.py` (lines
+  270, 302), all set `msg.error = None` on success -- crashes `.save()` every time,
+  on Postgres AND SQLite alike (verified while fixing -- not a SQLite-vs-Postgres
+  gap). Never caught before because no existing test ever ran the actual
+  download/verify success path with real data (the one test that did always used
+  an empty queue, dodging a separate ThreadPoolExecutor/TestCase deadlock issue).
+  Effect: once a message's download/verify actually
+  succeeds, the final state-saving .save() crashes trying to write error=None -- the
+  file is already on disk, but the row never advances past DISCOVERED/DOWNLOADED and
+  gets retried forever. NOTE: thousands of pre-existing DOWNLOADED/VERIFIED rows exist
+  in this same database from earlier (Phase 1 era, mid-2026) -- so this exact crash
+  either wasn't always present (something changed since then) or those earlier runs
+  went through a different code path; not fully explained yet, don't assume this has
+  ALWAYS been 100% broken, just that it demonstrably is right now.
   Found 2026-09-27 on a real account (57,895 discovered messages): `_download()` in
   gmail_pipeline.py never transitions GmailMessage.state on failure -- only sets
   error/last_attempt_at. A message Gmail confirms is gone (404/notFound on
@@ -204,6 +226,13 @@ PHASE 51 -- Fix gmail-loop infinite-retry on permanently-gone messages (DONE)
   scheme (http) and missing the port entirely. The CLI `make auth` flow is
   unaffected (different code path, no request-based redirect_uri) and is the
   working fallback until this lands.
+
+Known gap, not yet phased: `google_gmail_backup/api.py`'s HTTP-triggered download
+endpoint (`/sync/download`, around line 277) has the same Phase-51-shaped bug --
+its `except Exception as e:` unconditionally sets `error` with no 404/permanent-
+gone check, so it can still get stuck the way `gmail_pipeline.py`'s download did
+before Phase 51. Not fixed here (out of scope for Phase 52, which only touched the
+`error = None` NOT NULL issue) -- noticed while reading the surrounding code.
 
 NOT PHASED (backlog, needs a user decision first): restore to a different Google
 account, restore into Drive, per-rule cleanup schedules, NAS packages, animated

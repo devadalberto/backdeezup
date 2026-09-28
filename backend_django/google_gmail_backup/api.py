@@ -267,7 +267,7 @@ def gmail_download(request, limit: int = 20):
             msg.sha256 = sha256_bytes(raw)
             msg.downloaded_at = timezone.now()
             msg.state = GmailMessage.STATE_DOWNLOADED
-            msg.error = None
+            msg.error = ""  # Phase 52: field is NOT NULL on Postgres; "" matches its own default
             msg.save(update_fields=[
                 "thread_id", "history_id", "subject", "from_address", "to_address",
                 "date", "snippet", "labels", "size_estimate", "has_attachments",
@@ -299,7 +299,7 @@ def gmail_verify(request, limit: int = 50):
     for msg in qs:
         if msg.raw_path and os.path.exists(msg.raw_path):
             msg.state = GmailMessage.STATE_VERIFIED
-            msg.error = None
+            msg.error = ""  # Phase 52: field is NOT NULL on Postgres; "" matches its own default
             msg.save(update_fields=["state", "error"])
             verified += 1
         else:

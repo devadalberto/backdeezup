@@ -490,6 +490,86 @@ class GmailDownload404Test(TransactionTestCase):
         self.assertIn("network blip", self.msg_other.error)
 
 
+# ── BUG: successful Gmail download/verify crashed on Postgres (error=None) ────
+
+class GmailErrorFieldNotNullTest(TransactionTestCase):
+    """
+    BUG (Phase 52): GmailMessage.error is TextField(blank=True, default="") --
+    blank=True only affects Django form/admin validation, the real Postgres column
+    is NOT NULL (no null=True). Both _download's and _verify's success paths set
+    msg.error = None, which crashes .save() on Postgres with
+    "IntegrityError: null value in column \"error\" ... violates not-null
+    constraint". Confirmed live on a real account: 348 messages stuck retrying
+    forever because the state-advancing save kept crashing after a successful
+    download (the .eml file was already on disk). SQLite enforces this NOT NULL
+    constraint too (verified: reverting the fix fails this test here with the
+    same IntegrityError) -- the reason this was never caught wasn't a SQLite/
+    Postgres difference, it's that no existing test ever exercised the actual
+    success path with real data: ConcurrentDownloaderTest above only ever runs
+    with limit=0 (empty queue), specifically to dodge the ThreadPoolExecutor/
+    TestCase deadlock Phase 51 ran into -- which incidentally meant the success
+    path's .save() call never actually ran under any test until now.
+
+    FIX: msg.error = "" (matches the field's own declared default) instead of
+    None, at both call sites in gmail_pipeline.py and the two duplicate call
+    sites in api.py (same bug, separate HTTP-triggered code path, not covered by
+    this test file but fixed identically).
+    """
+    def test_download_success_sets_empty_string_never_none(self):
+        import os
+        import tempfile
+        from io import StringIO
+        from unittest.mock import patch
+        from django.core.management import call_command
+
+        msg = make_message("ok-download", state=GmailMessage.STATE_DISCOVERED)
+        tmp_dir = tempfile.mkdtemp()
+        eml_path = os.path.join(tmp_dir, "ok-download.eml")
+
+        try:
+            with patch("google_gmail_backup.services_gmail.get_message_raw", return_value=b"raw bytes"), \
+                 patch("google_gmail_backup.services_gmail.ensure_eml_path", return_value=eml_path):
+                call_command(
+                    "gmail_pipeline", "download",
+                    limit=10, workers=1,
+                    stdout=StringIO(), stderr=StringIO(),
+                )
+
+            msg.refresh_from_db()
+            self.assertEqual(msg.state, GmailMessage.STATE_DOWNLOADED)
+            self.assertIsNotNone(msg.error, "must never be None -- NOT NULL on Postgres")
+            self.assertEqual(msg.error, "")
+        finally:
+            if os.path.exists(eml_path):
+                os.remove(eml_path)
+            os.rmdir(tmp_dir)
+
+    def test_verify_success_sets_empty_string_never_none(self):
+        import os
+        import tempfile
+        from io import StringIO
+        from django.core.management import call_command
+
+        fd, eml_path = tempfile.mkstemp(suffix=".eml")
+        os.close(fd)
+        msg = make_message("ok-verify", state=GmailMessage.STATE_DOWNLOADED)
+        msg.raw_path = eml_path
+        msg.save(update_fields=["raw_path"])
+
+        try:
+            call_command(
+                "gmail_pipeline", "verify",
+                limit=10,
+                stdout=StringIO(), stderr=StringIO(),
+            )
+            msg.refresh_from_db()
+            self.assertEqual(msg.state, GmailMessage.STATE_VERIFIED)
+            self.assertIsNotNone(msg.error, "must never be None -- NOT NULL on Postgres")
+            self.assertEqual(msg.error, "")
+        finally:
+            os.remove(eml_path)
+
+
 # ── BUG: sync state total_messages count was wrong after re-discovery ─────────
 
 class SyncStateTotalTest(TestCase):
