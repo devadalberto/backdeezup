@@ -131,6 +131,13 @@ fi
 run "Running database migrations" docker compose run --rm web python manage.py migrate
 run "Starting the updated stack" docker compose up -d
 
+# nginx has no `build:` step and only bind-mounts nginx.conf.template, so
+# `docker compose up -d` never restarts it on a template-only change --
+# compose only diffs image/env/command/port/volume-list, never a mounted
+# file's bytes (Phase 68). Force it every time so config edits (and a
+# fresh DNS resolution of `web`) always actually take effect.
+run "Restarting nginx to pick up any config changes" docker compose up -d --force-recreate nginx
+
 if [ "$DRY_RUN" -eq 1 ]; then
   log "Dry run complete -- nothing was written, nothing was pulled or started."
   exit 0

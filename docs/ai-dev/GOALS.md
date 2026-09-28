@@ -798,6 +798,60 @@ Phase 67 -- Fix nginx proxying to a dead `web` container after `make upgrade` (S
   keeps working within ~10s without a manual nginx restart. Full detail:
   GOALS_TODOS.md.
 
+Phase 68 -- `make upgrade` must restart nginx to actually load config changes (XS) (DONE)
+  Live PDX-CL1 bug, found on a SECOND `make upgrade` run -- this time with
+  Phase 67's nginx.conf.template fix already pulled into the checkout.
+  Health check failed AGAIN, for a different underlying reason than
+  Phase 67 diagnosed, even though the symptom looked identical (502/504
+  on the ops page).
+  Root cause, confirmed from the real `make upgrade` output, not guessed:
+    - docker-compose.yml's `nginx` service has no `build:` step (plain
+      `image: nginx:stable-alpine`) and bind-mounts
+      `./nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro`.
+      Its `command` is `envsubst '$NGINX_HTTPS_PORT' <
+      nginx.conf.template > nginx.conf && nginx -g 'daemon off;'` -- this
+      only runs ONCE, at container start.
+    - `docker compose up -d` only recreates a service's container when
+      ITS OWN tracked definition changes (image digest/tag, environment,
+      command string, published ports, the volumes LIST) -- it never
+      diffs the actual bytes of a bind-mounted file. So a change to
+      `nginx.conf.template`'s contents alone is completely invisible to
+      compose's up-to-date check.
+    - Direct proof from the pasted `make upgrade` output's `up 6/6` step:
+        Container backdeezup-nginx-1  Running   0.0s
+      -- 0.0s of work, left exactly as it was -- versus
+        Container backdeezup-web-1        Started  12.4s
+        Container backdeezup-celery-1     Started  12.1s
+        Container backdeezup-celerybeat-1 Started  11.6s
+      which all show real recreate work. nginx was never touched.
+    - Net effect: nginx never re-ran `envsubst`, never re-read the
+      updated template, and kept running whatever config it rendered at
+      its actual last start (hours/days earlier) -- meaning Phase 67's
+      resolver fix was present ON DISK but never LOADED. Same visible
+      symptom as Phase 67 (nginx failing to reach `web`), genuinely
+      different root cause this time (nginx not restarted at all, versus
+      Phase 67's nginx-restarted-but-DNS-cached scenario).
+  Immediate live fix applied on PDX-CL1 (told directly to the user, not a
+  code change): `docker compose restart nginx` -- this time it actually
+  loads the current, correct, on-disk template (with Phase 67's resolver
+  fix in it).
+  Real fix: `scripts/upgrade.sh` must unconditionally force nginx to
+  restart/recreate as part of every upgrade run, so ANY future
+  `nginx.conf.template` edit is guaranteed to take effect on deploy --
+  e.g. `docker compose up -d --force-recreate nginx` run alongside (or
+  immediately after) the main `docker compose up -d` step. This is
+  belt-and-suspenders with Phase 67's resolver self-heal, not a
+  replacement for it: Phase 67 still matters for `web` recreates that
+  happen OUTSIDE of `upgrade.sh` (e.g. a manual `docker compose up -d
+  --no-deps web`), where nothing will proactively restart nginx at all.
+  Verify: real repro on this dev box (no Google secrets needed, same
+  style as Phase 67's verification) -- start a minimal nginx + bind-mount
+  setup, change the mounted template's content on disk, run `docker
+  compose up -d` and confirm (matching the real bug) nginx does NOT
+  restart and does NOT pick up the change; then apply the
+  `--force-recreate nginx` fix to the equivalent of `upgrade.sh` and
+  confirm it now does. Full detail: GOALS_TODOS.md.
+
 NOT PHASED (backlog, needs a user decision first): restore to a different Google
 account, restore into Drive, per-rule cleanup schedules, NAS packages, animated
 demos, sample-Google-data test install, SBOM-signed releases.

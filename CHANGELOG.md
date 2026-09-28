@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Phase 68** — Phase 67's nginx fix shipped correctly but never actually took
+  effect on a second `make upgrade` run on PDX-CL1: `nginx` has no `build:` step
+  and only bind-mounts `nginx.conf.template`, rendered via `envsubst` inside its
+  own startup `command`, which runs exactly once at container start. `docker
+  compose up -d` only recreates a container when its own tracked definition
+  (image/env/command/ports/volume list) changes — never when a bind-mounted
+  file's *contents* change — so the already-running nginx container kept the
+  pre-Phase-67 config loaded indefinitely, proven directly by the real
+  `make upgrade` output (`Container backdeezup-nginx-1  Running  0.0s`, versus
+  real recreate work on every other service). Fix: `scripts/upgrade.sh` now runs
+  `docker compose up -d --force-recreate nginx` unconditionally right after the
+  main `docker compose up -d`, so any future `nginx.conf.template` change is
+  guaranteed to load on the very next upgrade. Verified with a minimal real
+  repro (a throwaway bind-mount + render-on-start service): plain `up -d` after
+  editing the mounted file was a confirmed no-op; `--force-recreate <service>`
+  was confirmed to pick the change up.
 - **Phase 67** — live PDX-CL1 bug: after `make upgrade`, `web` came back up healthy but
   nginx kept returning 502/504 (`Connection refused`) for 10+ minutes straight, on every
   request. Root cause: `upgrade.sh`'s in-place `docker compose up -d` recreates

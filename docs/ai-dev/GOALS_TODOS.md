@@ -2126,3 +2126,158 @@ Phase 67 -- Fix nginx proxying to a dead `web` container after `make upgrade`
   today regardless, and after this fix `make upgrade` no longer needs
   nginx to be recreated at all -- it will self-heal on its own within
   10s of `web` coming back up).
+
+  CORRECTION (2026-09-28, same day): the claim directly above --
+  "make upgrade no longer needs nginx to be recreated at all" -- was
+  WRONG, disproven by a real second `make upgrade` run on PDX-CL1
+  immediately after this commit shipped. The resolver fix only helps
+  once nginx has actually LOADED a config containing it; `make upgrade`
+  never restarts nginx at all (see Phase 68), so the new template sat on
+  disk, unread, while the running nginx container kept using its old,
+  pre-Phase-67 in-memory config. The regression test above was real and
+  correct for what it tested (DNS caching once the new config is
+  running) but didn't cover the actual deploy mechanism that gets nginx
+  to load a new config in the first place -- that gap is Phase 68.
+
+----------------------------------------------------------------
+Phase 68 -- `make upgrade` must restart nginx to actually load config changes
+----------------------------------------------------------------
+  Trigger: user ran `make upgrade` on PDX-CL1 a second time, this time
+  with Phase 67's nginx.conf.template fix already pulled in via
+  `git pull`. Same failure:
+
+    HEALTH CHECK FAILED after the upgrade.
+
+  Investigation:
+    1. Re-read the pasted `make upgrade` output's `up 6/6` block closely
+       (already-available evidence, no new commands needed this time):
+         Container backdeezup-redis-1      Healthy   12.9s
+         Container backdeezup-nginx-1      Running   0.0s
+         Container backdeezup-db-1         Healthy   12.9s
+         Container backdeezup-celery-1     Started   12.1s
+         Container backdeezup-web-1        Started   12.4s
+         Container backdeezup-celerybeat-1 Started   11.6s
+       `nginx-1` at `Running 0.0s` -- distinctly different from every
+       other service, all of which show real elapsed work. This is
+       Docker Compose's own explicit signal that it took zero action on
+       `nginx` -- confirmed already in the compose CLI's own status
+       reporting, no extra log-fetching needed to establish this fact.
+    2. Read docker-compose.yml's `nginx` service definition in full
+       (lines 118-132): `image: nginx:stable-alpine` (no `build:`),
+       `volumes: - ./nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro`
+       (plain bind mount), `command: ["/bin/sh", "-c", "envsubst
+       '$$NGINX_HTTPS_PORT' < /etc/nginx/nginx.conf.template >
+       /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]`.
+    3. This confirms the mechanism precisely: the `envsubst` render step
+       is embedded IN the container's startup command, not a separate
+       reload-triggering process. It runs exactly once, at container
+       start, and never again for the life of that container.
+       `docker compose up -d`'s up-to-date check compares each service's
+       OWN declared config (image reference, environment map, command
+       array, port list, the volumes LIST itself) against what's
+       currently running -- none of those changed for `nginx` this
+       upgrade (same image, same env, same command string, same mounts
+       list), so compose correctly (by its own rules) concluded nginx
+       needed no action. It has no mechanism to notice that the BYTES
+       inside a bind-mounted file changed -- that's simply out of scope
+       for what `docker compose up -d`'s reconciliation checks.
+    4. Net result: the already-running nginx container (up for
+       hours/days, spanning the ENTIRE Phase 67 deploy) kept serving
+       whatever `/etc/nginx/nginx.conf` it rendered at its actual last
+       real start -- a config from before Phase 67 existed, with no
+       resolver directive at all. Phase 67's fix was correctly written,
+       correctly committed, correctly pulled onto PDX-CL1's disk -- and
+       never once loaded into a running nginx process.
+
+  Immediate live fix applied (not a code change): `docker compose
+  restart nginx` -- forces the container to actually exit and restart,
+  which re-runs its `command`, which re-runs `envsubst` against the
+  NOW-current template on disk, which finally loads Phase 67's resolver
+  fix for real.
+
+  Real fix (this phase's deliverable): make `scripts/upgrade.sh`
+  unconditionally force nginx to restart/recreate as part of every
+  upgrade, immediately after (or as part of) the main
+  `docker compose up -d` step -- e.g.:
+    docker compose up -d --force-recreate nginx
+  or equivalently `docker compose restart nginx` right after `up -d`.
+  This guarantees:
+    - Any future `nginx.conf.template` edit always takes effect on the
+      very next `make upgrade`, with no silent gap between "the fix is
+      on disk" and "the fix is actually running" ever again.
+    - nginx also gets a guaranteed-fresh DNS resolution of `web`
+      immediately on every upgrade, belt-and-suspenders with Phase 67's
+      10s self-heal -- not a replacement for Phase 67, since Phase 67
+      still matters for `web` recreates that happen OUTSIDE of
+      `upgrade.sh` entirely (e.g. someone running `docker compose up -d
+      --no-deps web` by hand, where nothing restarts nginx proactively
+      at all and the 10s resolver self-heal is the only thing that saves
+      it).
+  Why not instead rely on `docker compose up -d --force-recreate` for
+  ALL services every upgrade (simpler-sounding, one flag): rejected --
+  that would also force-recreate `db`/`redis` unnecessarily on every
+  single upgrade even when their images/config are unchanged, which is
+  wasteful at best and, for `db` specifically, needlessly increases the
+  blast radius of every upgrade for a container that legitimately never
+  needs to restart just because `web` or `nginx` changed. Scoping
+  `--force-recreate` to `nginx` alone (and letting compose's normal
+  image-diff-driven behavior handle `web`/`celery`/`celerybeat` as it
+  already correctly does) is the minimal targeted fix.
+
+  Verify: this dev box has no live PDX-CL1-equivalent compose stack
+  running (same constraint as Phases 66/67), but the actual mechanism
+  under test here -- "does `docker compose up -d` restart a service when
+  only a bind-mounted file's contents change, and does `--force-recreate
+  <service>` fix that" -- doesn't require the real Django app, Google
+  secrets, or Postgres at all, so it can be verified the same way Phase
+  67's regression test was: a minimal docker-compose.yml with one
+  service bind-mounting a text file rendered by its `command`, edit the
+  file, run plain `up -d` and confirm no restart happens (reproduces the
+  bug), then run `up -d --force-recreate <service>` and confirm the file
+  IS re-rendered (proves the fix). Then apply the equivalent line to the
+  real `scripts/upgrade.sh`.
+
+  STATUS: DONE (2026-09-28). Added
+    run "Restarting nginx to pick up any config changes" \
+      docker compose up -d --force-recreate nginx
+  to scripts/upgrade.sh immediately after "Starting the updated stack"
+  (`docker compose up -d`), before the dry-run early-exit check (so
+  `--dry-run` correctly prints "[dry-run] would run: ..." for this step
+  too, via the existing `run()` helper's own dry-run guard -- no new
+  dry-run handling needed).
+
+  Verified for real, not on paper: `bash -n scripts/upgrade.sh` (syntax
+  OK), plus a minimal real repro of the exact mechanism (no Google
+  secrets needed, same approach as Phase 67's verification) -- a
+  throwaway one-service compose stack (`python:3.12-slim`) bind-mounting
+  a text file and copying it to an output file via its `command` at
+  container start, standing in for nginx's `envsubst` render:
+    1. Started it, confirmed the output file read "OLD" (initial
+       template content).
+    2. Edited the bind-mounted file to "NEW", ran plain
+       `docker compose up -d` -- compose reported the container as
+       `Running` (no recreate), output file STILL read "OLD". This is
+       the exact bug, reproduced mechanically, not assumed.
+    3. Ran `docker compose up -d --force-recreate renderer` -- compose
+       reported `Recreate` / `Recreated` / `Starting` / `Started`, output
+       file now read "NEW". This is the exact fix, proven to work, not
+       assumed.
+    4. Cleaned up (`docker compose down -v`), nothing left behind.
+
+  This directly proves the mechanism `scripts/upgrade.sh`'s new line
+  depends on: plain `up -d` is a genuine no-op for a service whose only
+  change is a bind-mounted file's contents, and `--force-recreate
+  <service>` is what actually forces that service to re-run its startup
+  command and pick the change up.
+
+  Also corrects Phase 67's runbook (see the CORRECTION note added there
+  same day): Phase 67's resolver fix was real and independently verified
+  correct, but it could never have taken effect on PDX-CL1 without this
+  phase, since nginx was never being restarted at all to load it.
+
+  Remaining: push, then PDX-CL1 needs ONE more `make upgrade` run using
+  a checkout that already has THIS commit (or the immediate manual
+  `docker compose restart nginx` workaround already given for right now)
+  to actually load Phase 67's resolver fix for the first time -- every
+  `make upgrade` after that point will handle it automatically via this
+  phase's new step.
